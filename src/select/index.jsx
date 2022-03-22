@@ -1,6 +1,6 @@
 import "./style"
-import BodyPortal from "components/layout/body-portal"
 import classNames from "classnames"
+import config from "../config.js"
 import {digg, digs} from "diggerize"
 import debounce from "debounce"
 import {idForComponent, nameForComponent} from "@kaspernj/api-maker-inputs"
@@ -100,6 +100,7 @@ export default class CustomSelect extends React.PureComponent {
     const {endOfSelectRef} = digs(this, "endOfSelectRef")
     const {attribute, className, defaultValues, model, multiple, onChange, options, search, ...restProps} = this.props
     const {currentOptions, opened} = digs(this.state, "currentOptions", "opened")
+    const BodyPortal = config.getBodyPortal()
 
     return (
       <div
@@ -121,7 +122,7 @@ export default class CustomSelect extends React.PureComponent {
             <input
               className="custom-select-search-text-input"
               onChange={digg(this, "onSearchTextInputChangedDebounced")}
-              placeholder={I18n.t("js.components.custom_select.search_dot_dot_dot")} type="text"
+              placeholder={I18n.t("haya_select.search_dot_dot_dot")} type="text"
               ref={digg(this, "searchTextInputRef")}
             />
           }
@@ -129,7 +130,7 @@ export default class CustomSelect extends React.PureComponent {
             <>
               {currentOptions.length == 0 &&
                 <div style={{color: "grey"}}>
-                  {I18n.t("js.components.custom_select.nothing_selected")}
+                  {I18n.t("haya_select.nothing_selected")}
                 </div>
               }
               {currentOptions.map((currentOption) =>
@@ -286,7 +287,7 @@ export default class CustomSelect extends React.PureComponent {
         )}
         {loadedOptions?.length === 0 &&
           <div className="custom-select-no-options-container">
-            {I18n.t("js.components.custom_select.no_options_found")}
+            {I18n.t("haya_select.no_options_found")}
           </div>
         }
       </div>
