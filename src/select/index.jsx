@@ -33,7 +33,7 @@ const LoadedOption = class LoadedOption extends BaseComponent {
 
     return (
       <div
-        className="custom-select-option"
+        className="haya-select-option"
         data-selected={selected}
         data-value={digg(loadedOption, "value")}
         onClick={this.onOptionClicked}
@@ -104,7 +104,7 @@ export default class CustomSelect extends React.PureComponent {
 
     return (
       <div
-        className={classNames("components-custom-select", className)}
+        className={classNames("haya-select", className)}
         data-id={idForComponent(this)}
         {...restProps}
       >
@@ -114,13 +114,13 @@ export default class CustomSelect extends React.PureComponent {
           </BodyPortal>
         }
         <div
-          className="custom-select-current-selected"
+          className="haya-select-current-selected"
           data-opened={opened}
           onClick={this.onSelectClicked}
         >
           {opened &&
             <input
-              className="custom-select-search-text-input"
+              className="haya-select-search-text-input"
               onChange={digg(this, "onSearchTextInputChangedDebounced")}
               placeholder={I18n.t("haya_select.search_dot_dot_dot")} type="text"
               ref={digg(this, "searchTextInputRef")}
@@ -267,7 +267,7 @@ export default class CustomSelect extends React.PureComponent {
 
     return (
       <div
-        className="custom-select-options-container"
+        className="haya-select-options-container"
         data-id={idForComponent(this)}
         ref={optionsContainerRef}
         style={{
@@ -286,7 +286,7 @@ export default class CustomSelect extends React.PureComponent {
           />
         )}
         {loadedOptions?.length === 0 &&
-          <div className="custom-select-no-options-container">
+          <div className="haya-select-no-options-container">
             {I18n.t("haya_select.no_options_found")}
           </div>
         }

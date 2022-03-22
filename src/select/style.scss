@@ -1,4 +1,4 @@
-.custom-select-current-selected {
+.haya-select-current-selected {
   background-color: #fff;
   border: 1px solid #999;
   cursor: pointer;
@@ -13,13 +13,13 @@
   }
 }
 
-.custom-select-search-text-input {
+.haya-select-search-text-input {
   border: 0;
   outline: none;
   padding: 0;
 }
 
-.custom-select-options-container {
+.haya-select-options-container {
   background-color: #fff;
   border: 1px solid #999;
   max-height: 300px;
@@ -27,7 +27,7 @@
   position: absolute;
   z-index: 99999;
 
-  .custom-select-option {
+  .haya-select-option {
     padding: 4px 8px;
     color: #000;
 
