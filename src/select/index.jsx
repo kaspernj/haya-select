@@ -56,6 +56,7 @@ export default class CustomSelect extends React.PureComponent {
   static propTypes = {
     attribute: PropTypes.string,
     className: PropTypes.string,
+    defaultValue: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     defaultValues: PropTypes.array,
     defaultValuesFromOptions: PropTypes.array,
     model: PropTypes.object,
@@ -70,7 +71,7 @@ export default class CustomSelect extends React.PureComponent {
   searchTextInputRef = React.createRef()
 
   state = {
-    currentOptions: [],
+    currentOptions: this.defaultCurrentOptions(),
     loadedOptions: this.defaultLoadedOptions(),
     opened: false,
     optionsLeft: undefined,
@@ -80,12 +81,28 @@ export default class CustomSelect extends React.PureComponent {
     scrollTop: undefined
   }
 
+  defaultCurrentOptions() {
+    const {defaultValue, defaultValues} = this.props
+    const {options} = digs(this.props, "options")
+
+    if (!Array.isArray(options)) return []
+
+    return options.filter(({value}) =>
+      (defaultValue && value == defaultValue) ||
+        (defaultValues && defaultValues.includes(value))
+    )
+  }
+
   defaultLoadedOptions() {
     const {options} = digs(this.props, "options")
 
-    if (typeof options == "function") return undefined
+    if (typeof options == "function") {
+      return undefined
+    } else if (Array.isArray(options)) {
+      return options
+    }
 
-    return options
+    throw new Error(`Unknown type of options: ${typeof options}`)
   }
 
   componentDidMount() {
@@ -98,7 +115,7 @@ export default class CustomSelect extends React.PureComponent {
 
   render() {
     const {endOfSelectRef} = digs(this, "endOfSelectRef")
-    const {attribute, className, defaultValues, model, multiple, onChange, options, search, ...restProps} = this.props
+    const {attribute, className, defaultValue, defaultValues, model, multiple, onChange, options, search, ...restProps} = this.props
     const {currentOptions, opened} = digs(this.state, "currentOptions", "opened")
     const BodyPortal = config.getBodyPortal()
 
@@ -155,10 +172,14 @@ export default class CustomSelect extends React.PureComponent {
   defaultValues () {
     const {attribute, defaultValuesFromOptions, model} = this.props
 
+    console.log("defaultValues")
+
     if (defaultValuesFromOptions) return defaultValuesFromOptions
 
     if (attribute && model) {
       if (!(attribute in model)) throw new Error(`No such attribute on ${model.modelClassData().name}: ${attribute}`)
+
+      console.log(`Default value from ${attribute}: ${model[attribute]()}`)
 
       return model[attribute]()
     }
@@ -181,9 +202,20 @@ export default class CustomSelect extends React.PureComponent {
 
   loadOptions = async () => {
     const {options} = digs(this.props, "options")
-    const loadedOptions = await options({
-      searchValue: digg(this, "searchTextInputRef", "current")?.value
-    })
+    const searchValue = digg(this, "searchTextInputRef", "current")?.value
+
+    if (Array.isArray(options)) {
+      return this.loadOptionsFromArray(options, searchValue)
+    }
+
+    const loadedOptions = await options({searchValue})
+
+    this.setState({loadedOptions})
+  }
+
+  loadOptionsFromArray(options, searchValue) {
+    const lowerSearchValue = searchValue?.toLowerCase()
+    const loadedOptions = options.filter(({text}) => !lowerSearchValue || text.toLowerCase().includes(lowerSearchValue))
 
     this.setState({loadedOptions})
   }
