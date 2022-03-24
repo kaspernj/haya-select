@@ -172,14 +172,10 @@ export default class CustomSelect extends React.PureComponent {
   defaultValues () {
     const {attribute, defaultValuesFromOptions, model} = this.props
 
-    console.log("defaultValues")
-
     if (defaultValuesFromOptions) return defaultValuesFromOptions
 
     if (attribute && model) {
       if (!(attribute in model)) throw new Error(`No such attribute on ${model.modelClassData().name}: ${attribute}`)
-
-      console.log(`Default value from ${attribute}: ${model[attribute]()}`)
 
       return model[attribute]()
     }
