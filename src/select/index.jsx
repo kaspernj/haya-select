@@ -15,9 +15,9 @@ const nameForComponentWithMultiple = (component) => {
 }
 
 const presentOption = (currentValue) => {
-  if (currentValue.text) return currentValue.text
+  if ("text" in currentValue) return currentValue.text
 
-  if (currentValue.html) {
+  if ("html" in currentValue) {
     return (
       <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
     )
