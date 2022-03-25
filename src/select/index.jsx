@@ -23,7 +23,7 @@ const presentOption = (currentValue) => {
     )
   }
 
-  throw new Error("Couldn't figure out how to present option")
+  throw new Error(`Couldn't figure out how to present option from the given keys: ${Object.keys(currentValue, ", ")}`)
 }
 
 const LoadedOption = class LoadedOption extends BaseComponent {
