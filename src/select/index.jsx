@@ -14,39 +14,6 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
-const presentOption = (currentValue) => {
-  if ("text" in currentValue) return currentValue.text
-
-  if ("html" in currentValue) {
-    return (
-      <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
-    )
-  }
-
-  throw new Error(`Couldn't figure out how to present option from the given keys: ${Object.keys(currentValue, ", ")}`)
-}
-
-const LoadedOption = class LoadedOption extends BaseComponent {
-  render() {
-    const {currentOptions, loadedOption} = digs(this.props, "currentOptions", "loadedOption")
-    const selected = Boolean(currentOptions.find((currentOption) => currentOption.value == loadedOption.value))
-
-    return (
-      <div
-        className="haya-select-option"
-        data-selected={selected}
-        data-value={digg(loadedOption, "value")}
-        onClick={this.onOptionClicked}
-        style={{cursor: "pointer"}}
-      >
-        {presentOption(loadedOption)}
-      </div>
-    )
-  }
-
-  onOptionClicked = (e) => this.props.onClick(e, this.props.loadedOption)
-}
-
 export default class CustomSelect extends React.PureComponent {
   static defaultProps = {
     multiple: false,
@@ -63,7 +30,12 @@ export default class CustomSelect extends React.PureComponent {
     multiple: PropTypes.bool.isRequired,
     onChange: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
-    search: PropTypes.bool.isRequired
+    search: PropTypes.bool.isRequired,
+    toggleOptions: PropTypes.arrayOf(PropTypes.shape({
+      icon: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired
+    }))
   }
 
   endOfSelectRef = React.createRef()
@@ -78,7 +50,8 @@ export default class CustomSelect extends React.PureComponent {
     optionsTop: undefined,
     optionsWidth: undefined,
     scrollLeft: undefined,
-    scrollTop: undefined
+    scrollTop: undefined,
+    toggled: {}
   }
 
   defaultCurrentOptions() {
@@ -115,7 +88,7 @@ export default class CustomSelect extends React.PureComponent {
 
   render() {
     const {endOfSelectRef} = digs(this, "endOfSelectRef")
-    const {attribute, className, defaultValue, defaultValues, model, multiple, onChange, options, search, ...restProps} = this.props
+    const {attribute, className, defaultValue, defaultValues, model, multiple, onChange, options, search, toggleOptions, ...restProps} = this.props
     const {currentOptions, opened} = digs(this.state, "currentOptions", "opened")
     const BodyPortal = config.getBodyPortal()
 
@@ -158,7 +131,7 @@ export default class CustomSelect extends React.PureComponent {
                     type="hidden"
                     value={digg(currentOption, "value")}
                   />
-                  {presentOption(currentOption)}
+                  {this.presentOption(currentOption)}
                 </div>
               )}
             </>
@@ -207,6 +180,24 @@ export default class CustomSelect extends React.PureComponent {
     const loadedOptions = await options({searchValue})
 
     this.setState({loadedOptions})
+  }
+
+  hayaSelectOption({key, loadedOption}) {
+    const {currentOptions} = digs(this.state, "currentOptions")
+    const selected = Boolean(currentOptions.find((currentOption) => currentOption.value == loadedOption.value))
+
+    return (
+      <div
+        className="haya-select-option"
+        data-selected={selected}
+        data-value={digg(loadedOption, "value")}
+        key={key}
+        onClick={(e) => this.onOptionClicked(e, loadedOption)}
+        style={{cursor: "pointer"}}
+      >
+        {this.presentOption(loadedOption)}
+      </div>
+    )
   }
 
   loadOptionsFromArray(options, searchValue) {
@@ -273,7 +264,6 @@ export default class CustomSelect extends React.PureComponent {
   optionsContainer() {
     const {optionsContainerRef} = digs(this, "endOfSelectRef", "optionsContainerRef")
     const {
-      currentOptions,
       loadedOptions,
       optionsLeft,
       optionsTop,
@@ -282,7 +272,6 @@ export default class CustomSelect extends React.PureComponent {
       scrollTop
     } = digs(
       this.state,
-      "currentOptions",
       "loadedOptions",
       "currentOptions",
       "opened",
@@ -306,12 +295,10 @@ export default class CustomSelect extends React.PureComponent {
       >
         <EventListener event="click" onCalled={this.onWindowClicked} target={window} />
         {loadedOptions?.map((loadedOption) =>
-          <LoadedOption
-            currentOptions={currentOptions}
-            key={`loaded-option-${digg(loadedOption.value)}`}
-            loadedOption={loadedOption}
-            onClick={this.onOptionClicked}
-          />
+          this.hayaSelectOption({
+            key: `loaded-option-${digg(loadedOption.value)}`,
+            loadedOption
+          })
         )}
         {loadedOptions?.length === 0 &&
           <div className="haya-select-no-options-container">
@@ -326,26 +313,87 @@ export default class CustomSelect extends React.PureComponent {
     e.preventDefault()
     e.stopPropagation()
 
-    const {onChange} = this.props
+    const {onChange, toggleOptions} = this.props
     const {multiple} = digs(this.props, "multiple")
 
-    this.setState((prevState) => {
-      const existingOption = prevState.currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
+    this.setState(
+      (prevState) => {
+        const existingOption = prevState.currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
+        const newState = {}
+        const {toggled} = digs(prevState, "toggled")
+        const newToggled = {...toggled}
 
-      if (existingOption) {
-        return {
-          currentOptions: prevState.currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
-        }
-      } else {
-        if (multiple) {
-          return {currentOptions: prevState.currentOptions.concat([loadedOption])}
+        if (existingOption) {
+          if (toggleOptions) {
+            const currentIndex = digg(toggled, loadedOption.value)
+
+            if (currentIndex >= (toggleOptions.length - 1)) {
+              delete newToggled[loadedOption.value]
+
+              newState.currentOptions = prevState.currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
+            } else {
+              newToggled[loadedOption.value] = toggled[loadedOption.value] + 1
+            }
+
+            newState.toggled = newToggled
+          } else {
+            newState.currentOptions = prevState.currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
+          }
         } else {
-          return {currentOptions: [loadedOption]}
+          if (toggleOptions) {
+            newToggled[loadedOption.value] = 0
+            newState.toggled = newToggled
+          }
+
+          if (multiple || toggleOptions) {
+            newState.currentOptions = prevState.currentOptions.concat([loadedOption])
+          } else {
+            newState.currentOptions = [loadedOption]
+          }
+        }
+
+        return newState
+      },
+      () => {
+        if (onChange) {
+          const toggles = {}
+
+          for(const toggleKey in this.state.toggled) {
+            const toggleValue = digg(this, "state", "toggled", toggleKey)
+            const toggleOption = digg(this, "props", "toggleOptions", toggleValue)
+
+            toggles[toggleKey] = toggleOption
+          }
+
+          onChange({
+            options: this.state.currentOptions,
+            toggles
+          })
         }
       }
-    })
+    )
 
     if (!multiple) this.closeOptions()
-    if (onChange) onChange(loadedOption)
+
+  }
+
+  presentOption = (currentValue) => {
+    const {toggleOptions} = this.props
+    const {toggled} = digs(this.state, "toggled")
+
+    return (
+      <div>
+        {toggleOptions && !(currentValue.value in toggled) &&
+          <i className="fa fa-fw" />
+        }
+        {toggleOptions && (currentValue.value in toggled) &&
+          <i className={`fa fa-fw fa-${toggleOptions[toggled[currentValue.value]].icon}`} />
+        }
+        {currentValue.text}
+        {("html" in currentValue) &&
+          <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
+        }
+      </div>
+    )
   }
 }
