@@ -79,9 +79,9 @@ export default class CustomSelect extends React.PureComponent {
   }
 
   componentDidMount() {
-    const {attribute, defaultValuesFromOptions, model, options} = this.props
+    const {attribute, defaultValue, defaultValuesFromOptions, model, options} = this.props
 
-    if ((defaultValuesFromOptions || (attribute && model)) && typeof options == "function") {
+    if (((defaultValue || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
       this.loadDefaultValuesFromOptionsCallback()
     }
   }
@@ -143,9 +143,10 @@ export default class CustomSelect extends React.PureComponent {
   }
 
   defaultValues () {
-    const {attribute, defaultValuesFromOptions, model} = this.props
+    const {attribute, defaultValue, defaultValuesFromOptions, model} = this.props
 
     if (defaultValuesFromOptions) return defaultValuesFromOptions
+    if (defaultValue) return defaultValue
 
     if (attribute && model) {
       if (!(attribute in model)) throw new Error(`No such attribute on ${model.modelClassData().name}: ${attribute}`)
