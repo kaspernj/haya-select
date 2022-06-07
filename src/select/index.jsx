@@ -399,14 +399,14 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   presentOption = (currentValue) => {
-    const {toggleOptions} = this.props
+    const {toggleOptions} = this.props || {}
     const {toggled} = digs(this.state, "toggled")
 
     return (
       <div
         className="haya-select-option-presentation"
-        data-toggle-icon={toggleOptions[toggled[currentValue.value]]?.icon}
-        data-toggle-value={toggleOptions[toggled[currentValue.value]]?.value}
+        data-toggle-icon={toggleOptions && toggled && toggleOptions[toggled[currentValue.value]]?.icon}
+        data-toggle-value={toggleOptions && toggled && toggleOptions[toggled[currentValue.value]]?.value}
         data-value={currentValue.value}
       >
         {toggleOptions && !(currentValue.value in toggled) &&
