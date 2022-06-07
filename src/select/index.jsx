@@ -14,8 +14,9 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
-export default class CustomSelect extends React.PureComponent {
+export default class HayaSelect extends React.PureComponent {
   static defaultProps = {
+    defaultToggled: {},
     multiple: false,
     search: false
   }
@@ -23,13 +24,16 @@ export default class CustomSelect extends React.PureComponent {
   static propTypes = {
     attribute: PropTypes.string,
     className: PropTypes.string,
+    defaultToggled: PropTypes.object,
     defaultValue: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     defaultValues: PropTypes.array,
     defaultValuesFromOptions: PropTypes.array,
+    id: PropTypes.node,
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
     onChange: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
+    placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
       icon: PropTypes.string.isRequired,
@@ -51,7 +55,7 @@ export default class CustomSelect extends React.PureComponent {
     optionsWidth: undefined,
     scrollLeft: undefined,
     scrollTop: undefined,
-    toggled: {}
+    toggled: digg(this, "props", "defaultToggled")
   }
 
   defaultCurrentOptions() {
@@ -88,7 +92,22 @@ export default class CustomSelect extends React.PureComponent {
 
   render() {
     const {endOfSelectRef} = digs(this, "endOfSelectRef")
-    const {attribute, className, defaultValue, defaultValues, model, multiple, onChange, options, search, toggleOptions, ...restProps} = this.props
+    const {
+      attribute,
+      className,
+      defaultToggled,
+      defaultValue,
+      defaultValues,
+      id,
+      model,
+      multiple,
+      onChange,
+      options,
+      placeholder,
+      search,
+      toggleOptions,
+      ...restProps
+    } = this.props
     const {currentOptions, opened} = digs(this.state, "currentOptions", "opened")
     const BodyPortal = config.getBodyPortal()
 
@@ -120,17 +139,19 @@ export default class CustomSelect extends React.PureComponent {
             <>
               {currentOptions.length == 0 &&
                 <div style={{color: "grey"}}>
-                  {I18n.t("haya_select.nothing_selected")}
+                  {placeholder || I18n.t("haya_select.nothing_selected")}
                 </div>
               }
               {currentOptions.map((currentOption) =>
                 <div className="current-option" key={`current-value-${digg(currentOption, "value")}`}>
-                  <input
-                    id={idForComponent(this)}
-                    name={nameForComponentWithMultiple(this)}
-                    type="hidden"
-                    value={digg(currentOption, "value")}
-                  />
+                  {nameForComponentWithMultiple(this) &&
+                    <input
+                      id={idForComponent(this)}
+                      name={nameForComponentWithMultiple(this)}
+                      type="hidden"
+                      value={digg(currentOption, "value")}
+                    />
+                  }
                   {this.presentOption(currentOption)}
                 </div>
               )}
@@ -375,7 +396,6 @@ export default class CustomSelect extends React.PureComponent {
     )
 
     if (!multiple) this.closeOptions()
-
   }
 
   presentOption = (currentValue) => {
@@ -383,7 +403,12 @@ export default class CustomSelect extends React.PureComponent {
     const {toggled} = digs(this.state, "toggled")
 
     return (
-      <div>
+      <div
+        className="haya-select-option-presentation"
+        data-toggle-icon={toggleOptions[toggled[currentValue.value]]?.icon}
+        data-toggle-value={toggleOptions[toggled[currentValue.value]]?.value}
+        data-value={currentValue.value}
+      >
         {toggleOptions && !(currentValue.value in toggled) &&
           <i className="fa fa-fw" />
         }
