@@ -3,6 +3,7 @@ import classNames from "classnames"
 import config from "../config.js"
 import {digg, digs} from "diggerize"
 import debounce from "debounce"
+import EventListener from "@kaspernj/api-maker/src/event-listener"
 import {idForComponent, nameForComponent} from "@kaspernj/api-maker-inputs"
 import PropTypes from "prop-types"
 
