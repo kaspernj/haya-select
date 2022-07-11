@@ -5,7 +5,7 @@ import {digg, digs} from "diggerize"
 import debounce from "debounce"
 import EventListener from "@kaspernj/api-maker/src/event-listener"
 import idForComponent from "@kaspernj/api-maker-inputs/src/id-for-component.mjs"
-import nameForComponent from "@kaspernj/api-maker-inputs/src/id-for-component.mjs"
+import nameForComponent from "@kaspernj/api-maker-inputs/src/name-for-component.mjs"
 import PropTypes from "prop-types"
 
 const nameForComponentWithMultiple = (component) => {
