@@ -11,7 +11,7 @@ import PropTypes from "prop-types"
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
 
-  if (component.props.multiple) name += "[]"
+  if (component.props.multiple && name) name += "[]"
 
   return name
 }
@@ -85,9 +85,9 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   componentDidMount() {
-    const {attribute, defaultValue, defaultValuesFromOptions, model, options} = this.props
+    const {attribute, defaultValue, defaultValues, defaultValuesFromOptions, model, options} = this.props
 
-    if (((defaultValue || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
+    if (((defaultValue || defaultValues || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
       this.loadDefaultValuesFromOptionsCallback()
     }
   }
@@ -166,10 +166,11 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   defaultValues () {
-    const {attribute, defaultValue, defaultValuesFromOptions, model} = this.props
+    const {attribute, defaultValue, defaultValues, defaultValuesFromOptions, model} = this.props
 
     if (defaultValuesFromOptions) return defaultValuesFromOptions
     if (defaultValue) return defaultValue
+    if (defaultValues) return defaultValues
 
     if (attribute && model) {
       if (!(attribute in model)) throw new Error(`No such attribute on ${model.modelClassData().name}: ${attribute}`)
