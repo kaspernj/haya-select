@@ -1,15 +1,22 @@
-.haya-select-current-selected {
-  background-color: #fff;
-  border: 1px solid #999;
-  cursor: pointer;
-  padding: 5px;
+.haya-select {
+  .haya-select-current-selected {
+    display: flex;
+    background-color: #fff;
+    border: 1px solid #999;
+    cursor: pointer;
+    padding: 5px;
 
-  &[data-opened="false"] {
-    border-radius: 4px;
-  }
+    &[data-opened="false"] {
+      border-radius: 4px;
+    }
 
-  &[data-opened="true"] {
-    border-radius: 4px 4px 0 0;
+    &[data-opened="true"] {
+      border-radius: 4px 4px 0 0;
+    }
+
+    .current-option + .current-option {
+      margin-left: 6px;
+    }
   }
 }
 
@@ -38,5 +45,11 @@
     &:hover {
       background-color: steelblue;
     }
+  }
+
+  .haya-select--option-group {
+    padding: 4px 8px;
+    color: #000;
+    font-weight: bold;
   }
 }

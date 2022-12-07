@@ -6,7 +6,10 @@ import debounce from "debounce"
 import EventListener from "@kaspernj/api-maker/src/event-listener"
 import idForComponent from "@kaspernj/api-maker/src/inputs/id-for-component.mjs"
 import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.mjs"
+import Option from "./option"
+import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
+import React from "react"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -117,6 +120,7 @@ export default class HayaSelect extends React.PureComponent {
       <div
         className={classNames("haya-select", className)}
         data-id={idForComponent(this)}
+        data-toggles={Boolean(toggleOptions)}
         {...restProps}
       >
         {opened &&
@@ -145,16 +149,25 @@ export default class HayaSelect extends React.PureComponent {
                 </div>
               }
               {currentOptions.map((currentOption) =>
-                <div className="current-option" key={`current-value-${digg(currentOption, "value")}`}>
-                  {nameForComponentWithMultiple(this) &&
-                    <input
-                      id={idForComponent(this)}
-                      name={nameForComponentWithMultiple(this)}
-                      type="hidden"
-                      value={digg(currentOption, "value")}
-                    />
+                <div className="current-option" key={currentOption.key || `current-value-${currentOption.value}`}>
+                  {currentOption.type == "group" &&
+                    <div style={{fontWeight: "bold"}}>
+                      {currentOption.text}
+                    </div>
                   }
-                  {this.presentOption(currentOption)}
+                  {currentOption.type != "group" &&
+                    <>
+                      {nameForComponentWithMultiple(this) &&
+                        <input
+                          id={idForComponent(this)}
+                          name={nameForComponentWithMultiple(this)}
+                          type="hidden"
+                          value={digg(currentOption, "value")}
+                        />
+                      }
+                      {this.presentOption(currentOption)}
+                    </>
+                  }
                 </div>
               )}
             </>
@@ -208,21 +221,11 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   hayaSelectOption({key, loadedOption}) {
-    const {currentOptions} = digs(this.state, "currentOptions")
-    const selected = Boolean(currentOptions.find((currentOption) => currentOption.value == loadedOption.value))
+    if (loadedOption.type == "group") {
+      return <OptionGroup key={key} option={loadedOption} />
+    }
 
-    return (
-      <div
-        className="haya-select-option"
-        data-selected={selected}
-        data-value={digg(loadedOption, "value")}
-        key={key}
-        onClick={(e) => this.onOptionClicked(e, loadedOption)}
-        style={{cursor: "pointer"}}
-      >
-        {this.presentOption(loadedOption)}
-      </div>
-    )
+    return <Option currentOptions={this.state.currentOptions} key={key} option={loadedOption} onOptionClicked={this.onOptionClicked} presentOption={this.presentOption} />
   }
 
   loadOptionsFromArray(options, searchValue) {
@@ -270,9 +273,7 @@ export default class HayaSelect extends React.PureComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => {
-        digg(this, "searchTextInputRef", "current").focus()
-      }
+      () => digg(this, "searchTextInputRef", "current").focus()
     )
   }
 
@@ -321,7 +322,7 @@ export default class HayaSelect extends React.PureComponent {
         <EventListener event="click" onCalled={this.onWindowClicked} target={window} />
         {loadedOptions?.map((loadedOption) =>
           this.hayaSelectOption({
-            key: `loaded-option-${digg(loadedOption.value)}`,
+            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
             loadedOption
           })
         )}
