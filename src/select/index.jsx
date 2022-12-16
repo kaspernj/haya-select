@@ -47,6 +47,10 @@ export default class HayaSelect extends React.PureComponent {
     }))
   }
 
+  p = fetchingObject(() => this.props)
+  s = fetchingObject(() => this.state)
+  t = fetchingObject(this)
+
   endOfSelectRef = React.createRef()
   optionsContainerRef = React.createRef()
   searchTextInputRef = React.createRef()
@@ -65,7 +69,7 @@ export default class HayaSelect extends React.PureComponent {
 
   defaultCurrentOptions() {
     const {defaultValue, defaultValues} = this.props
-    const {options} = digs(this.props, "options")
+    const {options} = this.p
 
     if (!Array.isArray(options)) return []
 
@@ -76,7 +80,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   defaultLoadedOptions() {
-    const {options} = digs(this.props, "options")
+    const {options} = this.p
 
     if (typeof options == "function") {
       return undefined
@@ -96,7 +100,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   render() {
-    const {endOfSelectRef} = digs(this, "endOfSelectRef")
+    const {endOfSelectRef} = this.t
     const {
       attribute,
       className,
@@ -113,7 +117,7 @@ export default class HayaSelect extends React.PureComponent {
       toggleOptions,
       ...restProps
     } = this.props
-    const {currentOptions, opened} = digs(this.state, "currentOptions", "opened")
+    const {currentOptions, opened} = this.s
     const BodyPortal = config.getBodyPortal()
 
     return (
@@ -208,7 +212,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   loadOptions = async () => {
-    const {options} = digs(this.props, "options")
+    const {options} = this.p
     const searchValue = digg(this, "searchTextInputRef", "current")?.value
 
     if (Array.isArray(options)) {
@@ -225,7 +229,14 @@ export default class HayaSelect extends React.PureComponent {
       return <OptionGroup key={key} option={loadedOption} />
     }
 
-    return <Option currentOptions={this.state.currentOptions} key={key} option={loadedOption} onOptionClicked={this.onOptionClicked} presentOption={this.presentOption} />
+    return <Option
+      currentOptions={this.state.currentOptions}
+      icon={this.iconForOption(loadedOption)}
+      key={key}
+      option={loadedOption}
+      onOptionClicked={this.onOptionClicked}
+      presentOption={this.presentOption}
+    />
   }
 
   loadOptionsFromArray(options, searchValue) {
@@ -239,7 +250,7 @@ export default class HayaSelect extends React.PureComponent {
     e.preventDefault()
     e.stopPropagation()
 
-    const {opened} = digs(this.state, "opened")
+    const {opened} = this.s
 
     if (opened) {
       this.closeOptions()
@@ -258,7 +269,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   openOptions() {
-    const {endOfSelectRef} = digs(this, "endOfSelectRef")
+    const {endOfSelectRef} = this.t
     const position = endOfSelectRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
 
@@ -278,8 +289,8 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   onWindowClicked = (e) => {
-    const {optionsContainerRef} = digs(this, "optionsContainerRef")
-    const {opened} = digs(this.state, "opened")
+    const {optionsContainerRef} = this.t
+    const {opened} = this.s
 
     // If options are open and a click is made outside of the options container
     if (opened && optionsContainerRef.current && !optionsContainerRef.current?.contains(e.target)) {
@@ -288,25 +299,8 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   optionsContainer() {
-    const {optionsContainerRef} = digs(this, "endOfSelectRef", "optionsContainerRef")
-    const {
-      loadedOptions,
-      optionsLeft,
-      optionsTop,
-      optionsWidth,
-      scrollLeft,
-      scrollTop
-    } = digs(
-      this.state,
-      "loadedOptions",
-      "currentOptions",
-      "opened",
-      "optionsLeft",
-      "optionsTop",
-      "optionsWidth",
-      "scrollLeft",
-      "scrollTop"
-    )
+    const {optionsContainerRef} = this.t
+    const {loadedOptions, optionsLeft, optionsTop, optionsWidth, scrollLeft, scrollTop} = this.s
 
     return (
       <div
@@ -340,7 +334,7 @@ export default class HayaSelect extends React.PureComponent {
     e.stopPropagation()
 
     const {onChange, toggleOptions} = this.props
-    const {multiple} = digs(this.props, "multiple")
+    const {multiple} = this.p
 
     this.setState(
       (prevState) => {
@@ -402,9 +396,21 @@ export default class HayaSelect extends React.PureComponent {
     if (!multiple) this.closeOptions()
   }
 
+  iconForOption(option) {
+    const {toggleOptions} = this.props || {}
+    const {toggled} = this.s
+
+    if (toggleOptions && (option.value in toggled)) {
+      const icon = toggleOptions[toggled[option.value]].icon
+
+      return icon
+    }
+  }
+
   presentOption = (currentValue) => {
     const {toggleOptions} = this.props || {}
-    const {toggled} = digs(this.state, "toggled")
+    const {toggled} = this.s
+    const icon = this.iconForOption(currentValue)
 
     return (
       <div
@@ -417,7 +423,7 @@ export default class HayaSelect extends React.PureComponent {
           <i className="fa fa-fw" />
         }
         {toggleOptions && (currentValue.value in toggled) &&
-          <i className={`fa fa-fw fa-${toggleOptions[toggled[currentValue.value]].icon}`} />
+          <i className={`fa fa-fw fa-${icon}`} />
         }
         {currentValue.text}
         {("html" in currentValue) &&

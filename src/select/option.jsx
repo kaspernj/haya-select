@@ -5,10 +5,13 @@ import React from "react"
 export default class Option extends React.PureComponent {
   static propTypes = {
     currentOptions: PropTypes.array.isRequired,
+    icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
     option: PropTypes.object.isRequired,
     presentOption: PropTypes.func.isRequired
   }
+
+  style = {cursor: "pointer"}
 
   render() {
     const {currentOptions, option} = digs(this.props, "currentOptions", "option")
@@ -20,7 +23,7 @@ export default class Option extends React.PureComponent {
         data-selected={selected}
         data-value={option.value}
         onClick={this.onClick}
-        style={{cursor: "pointer"}}
+        style={this.style}
       >
         {this.props.presentOption(option)}
       </div>

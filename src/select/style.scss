@@ -1,10 +1,13 @@
 .haya-select {
   .haya-select-current-selected {
     display: flex;
+    flex-wrap: wrap;
     background-color: #fff;
     border: 1px solid #999;
     cursor: pointer;
-    padding: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
 
     &[data-opened="false"] {
       border-radius: 4px;
@@ -14,8 +17,8 @@
       border-radius: 4px 4px 0 0;
     }
 
-    .current-option + .current-option {
-      margin-left: 6px;
+    .current-option {
+      margin-right: 6px;
     }
   }
 }
