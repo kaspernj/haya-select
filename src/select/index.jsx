@@ -37,6 +37,7 @@ export default class HayaSelect extends React.PureComponent {
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
     onChange: PropTypes.func,
+    onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
@@ -111,6 +112,7 @@ export default class HayaSelect extends React.PureComponent {
       model,
       multiple,
       onChange,
+      onOptionsClosed,
       options,
       placeholder,
       search,
@@ -266,6 +268,8 @@ export default class HayaSelect extends React.PureComponent {
       loadedOptions: undefined,
       opened: false
     })
+
+    if (this.props.onOptionsClosed) this.props.onOptionsClosed()
   }
 
   openOptions() {
@@ -294,7 +298,7 @@ export default class HayaSelect extends React.PureComponent {
 
     // If options are open and a click is made outside of the options container
     if (opened && optionsContainerRef.current && !optionsContainerRef.current?.contains(e.target)) {
-      this.setState({opened: false})
+      this.closeOptions()
     }
   }
 
