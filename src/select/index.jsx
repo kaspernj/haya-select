@@ -10,6 +10,7 @@ import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import React from "react"
+import {anythingDifferent} from "set-state-compare"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -21,7 +22,6 @@ const nameForComponentWithMultiple = (component) => {
 
 export default class HayaSelect extends React.PureComponent {
   static defaultProps = {
-    defaultToggled: {},
     multiple: false,
     search: false
   }
@@ -41,11 +41,13 @@ export default class HayaSelect extends React.PureComponent {
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
+    toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
       icon: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired
-    }))
+    })),
+    values: PropTypes.array
   }
 
   p = fetchingObject(() => this.props)
@@ -65,18 +67,19 @@ export default class HayaSelect extends React.PureComponent {
     optionsWidth: undefined,
     scrollLeft: undefined,
     scrollTop: undefined,
-    toggled: digg(this, "props", "defaultToggled")
+    toggled: this.defaultToggled()
   }
 
   defaultCurrentOptions() {
-    const {defaultValue, defaultValues} = this.props
+    const {defaultValue, defaultValues, values} = this.props
     const {options} = this.p
 
     if (!Array.isArray(options)) return []
 
     return options.filter(({value}) =>
       (defaultValue && value == defaultValue) ||
-        (defaultValues && defaultValues.includes(value))
+        (defaultValues && defaultValues.includes(value)) ||
+        (values && values.includes(value))
     )
   }
 
@@ -92,12 +95,40 @@ export default class HayaSelect extends React.PureComponent {
     throw new Error(`Unknown type of options: ${typeof options}`)
   }
 
+  defaultToggled() {
+    return this.props.defaultToggled || this.props.toggled || {}
+  }
+
   componentDidMount() {
     const {attribute, defaultValue, defaultValues, defaultValuesFromOptions, model, options} = this.props
 
     if (((defaultValue || defaultValues || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
       this.loadDefaultValuesFromOptionsCallback()
     }
+  }
+
+  componentDidUpdate() {
+    this.setState((prevState) => {
+      const stateUpdate = {}
+
+      if ("values" in this.props) {
+        const newCurrentOptions = this.defaultCurrentOptions()
+
+        if (anythingDifferent(prevState.currentOptions, newCurrentOptions)) {
+          stateUpdate.currentOptions = newCurrentOptions
+        }
+      }
+
+      if ("toggled" in this.props) {
+        const newToggled = digg(this, "props", "toggled")
+
+        if (anythingDifferent(prevState.toggled, newToggled)) {
+          stateUpdate.toggled = newToggled
+        }
+      }
+
+      return stateUpdate
+    })
   }
 
   render() {
@@ -269,7 +300,9 @@ export default class HayaSelect extends React.PureComponent {
       opened: false
     })
 
-    if (this.props.onOptionsClosed) this.props.onOptionsClosed()
+    if (this.props.onOptionsClosed) {
+      this.props.onOptionsClosed({options: this.state.currentOptions})
+    }
   }
 
   openOptions() {
