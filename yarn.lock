@@ -21,3 +21,8 @@ fetching-object@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/fetching-object/-/fetching-object-1.0.1.tgz#0182826488d05b9008b5cc70b7d92bf4b9f908b4"
   integrity sha512-TzN9rlL9ZGzTbHClKAT+bPYLgKmb4pDTyIJWWmVWQYwVROSXe12dO+l/rosN2+NBLOMDjMu3neTRNhjyj6UMRg==
+
+set-state-compare@^1.0.19:
+  version "1.0.19"
+  resolved "https://registry.yarnpkg.com/set-state-compare/-/set-state-compare-1.0.19.tgz#5c5dfca912fd45098d514905206ad95fa783692d"
+  integrity sha512-+x19TrIvPG+b0ZAHx3gvLMu38tuGtIVpN55lYjnV6l0XiUkKvfBfOWUf2MFjEh4PJ4bl0/y/e26rLgtwa68b1Q==
