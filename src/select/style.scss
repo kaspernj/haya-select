@@ -14,7 +14,11 @@
       border-radius: 4px;
     }
 
-    &[data-opened="true"] {
+    &[data-opened="true"][data-options-placement="above"] {
+      border-radius: 0 0 4px 4px;
+    }
+
+    &[data-opened="true"][data-options-placement="below"] {
       border-radius: 4px 4px 0 0;
     }
 
