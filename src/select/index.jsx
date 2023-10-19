@@ -10,7 +10,7 @@ import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import React from "react"
-import {anythingDifferent} from "set-state-compare"
+import {anythingDifferent, Shape} from "set-state-compare"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -51,24 +51,27 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   p = fetchingObject(() => this.props)
-  s = fetchingObject(() => this.state)
+  s = fetchingObject(() => this.shape)
   t = fetchingObject(this)
 
   endOfSelectRef = React.createRef()
   optionsContainerRef = React.createRef()
+  currentSelectedRef = React.createRef()
   searchTextInputRef = React.createRef()
 
-  state = {
+  shape = new Shape(this, {
     currentOptions: this.defaultCurrentOptions(),
     loadedOptions: this.defaultLoadedOptions(),
     opened: false,
     optionsLeft: undefined,
+    optionsPlacement: undefined,
     optionsTop: undefined,
+    optionsVisibility: undefined,
     optionsWidth: undefined,
     scrollLeft: undefined,
     scrollTop: undefined,
     toggled: this.defaultToggled()
-  }
+  })
 
   defaultCurrentOptions() {
     const {defaultValue, defaultValues, values} = this.props
@@ -105,34 +108,40 @@ export default class HayaSelect extends React.PureComponent {
     if (((defaultValue || defaultValues || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
       this.loadDefaultValuesFromOptionsCallback()
     }
+
+    window.addEventListener("resize", this.t.onAnythingResizedDebounced, true)
+    window.addEventListener("scroll", this.t.onAnythingScrolledDebounced, true)
   }
 
   componentDidUpdate() {
-    this.setState((prevState) => {
-      const stateUpdate = {}
+    const newState = {}
 
-      if ("values" in this.props) {
-        const newCurrentOptions = this.defaultCurrentOptions()
+    if ("values" in this.props) {
+      const newCurrentOptions = this.defaultCurrentOptions()
 
-        if (anythingDifferent(prevState.currentOptions, newCurrentOptions)) {
-          stateUpdate.currentOptions = newCurrentOptions
-        }
+      if (anythingDifferent(this.shape.currentOptions, newCurrentOptions)) {
+        newState.currentOptions = newCurrentOptions
       }
+    }
 
-      if ("toggled" in this.props) {
-        const newToggled = digg(this, "props", "toggled")
+    if ("toggled" in this.props) {
+      const newToggled = this.p.toggled
 
-        if (anythingDifferent(prevState.toggled, newToggled)) {
-          stateUpdate.toggled = newToggled
-        }
+      if (anythingDifferent(this.shape.toggled, newToggled)) {
+        newState.toggled = newToggled
       }
+    }
 
-      return stateUpdate
-    })
+    this.shape.set(newState)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.t.onAnythingResizedDebounced)
+    window.removeEventListener("scroll", this.t.onAnythingScrolledDebounced)
   }
 
   render() {
-    const {endOfSelectRef} = this.t
+    const {currentSelectedRef, endOfSelectRef} = this.t
     const {
       attribute,
       className,
@@ -150,7 +159,7 @@ export default class HayaSelect extends React.PureComponent {
       toggleOptions,
       ...restProps
     } = this.props
-    const {currentOptions, opened} = this.s
+    const {currentOptions, opened, optionsPlacement} = this.s
     const BodyPortal = config.getBodyPortal()
 
     return (
@@ -168,14 +177,16 @@ export default class HayaSelect extends React.PureComponent {
         <div
           className="haya-select-current-selected"
           data-opened={opened}
-          onClick={this.onSelectClicked}
+          data-options-placement={optionsPlacement}
+          onClick={this.t.onSelectClicked}
+          ref={currentSelectedRef}
         >
           {opened &&
             <input
               className="haya-select-search-text-input"
-              onChange={digg(this, "onSearchTextInputChangedDebounced")}
+              onChange={this.tonSearchTextInputChangedDebounced}
               placeholder={I18n.t("haya_select.search_dot_dot_dot")} type="text"
-              ref={digg(this, "searchTextInputRef")}
+              ref={this.t.searchTextInputRef}
             />
           }
           {!opened &&
@@ -235,18 +246,16 @@ export default class HayaSelect extends React.PureComponent {
     if (!defaultValues) return
 
     const result = await this.props.options({
-      searchValue: digg(this, "searchTextInputRef", "current")?.value,
+      searchValue: digg(this.t.searchTextInputRef, "current")?.value,
       values: defaultValues
     })
 
-    this.setState((prevState) => ({
-      currentOptions: prevState.currentOptions.concat(result)
-    }))
+    this.shape.set({currentOptions: this.shape.currentOptions.concat(result)})
   }
 
   loadOptions = async () => {
     const {options} = this.p
-    const searchValue = digg(this, "searchTextInputRef", "current")?.value
+    const searchValue = digg(this.t.searchTextInputRef, "current")?.value
 
     if (Array.isArray(options)) {
       return this.loadOptionsFromArray(options, searchValue)
@@ -254,7 +263,7 @@ export default class HayaSelect extends React.PureComponent {
 
     const loadedOptions = await options({searchValue})
 
-    this.setState({loadedOptions})
+    this.shape.set({loadedOptions})
   }
 
   hayaSelectOption({key, loadedOption}) {
@@ -263,7 +272,7 @@ export default class HayaSelect extends React.PureComponent {
     }
 
     return <Option
-      currentOptions={this.state.currentOptions}
+      currentOptions={this.shape.currentOptions}
       icon={this.iconForOption(loadedOption)}
       key={key}
       option={loadedOption}
@@ -276,7 +285,7 @@ export default class HayaSelect extends React.PureComponent {
     const lowerSearchValue = searchValue?.toLowerCase()
     const loadedOptions = options.filter(({text}) => !lowerSearchValue || text.toLowerCase().includes(lowerSearchValue))
 
-    this.setState({loadedOptions})
+    this.shape.set({loadedOptions})
   }
 
   onSelectClicked = (e) => {
@@ -292,38 +301,109 @@ export default class HayaSelect extends React.PureComponent {
     }
   }
 
-  onSearchTextInputChangedDebounced = debounce(digg(this, "loadOptions"), 200)
+  onSearchTextInputChangedDebounced = debounce(this.t.loadOptions, 200)
 
   closeOptions() {
-    this.setState({
+    this.shape.set({
       loadedOptions: undefined,
       opened: false
     })
 
     if (this.props.onOptionsClosed) {
-      this.props.onOptionsClosed({options: this.state.currentOptions})
+      this.props.onOptionsClosed({options: this.shape.currentOptions})
     }
   }
 
   openOptions() {
-    const {endOfSelectRef} = this.t
-    const position = endOfSelectRef.current.getBoundingClientRect()
-    const {left, top, width} = digs(position, "left", "top", "width")
-
+    this.setOptionsPositionBelow()
     this.loadOptions()
+    this.shape.set(
+      {opened: true},
+      () => {
+        this.focusTextInput()
+        this.setOptionsPositionAboveIfOutsideScreen()
+      }
+    )
+  }
 
-    this.setState(
+  focusTextInput = () => digg(this.t.searchTextInputRef, "current").focus()
+
+  setOptionsPosition() {
+    this.setOptionsPositionBelow()
+    this.setOptionsPositionAboveIfOutsideScreen()
+  }
+
+  setOptionsPositionAboveIfOutsideScreen() {
+    const {optionsContainerRef} = this.t
+    const {optionsTop} = this.s
+    const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
+    const scrollTop = document.documentElement.scrollTop
+    const optionsTotalHeight = optionsHeight + optionsTop + scrollTop
+
+    if (window.innerHeight < optionsTotalHeight) {
+      this.setOptionsPositionAbove()
+    } else {
+      this.shape.set({optionsVisibility: "visible"})
+    }
+  }
+
+  setOptionsPositionAbove() {
+    const {optionsContainerRef, currentSelectedRef} = this.t
+    const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
+    const position = currentSelectedRef.current.getBoundingClientRect()
+    const {left, top, width} = digs(position, "left", "top", "width")
+    const optionsTop = top - optionsHeight + 2
+
+    this.shape.set(
       {
         opened: true,
         optionsLeft: left,
-        optionsTop: top,
+        optionsPlacement: "above",
+        optionsTop,
+        optionsVisibility: "visible",
         optionsWidth: width,
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => digg(this, "searchTextInputRef", "current").focus()
+      () => digg(this.t.searchTextInputRef, "current").focus()
     )
   }
+
+  setOptionsPositionBelow() {
+    const {endOfSelectRef} = this.t
+    const position = endOfSelectRef.current.getBoundingClientRect()
+    const {left, top, width} = digs(position, "left", "top", "width")
+
+    this.shape.set(
+      {
+        opened: true,
+        optionsLeft: left,
+        optionsPlacement: "below",
+        optionsTop: top,
+        optionsVisibility: "hidden",
+        optionsWidth: width,
+        scrollLeft: document.documentElement.scrollLeft,
+        scrollTop: document.documentElement.scrollTop
+      },
+      () => digg(this.t.searchTextInputRef, "current").focus()
+    )
+  }
+
+  onAnythingResized = (e) => {
+    if (this.s.opened) {
+      this.setOptionsPosition()
+    }
+  }
+
+  onAnythingResizedDebounced = debounce(this.t.onAnythingResized, 25)
+
+  onAnythingScrolled = (e) => {
+    if (this.s.opened) {
+      this.setOptionsPosition()
+    }
+  }
+
+  onAnythingScrolledDebounced = debounce(this.t.onAnythingScrolled, 25)
 
   onWindowClicked = (e) => {
     const {optionsContainerRef} = this.t
@@ -337,7 +417,7 @@ export default class HayaSelect extends React.PureComponent {
 
   optionsContainer() {
     const {optionsContainerRef} = this.t
-    const {loadedOptions, optionsLeft, optionsTop, optionsWidth, scrollLeft, scrollTop} = this.s
+    const {loadedOptions, optionsLeft, optionsTop, optionsVisibility, optionsWidth, scrollLeft, scrollTop} = this.s
 
     return (
       <div
@@ -347,6 +427,7 @@ export default class HayaSelect extends React.PureComponent {
         style={{
           left: optionsLeft + scrollLeft,
           top: optionsTop + scrollTop - 1,
+          visibility: optionsVisibility,
           width: optionsWidth,
         }}
       >
@@ -372,63 +453,57 @@ export default class HayaSelect extends React.PureComponent {
 
     const {onChange, toggleOptions} = this.props
     const {multiple} = this.p
+    const {currentOptions, toggled} = this.shape
+    const newState = {}
+    const existingOption = currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
+    const newToggled = {...toggled}
 
-    this.setState(
-      (prevState) => {
-        const existingOption = prevState.currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
-        const newState = {}
-        const {toggled} = digs(prevState, "toggled")
-        const newToggled = {...toggled}
+    if (existingOption) {
+      if (toggleOptions) {
+        const currentIndex = digg(toggled, loadedOption.value)
 
-        if (existingOption) {
-          if (toggleOptions) {
-            const currentIndex = digg(toggled, loadedOption.value)
+        if (currentIndex >= (toggleOptions.length - 1)) {
+          delete newToggled[loadedOption.value]
 
-            if (currentIndex >= (toggleOptions.length - 1)) {
-              delete newToggled[loadedOption.value]
-
-              newState.currentOptions = prevState.currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
-            } else {
-              newToggled[loadedOption.value] = toggled[loadedOption.value] + 1
-            }
-
-            newState.toggled = newToggled
-          } else {
-            newState.currentOptions = prevState.currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
-          }
+          newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
         } else {
-          if (toggleOptions) {
-            newToggled[loadedOption.value] = 0
-            newState.toggled = newToggled
-          }
-
-          if (multiple || toggleOptions) {
-            newState.currentOptions = prevState.currentOptions.concat([loadedOption])
-          } else {
-            newState.currentOptions = [loadedOption]
-          }
+          newToggled[loadedOption.value] = toggled[loadedOption.value] + 1
         }
 
-        return newState
-      },
-      () => {
-        if (onChange) {
-          const toggles = {}
-
-          for(const toggleKey in this.state.toggled) {
-            const toggleValue = digg(this, "state", "toggled", toggleKey)
-            const toggleOption = digg(this, "props", "toggleOptions", toggleValue)
-
-            toggles[toggleKey] = toggleOption
-          }
-
-          onChange({
-            options: this.state.currentOptions,
-            toggles
-          })
-        }
+        newState.toggled = newToggled
+      } else {
+        newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
       }
-    )
+    } else {
+      if (toggleOptions) {
+        newToggled[loadedOption.value] = 0
+        newState.toggled = newToggled
+      }
+
+      if (multiple || toggleOptions) {
+        newState.currentOptions = currentOptions.concat([loadedOption])
+      } else {
+        newState.currentOptions = [loadedOption]
+      }
+    }
+
+    this.shape.set(newState)
+
+    if (onChange) {
+      const toggles = {}
+
+      for(const toggleKey in this.shape.toggled) {
+        const toggleValue = digg(this.s.toggled, toggleKey)
+        const toggleOption = digg(this.p.toggleOptions, toggleValue)
+
+        toggles[toggleKey] = toggleOption
+      }
+
+      onChange({
+        options: this.shape.currentOptions,
+        toggles
+      })
+    }
 
     if (!multiple) this.closeOptions()
   }
