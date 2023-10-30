@@ -348,7 +348,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   setOptionsPositionAbove() {
-    const {optionsContainerRef, currentSelectedRef} = this.t
+    const {optionsContainerRef, currentSelectedRef, searchTextInputRef} = this.t
     const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
     const position = currentSelectedRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
@@ -365,7 +365,7 @@ export default class HayaSelect extends React.PureComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => digg(this.t.searchTextInputRef, "current").focus()
+      () => searchTextInputRef.current.focus()
     )
   }
 
@@ -385,7 +385,7 @@ export default class HayaSelect extends React.PureComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => digg(searchTextInputRef, "current").focus()
+      () => searchTextInputRef.current.focus()
     )
   }
 
