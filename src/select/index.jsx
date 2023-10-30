@@ -141,7 +141,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   render() {
-    const {currentSelectedRef, endOfSelectRef} = this.t
+    const {currentSelectedRef, endOfSelectRef, onSelectClicked, onSearchTextInputChangedDebounced} = this.t
     const {
       attribute,
       className,
@@ -178,13 +178,13 @@ export default class HayaSelect extends React.PureComponent {
           className="haya-select-current-selected"
           data-opened={opened}
           data-options-placement={optionsPlacement}
-          onClick={this.t.onSelectClicked}
+          onClick={onSelectClicked}
           ref={currentSelectedRef}
         >
           {opened &&
             <input
               className="haya-select-search-text-input"
-              onChange={this.tonSearchTextInputChangedDebounced}
+              onChange={onSearchTextInputChangedDebounced}
               placeholder={I18n.t("haya_select.search_dot_dot_dot")} type="text"
               ref={this.t.searchTextInputRef}
             />
@@ -370,7 +370,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   setOptionsPositionBelow() {
-    const {endOfSelectRef} = this.t
+    const {endOfSelectRef, searchTextInputRef} = this.t
     const position = endOfSelectRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
 
@@ -385,7 +385,7 @@ export default class HayaSelect extends React.PureComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => digg(this.t.searchTextInputRef, "current").focus()
+      () => digg(searchTextInputRef, "current").focus()
     )
   }
 
