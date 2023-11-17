@@ -240,6 +240,14 @@ export default class HayaSelect extends React.PureComponent {
     }
   }
 
+  isActive() {
+    if (this.t.endOfSelectRef.current) {
+      return true
+    }
+
+    return false
+  }
+
   async loadDefaultValuesFromOptionsCallback() {
     const defaultValues = this.defaultValues()
 
@@ -329,6 +337,8 @@ export default class HayaSelect extends React.PureComponent {
   focusTextInput = () => digg(this.t.searchTextInputRef, "current").focus()
 
   setOptionsPosition() {
+    if (!this.isActive()) return // Debounce after un-mount handeling.
+
     this.setOptionsPositionBelow()
     this.setOptionsPositionAboveIfOutsideScreen()
   }
@@ -447,9 +457,9 @@ export default class HayaSelect extends React.PureComponent {
     )
   }
 
-  onOptionClicked = (e, loadedOption) => {
-    e.preventDefault()
-    e.stopPropagation()
+  onOptionClicked = (event, loadedOption) => {
+    event.preventDefault()
+    event.stopPropagation()
 
     const {onChange, toggleOptions} = this.props
     const {multiple} = this.p
@@ -500,6 +510,7 @@ export default class HayaSelect extends React.PureComponent {
       }
 
       onChange({
+        event,
         options: this.shape.currentOptions,
         toggles
       })
