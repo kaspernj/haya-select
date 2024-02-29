@@ -485,6 +485,9 @@ export default class HayaSelect extends React.PureComponent {
         newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
       }
     } else {
+      // Don't do anything if the clicked option is disabled
+      if (loadedOption.disabled) return
+
       if (toggleOptions) {
         newToggled[loadedOption.value] = 0
         newState.toggled = newToggled
