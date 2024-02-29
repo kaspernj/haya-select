@@ -46,6 +46,15 @@
     padding: 4px 8px;
     color: #000;
 
+    &[data-disabled="true"] {
+      cursor: default;
+      opacity: .6;
+    }
+
+    &[data-disabled="false"] {
+      cursor: pointer;
+    }
+
     &[data-selected="true"] {
       background-color: #80b2ff;
     }

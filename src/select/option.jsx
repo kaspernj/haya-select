@@ -1,34 +1,32 @@
-import {digs} from "diggerize"
 import PropTypes from "prop-types"
-import React from "react"
+import {memo, useMemo} from "react"
+import useShape from "set-state-compare/src/use-shape.js"
 
-export default class Option extends React.PureComponent {
-  static propTypes = {
-    currentOptions: PropTypes.array.isRequired,
-    icon: PropTypes.string,
-    onOptionClicked: PropTypes.func.isRequired,
-    option: PropTypes.object.isRequired,
-    presentOption: PropTypes.func.isRequired
-  }
+const Option = (props) => {
+  const s = useShape(props)
+  const onClick = useCallback((e) => s.p.onOptionClicked(e, s.p.option), [])
+  const selected = Boolean(s.p.currentOptions.find((currentOption) => currentOption.value == s.p.option.value))
 
-  style = {cursor: "pointer"}
-
-  render() {
-    const {currentOptions, option} = digs(this.props, "currentOptions", "option")
-    const selected = Boolean(currentOptions.find((currentOption) => currentOption.value == option.value))
-
-    return (
-      <div
-        className="haya-select-option"
-        data-selected={selected}
-        data-value={option.value}
-        onClick={this.onClick}
-        style={this.style}
-      >
-        {this.props.presentOption(option)}
-      </div>
-    )
-  }
-
-  onClick = (e) => this.props.onOptionClicked(e, this.props.option)
+  return (
+    <div
+      className="haya-select-option"
+      data-disabled={Boolean(s.p.option.disabled)}
+      data-selected={selected}
+      data-value={s.p.option.value}
+      onClick={onClick}
+    >
+      {props.presentOption(s.p.option)}
+    </div>
+  )
 }
+
+Option.propTypes = {
+  currentOptions: PropTypes.array.isRequired,
+  disabled: PropTypes.bool,
+  icon: PropTypes.string,
+  onOptionClicked: PropTypes.func.isRequired,
+  option: PropTypes.object.isRequired,
+  presentOption: PropTypes.func.isRequired
+}
+
+export default memo(Option)
