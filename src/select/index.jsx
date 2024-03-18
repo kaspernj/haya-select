@@ -220,6 +220,9 @@ export default class HayaSelect extends React.PureComponent {
               )}
             </>
           }
+          <div className="haya-select-chevron-down-container">
+            <i className="fa fa-chevron-down" />
+          </div>
         </div>
         <div ref={endOfSelectRef} />
       </div>
