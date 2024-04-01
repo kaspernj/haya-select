@@ -166,6 +166,8 @@ export default class HayaSelect extends React.PureComponent {
       <div
         className={classNames("haya-select", className)}
         data-id={idForComponent(this)}
+        data-opened={opened}
+        data-options-placement={optionsPlacement}
         data-toggles={Boolean(toggleOptions)}
         {...restProps}
       >
@@ -174,52 +176,52 @@ export default class HayaSelect extends React.PureComponent {
             {this.optionsContainer()}
           </BodyPortal>
         }
-        <div
-          className="haya-select-current-selected"
-          data-opened={opened}
-          data-options-placement={optionsPlacement}
-          onClick={onSelectClicked}
-          ref={currentSelectedRef}
-        >
-          {opened &&
-            <input
-              className="haya-select-search-text-input"
-              onChange={onSearchTextInputChangedDebounced}
-              placeholder={I18n.t("haya_select.search_dot_dot_dot")} type="text"
-              ref={this.t.searchTextInputRef}
-            />
-          }
-          {!opened &&
-            <>
-              {currentOptions.length == 0 &&
-                <div style={{color: "grey"}}>
-                  {placeholder || I18n.t("haya_select.nothing_selected")}
-                </div>
-              }
-              {currentOptions.map((currentOption) =>
-                <div className="current-option" key={currentOption.key || `current-value-${currentOption.value}`}>
-                  {currentOption.type == "group" &&
-                    <div style={{fontWeight: "bold"}}>
-                      {currentOption.text}
-                    </div>
-                  }
-                  {currentOption.type != "group" &&
-                    <>
-                      {nameForComponentWithMultiple(this) &&
-                        <input
-                          id={idForComponent(this)}
-                          name={nameForComponentWithMultiple(this)}
-                          type="hidden"
-                          value={digg(currentOption, "value")}
-                        />
-                      }
-                      {this.presentOption(currentOption)}
-                    </>
-                  }
-                </div>
-              )}
-            </>
-          }
+        <div className="haya-select-container" onClick={onSelectClicked}>
+          <div
+            className="haya-select-current-selected"
+            ref={currentSelectedRef}
+          >
+            {opened &&
+              <input
+                className="haya-select-search-text-input"
+                onChange={onSearchTextInputChangedDebounced}
+                placeholder={I18n.t("haya_select.search_dot_dot_dot")}
+                type="text"
+                ref={this.t.searchTextInputRef}
+              />
+            }
+            {!opened &&
+              <>
+                {currentOptions.length == 0 &&
+                  <div style={{color: "grey"}}>
+                    {placeholder || I18n.t("haya_select.nothing_selected")}
+                  </div>
+                }
+                {currentOptions.map((currentOption) =>
+                  <div className="current-option" key={currentOption.key || `current-value-${currentOption.value}`}>
+                    {currentOption.type == "group" &&
+                      <div style={{fontWeight: "bold"}}>
+                        {currentOption.text}
+                      </div>
+                    }
+                    {currentOption.type != "group" &&
+                      <>
+                        {nameForComponentWithMultiple(this) &&
+                          <input
+                            id={idForComponent(this)}
+                            name={nameForComponentWithMultiple(this)}
+                            type="hidden"
+                            value={digg(currentOption, "value")}
+                          />
+                        }
+                        {this.presentOption(currentOption)}
+                      </>
+                    }
+                  </div>
+                )}
+              </>
+            }
+          </div>
           <div className="haya-select-chevron-down-container">
             <i className="fa fa-chevron-down" />
           </div>
