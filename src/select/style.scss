@@ -3,6 +3,15 @@
     display: flex;
     flex-wrap: wrap;
     position: relative;
+
+    .current-option {
+      margin-right: 6px;
+    }
+  }
+
+  .haya-select-container {
+    display: flex;
+    align-items: center;
     background-color: #fff;
     border: 1px solid #999;
     color: #000;
@@ -10,36 +19,32 @@
     padding-top: 5px;
     padding-bottom: 5px;
     padding-left: 5px;
-
-    &[data-opened="false"] {
-      border-radius: 4px;
-    }
-
-    &[data-opened="true"][data-options-placement="above"] {
-      border-radius: 0 0 4px 4px;
-    }
-
-    &[data-opened="true"][data-options-placement="below"] {
-      border-radius: 4px 4px 0 0;
-    }
-
-    .current-option {
-      margin-right: 6px;
-    }
   }
 
   .haya-select-chevron-down-container {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
+    margin-right: 8px;
+    margin-left: auto;
+  }
 
-    position: absolute;
-    right: 20px;
-    height: calc(100% - 33px);
+  &[data-opened="false"] .haya-select-container {
+    border-radius: 4px;
+  }
+
+  &[data-opened="true"][data-options-placement="above"] .haya-select-container {
+    border-radius: 0 0 4px 4px;
+  }
+
+  &[data-opened="true"][data-options-placement="below"] .haya-select-container {
+    border-radius: 4px 4px 0 0;
   }
 }
 
 .haya-select-search-text-input {
+  width: 100%;
   border: 0;
   outline: none;
   padding: 0;
