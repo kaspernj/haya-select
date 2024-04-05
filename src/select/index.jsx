@@ -556,7 +556,8 @@ export default class HayaSelect extends React.PureComponent {
         {toggleOptions && (currentValue.value in toggled) &&
           <i className={`fa fa-fw fa-${icon}`} />
         }
-        {currentValue.text}
+        {currentValue.content}
+        {!currentValue.content && currentValue.text}
         {("html" in currentValue) &&
           <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
         }
