@@ -151,6 +151,7 @@ export default class HayaSelect extends React.PureComponent {
       id,
       model,
       multiple,
+      name,
       onChange,
       onOptionsClosed,
       options,
