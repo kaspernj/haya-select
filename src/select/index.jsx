@@ -198,6 +198,14 @@ export default class HayaSelect extends React.PureComponent {
                     {placeholder || I18n.t("haya_select.nothing_selected")}
                   </div>
                 }
+                {currentOptions.length == 0 &&
+                  <input
+                    id={idForComponent(this)}
+                    name={nameForComponentWithMultiple(this)}
+                    type="hidden"
+                    value=""
+                  />
+                }
                 {currentOptions.map((currentOption) =>
                   <div className="current-option" key={currentOption.key || `current-value-${currentOption.value}`}>
                     {currentOption.type == "group" &&
