@@ -23,8 +23,8 @@ diggerize@^1.0.4:
   integrity sha512-TzN9rlL9ZGzTbHClKAT+bPYLgKmb4pDTyIJWWmVWQYwVROSXe12dO+l/rosN2+NBLOMDjMu3neTRNhjyj6UMRg==
 
 set-state-compare@^1.0.27:
-  version "1.0.31"
-  resolved "https://registry.yarnpkg.com/set-state-compare/-/set-state-compare-1.0.31.tgz#16522f2e65e1ed2fec2bfb40e26300782cb3d292"
-  integrity sha512-Rf6YFyoVM1O3IwPyFOe8UsNnIpzEXXw6N482uGUEB6So8hDYFQKJ5eEHtIQgmMdei8LWVu3niZ6P7ETJfgDrYg==
+  version "1.0.36"
+  resolved "https://registry.yarnpkg.com/set-state-compare/-/set-state-compare-1.0.36.tgz#e424be858150cb78b6e3529acffbd50c64e5ffce"
+  integrity sha512-Ra7Vhipf+hvo8QnU8svpcVDoUU6kqSvQXssdQ5Tzr72oFX36M5la+/cFNCVu3tydAxUCgsXnQc+nzt//sclNLQ==
   dependencies:
     fetching-object ">= 1.0.1"
