@@ -9,8 +9,8 @@ import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.
 import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
-import React from "react"
-import {anythingDifferent, Shape} from "set-state-compare"
+import {memo, useRef} from "react"
+import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -20,7 +20,7 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
-export default class HayaSelect extends React.PureComponent {
+export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
     search: false
@@ -51,27 +51,33 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   p = fetchingObject(() => this.props)
-  s = fetchingObject(() => this.shape)
-  t = fetchingObject(this)
+  s = fetchingObject(() => this.state)
+  tt = fetchingObject(this)
 
-  endOfSelectRef = React.createRef()
-  optionsContainerRef = React.createRef()
-  currentSelectedRef = React.createRef()
-  searchTextInputRef = React.createRef()
+  setup() {
+    const {t} = useI18n({namespace: "haya_select"})
 
-  shape = new Shape(this, {
-    currentOptions: this.defaultCurrentOptions(),
-    loadedOptions: this.defaultLoadedOptions(),
-    opened: false,
-    optionsLeft: undefined,
-    optionsPlacement: undefined,
-    optionsTop: undefined,
-    optionsVisibility: undefined,
-    optionsWidth: undefined,
-    scrollLeft: undefined,
-    scrollTop: undefined,
-    toggled: this.defaultToggled()
-  })
+    this.setInstance({
+      endOfSelectRef: useRef(),
+      optionsContainerRef: useRef(),
+      currentSelectedRef: useRef(),
+      searchTextInputRef: useRef(),
+      t
+    })
+    this.useStates({
+      currentOptions: () => this.defaultCurrentOptions(),
+      loadedOptions: () => this.defaultLoadedOptions(),
+      opened: false,
+      optionsLeft: undefined,
+      optionsPlacement: undefined,
+      optionsTop: undefined,
+      optionsVisibility: undefined,
+      optionsWidth: undefined,
+      scrollLeft: undefined,
+      scrollTop: undefined,
+      toggled: () => this.defaultToggled()
+    })
+  }
 
   defaultCurrentOptions() {
     const {defaultValue, defaultValues, values} = this.props
@@ -109,8 +115,8 @@ export default class HayaSelect extends React.PureComponent {
       this.loadDefaultValuesFromOptionsCallback()
     }
 
-    window.addEventListener("resize", this.t.onAnythingResizedDebounced, true)
-    window.addEventListener("scroll", this.t.onAnythingScrolledDebounced, true)
+    window.addEventListener("resize", this.tt.onAnythingResizedDebounced, true)
+    window.addEventListener("scroll", this.tt.onAnythingScrolledDebounced, true)
   }
 
   componentDidUpdate() {
@@ -119,7 +125,7 @@ export default class HayaSelect extends React.PureComponent {
     if ("values" in this.props) {
       const newCurrentOptions = this.defaultCurrentOptions()
 
-      if (anythingDifferent(this.shape.currentOptions, newCurrentOptions)) {
+      if (anythingDifferent(this.state.currentOptions, newCurrentOptions)) {
         newState.currentOptions = newCurrentOptions
       }
     }
@@ -127,21 +133,21 @@ export default class HayaSelect extends React.PureComponent {
     if ("toggled" in this.props) {
       const newToggled = this.p.toggled
 
-      if (anythingDifferent(this.shape.toggled, newToggled)) {
+      if (anythingDifferent(this.state.toggled, newToggled)) {
         newState.toggled = newToggled
       }
     }
 
-    this.shape.set(newState)
+    this.setState(newState)
   }
 
   componentWillUnmount() {
-    window.removeEventListener("resize", this.t.onAnythingResizedDebounced)
-    window.removeEventListener("scroll", this.t.onAnythingScrolledDebounced)
+    window.removeEventListener("resize", this.tt.onAnythingResizedDebounced)
+    window.removeEventListener("scroll", this.tt.onAnythingScrolledDebounced)
   }
 
   render() {
-    const {currentSelectedRef, endOfSelectRef, onSelectClicked, onSearchTextInputChangedDebounced} = this.t
+    const {currentSelectedRef, endOfSelectRef, onSelectClicked, onSearchTextInputChangedDebounced} = this.tt
     const {
       attribute,
       className,
@@ -186,16 +192,16 @@ export default class HayaSelect extends React.PureComponent {
               <input
                 className="haya-select-search-text-input"
                 onChange={onSearchTextInputChangedDebounced}
-                placeholder={I18n.t("haya_select.search_dot_dot_dot")}
+                placeholder={this.t(".search_dot_dot_dot")}
                 type="text"
-                ref={this.t.searchTextInputRef}
+                ref={this.tt.searchTextInputRef}
               />
             }
             {!opened &&
               <>
                 {currentOptions.length == 0 &&
                   <div style={{color: "grey"}}>
-                    {placeholder || I18n.t("haya_select.nothing_selected")}
+                    {placeholder || this.t(".nothing_selected")}
                   </div>
                 }
                 {currentOptions.length == 0 &&
@@ -255,7 +261,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   isActive() {
-    if (this.t.endOfSelectRef.current) {
+    if (this.tt.endOfSelectRef.current) {
       return true
     }
 
@@ -268,16 +274,16 @@ export default class HayaSelect extends React.PureComponent {
     if (!defaultValues) return
 
     const result = await this.props.options({
-      searchValue: digg(this.t.searchTextInputRef, "current")?.value,
+      searchValue: digg(this.tt.searchTextInputRef, "current")?.value,
       values: defaultValues
     })
 
-    this.shape.set({currentOptions: this.shape.currentOptions.concat(result)})
+    this.setState({currentOptions: this.state.currentOptions.concat(result)})
   }
 
   loadOptions = async () => {
     const {options} = this.p
-    const searchValue = digg(this.t.searchTextInputRef, "current")?.value
+    const searchValue = digg(this.tt.searchTextInputRef, "current")?.value
 
     if (Array.isArray(options)) {
       return this.loadOptionsFromArray(options, searchValue)
@@ -285,7 +291,7 @@ export default class HayaSelect extends React.PureComponent {
 
     const loadedOptions = await options({searchValue})
 
-    this.shape.set({loadedOptions})
+    this.setState({loadedOptions})
   }
 
   hayaSelectOption({key, loadedOption}) {
@@ -294,7 +300,7 @@ export default class HayaSelect extends React.PureComponent {
     }
 
     return <Option
-      currentOptions={this.shape.currentOptions}
+      currentOptions={this.state.currentOptions}
       icon={this.iconForOption(loadedOption)}
       key={key}
       option={loadedOption}
@@ -307,7 +313,7 @@ export default class HayaSelect extends React.PureComponent {
     const lowerSearchValue = searchValue?.toLowerCase()
     const loadedOptions = options.filter(({text}) => !lowerSearchValue || text.toLowerCase().includes(lowerSearchValue))
 
-    this.shape.set({loadedOptions})
+    this.setState({loadedOptions})
   }
 
   onSelectClicked = (e) => {
@@ -323,23 +329,23 @@ export default class HayaSelect extends React.PureComponent {
     }
   }
 
-  onSearchTextInputChangedDebounced = debounce(this.t.loadOptions, 200)
+  onSearchTextInputChangedDebounced = debounce(this.tt.loadOptions, 200)
 
   closeOptions() {
-    this.shape.set({
+    this.setState({
       loadedOptions: undefined,
       opened: false
     })
 
     if (this.props.onOptionsClosed) {
-      this.props.onOptionsClosed({options: this.shape.currentOptions})
+      this.props.onOptionsClosed({options: this.state.currentOptions})
     }
   }
 
   openOptions() {
     this.setOptionsPositionBelow()
     this.loadOptions()
-    this.shape.set(
+    this.setState(
       {opened: true},
       () => {
         this.focusTextInput()
@@ -348,7 +354,7 @@ export default class HayaSelect extends React.PureComponent {
     )
   }
 
-  focusTextInput = () => digg(this.t.searchTextInputRef, "current").focus()
+  focusTextInput = () => digg(this.tt.searchTextInputRef, "current").focus()
 
   setOptionsPosition() {
     if (!this.isActive()) return // Debounce after un-mount handeling.
@@ -358,7 +364,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   setOptionsPositionAboveIfOutsideScreen() {
-    const {optionsContainerRef} = this.t
+    const {optionsContainerRef} = this.tt
     const {optionsTop} = this.s
     const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
     const scrollTop = document.documentElement.scrollTop
@@ -367,18 +373,18 @@ export default class HayaSelect extends React.PureComponent {
     if (window.innerHeight < optionsTotalHeight) {
       this.setOptionsPositionAbove()
     } else {
-      this.shape.set({optionsVisibility: "visible"})
+      this.setState({optionsVisibility: "visible"})
     }
   }
 
   setOptionsPositionAbove() {
-    const {optionsContainerRef, currentSelectedRef, searchTextInputRef} = this.t
+    const {optionsContainerRef, currentSelectedRef, searchTextInputRef} = this.tt
     const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
     const position = currentSelectedRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
     const optionsTop = top - optionsHeight + 2
 
-    this.shape.set(
+    this.setState(
       {
         opened: true,
         optionsLeft: left,
@@ -394,11 +400,11 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   setOptionsPositionBelow() {
-    const {endOfSelectRef, searchTextInputRef} = this.t
+    const {endOfSelectRef, searchTextInputRef} = this.tt
     const position = endOfSelectRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
 
-    this.shape.set(
+    this.setState(
       {
         opened: true,
         optionsLeft: left,
@@ -419,7 +425,7 @@ export default class HayaSelect extends React.PureComponent {
     }
   }
 
-  onAnythingResizedDebounced = debounce(this.t.onAnythingResized, 25)
+  onAnythingResizedDebounced = debounce(this.tt.onAnythingResized, 25)
 
   onAnythingScrolled = (e) => {
     if (this.s.opened) {
@@ -427,10 +433,10 @@ export default class HayaSelect extends React.PureComponent {
     }
   }
 
-  onAnythingScrolledDebounced = debounce(this.t.onAnythingScrolled, 25)
+  onAnythingScrolledDebounced = debounce(this.tt.onAnythingScrolled, 25)
 
   onWindowClicked = (e) => {
-    const {optionsContainerRef} = this.t
+    const {optionsContainerRef} = this.tt
     const {opened} = this.s
 
     // If options are open and a click is made outside of the options container
@@ -440,7 +446,7 @@ export default class HayaSelect extends React.PureComponent {
   }
 
   optionsContainer() {
-    const {optionsContainerRef} = this.t
+    const {optionsContainerRef} = this.tt
     const {loadedOptions, optionsLeft, optionsTop, optionsVisibility, optionsWidth, scrollLeft, scrollTop} = this.s
 
     return (
@@ -464,7 +470,7 @@ export default class HayaSelect extends React.PureComponent {
         )}
         {loadedOptions?.length === 0 &&
           <div className="haya-select-no-options-container">
-            {I18n.t("haya_select.no_options_found")}
+            {this.t(".no_options_found")}
           </div>
         }
       </div>
@@ -477,7 +483,7 @@ export default class HayaSelect extends React.PureComponent {
 
     const {onChange, toggleOptions} = this.props
     const {multiple} = this.p
-    const {currentOptions, toggled} = this.shape
+    const {currentOptions, toggled} = this.state
     const newState = {}
     const existingOption = currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
     const newToggled = {...toggled}
@@ -514,12 +520,12 @@ export default class HayaSelect extends React.PureComponent {
       }
     }
 
-    this.shape.set(newState)
+    this.setState(newState)
 
     if (onChange) {
       const toggles = {}
 
-      for(const toggleKey in this.shape.toggled) {
+      for(const toggleKey in this.state.toggled) {
         const toggleValue = digg(this.s.toggled, toggleKey)
         const toggleOption = digg(this.p.toggleOptions, toggleValue)
 
@@ -528,7 +534,7 @@ export default class HayaSelect extends React.PureComponent {
 
       onChange({
         event,
-        options: this.shape.currentOptions,
+        options: this.state.currentOptions,
         toggles
       })
     }
@@ -573,4 +579,4 @@ export default class HayaSelect extends React.PureComponent {
       </div>
     )
   }
-}
+}))

@@ -1,32 +1,32 @@
 import PropTypes from "prop-types"
-import {memo, useMemo} from "react"
-import useShape from "set-state-compare/src/use-shape.js"
+import {memo} from "react"
+import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 
-const Option = (props) => {
-  const s = useShape(props)
-  const onClick = useCallback((e) => s.p.onOptionClicked(e, s.p.option), [])
-  const selected = Boolean(s.p.currentOptions.find((currentOption) => currentOption.value == s.p.option.value))
+export default memo(shapeComponent(class Option extends ShapeComponent {
+  static propTypes = {
+    currentOptions: PropTypes.array.isRequired,
+    disabled: PropTypes.bool,
+    icon: PropTypes.string,
+    onOptionClicked: PropTypes.func.isRequired,
+    option: PropTypes.object.isRequired,
+    presentOption: PropTypes.func.isRequired
+  }
 
-  return (
-    <div
-      className="haya-select-option"
-      data-disabled={Boolean(s.p.option.disabled)}
-      data-selected={selected}
-      data-value={s.p.option.value}
-      onClick={onClick}
-    >
-      {props.presentOption(s.p.option)}
-    </div>
-  )
-}
+  render() {
+    const selected = Boolean(this.props.currentOptions.find((currentOption) => currentOption.value == this.props.option.value))
 
-Option.propTypes = {
-  currentOptions: PropTypes.array.isRequired,
-  disabled: PropTypes.bool,
-  icon: PropTypes.string,
-  onOptionClicked: PropTypes.func.isRequired,
-  option: PropTypes.object.isRequired,
-  presentOption: PropTypes.func.isRequired
-}
+    return (
+      <div
+        className="haya-select-option"
+        data-disabled={Boolean(this.props.option.disabled)}
+        data-selected={selected}
+        data-value={this.props.option.value}
+        onClick={this.onClick}
+      >
+        {props.presentOption(this.props.option)}
+      </div>
+    )
+  }
 
-export default memo(Option)
+  onClick = (e) => this.props.onOptionClicked(e, this.props.option)
+}))
