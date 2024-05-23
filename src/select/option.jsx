@@ -23,7 +23,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
         data-value={this.props.option.value}
         onClick={this.onClick}
       >
-        {props.presentOption(this.props.option)}
+        {this.props.presentOption(this.props.option)}
       </div>
     )
   }
