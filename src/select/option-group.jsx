@@ -10,7 +10,7 @@ export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
   render() {
     return (
       <div className="haya-select--option-group">
-        {option.text}
+        {this.props.option.text}
       </div>
     )
   }

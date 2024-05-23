@@ -357,7 +357,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   focusTextInput = () => digg(this.tt.searchTextInputRef, "current").focus()
 
   setOptionsPosition() {
-    if (!this.isActive()) return // Debounce after un-mount handeling.
+    if (!this.isActive()) {
+      return // Debounce after un-mount handeling.
+    }
 
     this.setOptionsPositionBelow()
     this.setOptionsPositionAboveIfOutsideScreen()

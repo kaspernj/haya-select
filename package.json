@@ -13,7 +13,7 @@
     "debounce": "^1.2.1",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
-    "set-state-compare": "^1.0.42"
+    "set-state-compare": "^1.0.43"
   },
   "peerDependencies": {
     "prop-types": ">= 15.7.2",
