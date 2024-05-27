@@ -311,7 +311,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   loadOptionsFromArray(options, searchValue) {
     const lowerSearchValue = searchValue?.toLowerCase()
-    const loadedOptions = options.filter(({text}) => !lowerSearchValue || text.toLowerCase().includes(lowerSearchValue))
+    const loadedOptions = options.filter(({text}) => !lowerSearchValue || text?.toLowerCase()?.includes(lowerSearchValue))
 
     this.setState({loadedOptions})
   }
