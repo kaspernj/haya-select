@@ -569,12 +569,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {toggleOptions} = this.props || {}
     const toggled = this.getToggled()
     const icon = this.iconForOption(currentValue)
+    const toggleValue = toggled[currentValue.value]
+    const toggleOption = toggleOptions.find((toggleOptionI) => toggleOptionI.value == toggleValue)
 
     return (
       <div
         className="haya-select-option-presentation"
-        data-toggle-icon={toggleOptions && toggled && toggleOptions[toggled[currentValue.value]]?.icon}
-        data-toggle-value={toggleOptions && toggled && toggleOptions[toggled[currentValue.value]]?.value}
+        data-toggle-icon={toggleOption?.icon}
+        data-toggle-value={toggleOption?.value}
         data-value={currentValue.value}
       >
         {toggleOptions && !(currentValue.value in toggled) &&
