@@ -557,6 +557,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       const toggledValue = toggled[option.value]
       const toggledOption = toggleOptions.find((element) => element.value == toggledValue)
 
+      if (!toggledOption) {
+        throw new Error(`Couldn't find a toggle option for value: ${toggledValue}`)
+      }
+
       return toggledOption.icon
     }
   }
