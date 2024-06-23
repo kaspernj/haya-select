@@ -1,9 +1,9 @@
 import "./style"
+import {anythingDifferent} from "set-state-compare/src/diff-utils"
 import classNames from "classnames"
 import config from "../config.js"
 import {digg, digs} from "diggerize"
 import debounce from "debounce"
-import EventListener from "@kaspernj/api-maker/src/event-listener"
 import idForComponent from "@kaspernj/api-maker/src/inputs/id-for-component.mjs"
 import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.mjs"
 import Option from "./option"
@@ -11,6 +11,7 @@ import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import {memo, useRef} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
+import useEventListener from "@kaspernj/api-maker/src/use-event-listener"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -77,6 +78,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       scrollTop: undefined,
       toggled: () => this.defaultToggled()
     })
+    useEventListener(window, "click", this.onWindowClicked)
+    useEventListener(window, "resize", this.tt.onAnythingResizedDebounced)
+    useEventListener(window, "scroll", this.tt.onAnythingScrolledDebounced)
   }
 
   defaultCurrentOptions() {
@@ -104,8 +108,21 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     throw new Error(`Unknown type of options: ${typeof options}`)
   }
 
-  defaultToggled() {
-    return this.props.defaultToggled || this.props.toggled || {}
+  defaultToggled = () => ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
+  getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
+  getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
+  getCurrentOptions = () => {
+    if ("values" in this.props) {
+      if (this.s.loadedOptions) {
+        return this.p.values.map((value) => this.s.loadedOptions.find((option) => option.value == value))
+      } else if (this.props.options) {
+        return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
+      } else {
+        return this.p.values.map((value) => ({value}))
+      }
+    }
+
+    return this.s.currentOptions
   }
 
   componentDidMount() {
@@ -114,9 +131,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (((defaultValue || defaultValues || defaultValuesFromOptions) || (attribute && model)) && typeof options == "function") {
       this.loadDefaultValuesFromOptionsCallback()
     }
-
-    window.addEventListener("resize", this.tt.onAnythingResizedDebounced, true)
-    window.addEventListener("scroll", this.tt.onAnythingScrolledDebounced, true)
   }
 
   componentDidUpdate() {
@@ -138,12 +152,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
     }
 
-    this.setState(newState)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this.tt.onAnythingResizedDebounced)
-    window.removeEventListener("scroll", this.tt.onAnythingScrolledDebounced)
+    if (Object.keys(newState).length > 0) {
+      this.setState(newState)
+    }
   }
 
   render() {
@@ -166,7 +177,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       toggleOptions,
       ...restProps
     } = this.props
-    const {currentOptions, opened, optionsPlacement} = this.s
+    const {opened, optionsPlacement} = this.s
+    const currentOptions = this.getCurrentOptions()
     const BodyPortal = config.getBodyPortal()
 
     return (
@@ -184,10 +196,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </BodyPortal>
         }
         <div className="haya-select-container" onClick={onSelectClicked}>
-          <div
-            className="haya-select-current-selected"
-            ref={currentSelectedRef}
-          >
+          <div className="haya-select-current-selected" ref={currentSelectedRef}>
             {opened &&
               <input
                 className="haya-select-search-text-input"
@@ -300,7 +309,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     }
 
     return <Option
-      currentOptions={this.state.currentOptions}
+      currentOptions={this.getCurrentOptions()}
       icon={this.iconForOption(loadedOption)}
       key={key}
       option={loadedOption}
@@ -338,7 +347,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     })
 
     if (this.props.onOptionsClosed) {
-      this.props.onOptionsClosed({options: this.state.currentOptions})
+      this.props.onOptionsClosed({options: this.getCurrentOptions()})
     }
   }
 
@@ -463,7 +472,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           width: optionsWidth,
         }}
       >
-        <EventListener event="click" onCalled={this.onWindowClicked} target={window} />
         {loadedOptions?.map((loadedOption) =>
           this.hayaSelectOption({
             key: loadedOption.key || `loaded-option-${loadedOption.value}`,
@@ -485,25 +493,30 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     const {onChange, toggleOptions} = this.props
     const {multiple} = this.p
-    const {currentOptions, toggled} = this.state
+    const currentOptions = this.getCurrentOptions()
+    const toggled = this.getToggled()
     const newState = {}
     const existingOption = currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
     const newToggled = {...toggled}
 
     if (existingOption) {
       if (toggleOptions) {
-        const currentIndex = digg(toggled, loadedOption.value)
+        const currentToggle = toggled[loadedOption.value]
+        const currentIndex = toggleOptions.findIndex((element) => element.value == currentToggle)
 
         if (currentIndex >= (toggleOptions.length - 1)) {
+          // No next toggled - remove toggled and option
           delete newToggled[loadedOption.value]
 
           newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
         } else {
-          newToggled[loadedOption.value] = toggled[loadedOption.value] + 1
+          // Already toggled - set to next toggle
+          newToggled[loadedOption.value] = digg(toggleOptions, currentIndex + 1, "value")
         }
 
         newState.toggled = newToggled
       } else {
+        // Remove from current options
         newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
       }
     } else {
@@ -511,7 +524,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       if (loadedOption.disabled) return
 
       if (toggleOptions) {
-        newToggled[loadedOption.value] = 0
+        // Set fresh toggle
+
+        newToggled[loadedOption.value] = toggleOptions[0].value
         newState.toggled = newToggled
       }
 
@@ -522,42 +537,33 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
     }
 
-    this.setState(newState)
-
     if (onChange) {
-      const toggles = {}
-
-      for(const toggleKey in this.state.toggled) {
-        const toggleValue = digg(this.s.toggled, toggleKey)
-        const toggleOption = digg(this.p.toggleOptions, toggleValue)
-
-        toggles[toggleKey] = toggleOption
-      }
-
       onChange({
         event,
-        options: this.state.currentOptions,
-        toggles
+        options: newState.currentOptions || currentOptions,
+        toggles: newToggled
       })
     }
 
     if (!multiple) this.closeOptions()
+    this.setState(newState)
   }
 
   iconForOption(option) {
     const {toggleOptions} = this.props || {}
-    const {toggled} = this.s
+    const toggled = this.getToggled()
 
     if (toggleOptions && (option.value in toggled)) {
-      const icon = toggleOptions[toggled[option.value]].icon
+      const toggledValue = toggled[option.value]
+      const toggledOption = toggleOptions.find((element) => element.value == toggledValue)
 
-      return icon
+      return toggledOption.icon
     }
   }
 
   presentOption = (currentValue) => {
     const {toggleOptions} = this.props || {}
-    const {toggled} = this.s
+    const toggled = this.getToggled()
     const icon = this.iconForOption(currentValue)
 
     return (
