@@ -363,7 +363,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     )
   }
 
-  focusTextInput = () => digg(this.tt.searchTextInputRef, "current").focus()
+  focusTextInput = () => digg(this.tt.searchTextInputRef, "current")?.focus()
 
   setOptionsPosition() {
     if (!this.isActive()) {
@@ -406,7 +406,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => searchTextInputRef.current?.focus()
+      () => this.focusTextInput()
     )
   }
 
@@ -426,7 +426,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => searchTextInputRef.current.focus()
+      () => this.focusTextInput()
     )
   }
 
