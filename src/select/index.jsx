@@ -397,7 +397,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         scrollLeft: document.documentElement.scrollLeft,
         scrollTop: document.documentElement.scrollTop
       },
-      () => searchTextInputRef.current.focus()
+      () => searchTextInputRef.current?.focus()
     )
   }
 
