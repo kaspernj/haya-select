@@ -1,6 +1,4 @@
-import "./style"
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
-import classNames from "classnames"
 import config from "../config.js"
 import {digg, digs} from "diggerize"
 import debounce from "debounce"
@@ -9,8 +7,10 @@ import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.
 import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
+import propTypesExact from "prop-types-exact"
 import {memo, useRef} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
+import {Platform, Pressable, Text, TextInput, View} from "react-native"
 import useEventListener from "@kaspernj/api-maker/src/use-event-listener"
 
 const nameForComponentWithMultiple = (component) => {
@@ -27,7 +27,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     search: false
   }
 
-  static propTypes = {
+  static propTypes = propTypesExact({
     attribute: PropTypes.string,
     className: PropTypes.string,
     defaultToggled: PropTypes.object,
@@ -37,11 +37,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     id: PropTypes.node,
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
+    name: PropTypes.string,
     onChange: PropTypes.func,
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
+    selectContainerStyle: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
       icon: PropTypes.string.isRequired,
@@ -49,7 +51,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       value: PropTypes.string.isRequired
     })),
     values: PropTypes.array
-  }
+  })
 
   p = fetchingObject(() => this.props)
   s = fetchingObject(() => this.state)
@@ -57,6 +59,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   setup() {
     const {t} = useI18n({namespace: "haya_select"})
+
+    if (this.props.values) {
+      for (const value of this.props.values) {
+        if (typeof value == "undefined") {
+          throw new Error("HayaSelect: Undefined given as value")
+        }
+      }
+    }
 
     this.setInstance({
       endOfSelectRef: useRef(),
@@ -74,6 +84,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       optionsTop: undefined,
       optionsVisibility: undefined,
       optionsWidth: undefined,
+      searchText: "",
       scrollLeft: undefined,
       scrollTop: undefined,
       toggled: () => this.defaultToggled()
@@ -112,10 +123,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
-    if ("values" in this.props) {
-      if (this.s.loadedOptions) {
-        return this.p.values.map((value) => this.s.loadedOptions.find((option) => option.value == value))
-      } else if (this.props.options) {
+    if ("values" in this.props && typeof this.props.values != "undefined") {
+      if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
+        if (this.s.loadedOptions) {
+          return this.p.values.map((value) => this.s.loadedOptions.find((option) => option.value == value))
+        } else {
+          this.setCurrentFromGivenValues()
+        }
+      } else if (Array.isArray(this.props.options)) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
       } else {
         return this.p.values.map((value) => ({value}))
@@ -136,14 +151,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   componentDidUpdate() {
     const newState = {}
 
-    if ("values" in this.props) {
-      const newCurrentOptions = this.defaultCurrentOptions()
-
-      if (anythingDifferent(this.state.currentOptions, newCurrentOptions)) {
-        newState.currentOptions = newCurrentOptions
-      }
-    }
-
     if ("toggled" in this.props) {
       const newToggled = this.p.toggled
 
@@ -158,7 +165,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   render() {
-    const {currentSelectedRef, endOfSelectRef, onSelectClicked, onSearchTextInputChangedDebounced} = this.tt
+    const {currentSelectedRef, endOfSelectRef} = this.tt
     const {
       attribute,
       className,
@@ -174,6 +181,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       options,
       placeholder,
       search,
+      selectContainerStyle,
       toggleOptions,
       ...restProps
     } = this.props
@@ -181,13 +189,49 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const currentOptions = this.getCurrentOptions()
     const BodyPortal = config.getBodyPortal()
 
+    const selectContainerStyleActual = Object.assign(
+      {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        border: "1px solid #999",
+        color: "#000",
+        cursor: "pointer",
+        paddingTop: 5,
+        paddingBottom: 5,
+        paddingLeft: 5
+      },
+      selectContainerStyle
+    )
+
+    if (opened) {
+      if (optionsPlacement == "above") {
+        selectContainerStyleActual.borderTopLeftRadius = 0
+        selectContainerStyleActual.borderTopRightRadius = 0
+        selectContainerStyleActual.borderBottomRightRadius = 4
+        selectContainerStyleActual.borderBottomLeftRadius = 4
+      } else if (optionsPlacement == "below") {
+        selectContainerStyleActual.borderTopLeftRadius = 4
+        selectContainerStyleActual.borderTopRightRadius = 4
+        selectContainerStyleActual.borderBottomRightRadius = 0
+        selectContainerStyleActual.borderBottomLeftRadius = 0
+      }
+    } else {
+      selectContainerStyleActual.borderRadius = 4
+    }
+
+    const chevronStyle = {fontSize: 24}
+
+    if (opened) {
+      chevronStyle.marginBottom = -9
+    } else {
+      chevronStyle.marginTop = -9
+    }
+
     return (
-      <div
-        className={classNames("haya-select", className)}
-        data-id={idForComponent(this)}
-        data-opened={opened}
-        data-options-placement={optionsPlacement}
-        data-toggles={Boolean(toggleOptions)}
+      <View
+        dataSet={{class: className, component: "haya-select", id: idForComponent(this), opened, optionsPlacement, toggles: Boolean(toggleOptions)}}
         {...restProps}
       >
         {opened &&
@@ -195,25 +239,40 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             {this.optionsContainer()}
           </BodyPortal>
         }
-        <div className="haya-select-container" onClick={onSelectClicked}>
-          <div className="haya-select-current-selected" ref={currentSelectedRef}>
+        <Pressable
+          dataSet={{class: "select-container"}}
+          onPress={this.tt.onSelectClicked}
+          style={selectContainerStyleActual}
+        >
+          <View
+            dataSet={{class: "current-selected"}}
+            ref={currentSelectedRef}
+            style={{flexWrap: "wrap"}}
+          >
             {opened &&
-              <input
-                className="haya-select-search-text-input"
-                onChange={onSearchTextInputChangedDebounced}
+              <TextInput
+                dataSet={{class: "search-text-input"}}
+                onChange={this.tt.onSearchTextInputChangedDebounced}
+                onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.t(".search_dot_dot_dot")}
-                type="text"
                 ref={this.tt.searchTextInputRef}
+                style={{
+                  width: "100%",
+                  border: 0,
+                  outline: "none",
+                  padding: 0
+                }}
+                value={this.state.searchText}
               />
             }
             {!opened &&
               <>
                 {currentOptions.length == 0 &&
-                  <div style={{color: "grey"}}>
+                  <Text style={{color: "grey"}}>
                     {placeholder || this.t(".nothing_selected")}
-                  </div>
+                  </Text>
                 }
-                {currentOptions.length == 0 &&
+                {currentOptions.length == 0 && Platform.OS == "web" &&
                   <input
                     id={idForComponent(this)}
                     name={nameForComponentWithMultiple(this)}
@@ -222,15 +281,17 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                   />
                 }
                 {currentOptions.map((currentOption) =>
-                  <div className="current-option" key={currentOption.key || `current-value-${currentOption.value}`}>
+                  <View dataSet={{class: "current-option"}} key={currentOption.key || `current-value-${currentOption.value}`} style={{marginRight: 6}}>
                     {currentOption.type == "group" &&
-                      <div style={{fontWeight: "bold"}}>
-                        {currentOption.text}
-                      </div>
+                      <View style={{fontWeight: "bold"}}>
+                        <Text>
+                          {currentOption.text}
+                        </Text>
+                      </View>
                     }
                     {currentOption.type != "group" &&
                       <>
-                        {nameForComponentWithMultiple(this) &&
+                        {Platform.OS == "web" && nameForComponentWithMultiple(this) &&
                           <input
                             id={idForComponent(this)}
                             name={nameForComponentWithMultiple(this)}
@@ -241,17 +302,34 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                         {this.presentOption(currentOption)}
                       </>
                     }
-                  </div>
+                  </View>
                 )}
               </>
             }
-          </div>
-          <div className="haya-select-chevron-down-container">
-            <i className="fa fa-chevron-down" />
-          </div>
-        </div>
-        <div ref={endOfSelectRef} />
-      </div>
+          </View>
+          <View
+            className="chevron-container"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              marginRight: 8,
+              marginLeft: "auto"
+            }}
+          >
+            <Text style={chevronStyle}>
+              {opened &&
+                <>&#8963;</>
+              }
+              {!opened &&
+                <>&#8964;</>
+              }
+            </Text>
+          </View>
+        </Pressable>
+        <View ref={endOfSelectRef} />
+      </View>
     )
   }
 
@@ -283,7 +361,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (!defaultValues) return
 
     const result = await this.props.options({
-      searchValue: digg(this.tt.searchTextInputRef, "current")?.value,
+      searchValue: this.s.searchText,
       values: defaultValues
     })
 
@@ -292,7 +370,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   loadOptions = async () => {
     const {options} = this.p
-    const searchValue = digg(this.tt.searchTextInputRef, "current")?.value
+    const searchValue = this.s.searchText
 
     if (Array.isArray(options)) {
       return this.loadOptionsFromArray(options, searchValue)
@@ -308,14 +386,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       return <OptionGroup key={key} option={loadedOption} />
     }
 
-    return <Option
-      currentOptions={this.getCurrentOptions()}
-      icon={this.iconForOption(loadedOption)}
-      key={key}
-      option={loadedOption}
-      onOptionClicked={this.onOptionClicked}
-      presentOption={this.presentOption}
-    />
+    return (
+      <Option
+        currentOptions={this.getCurrentOptions()}
+        icon={this.iconForOption(loadedOption)}
+        key={key}
+        option={loadedOption}
+        onOptionClicked={this.onOptionClicked}
+        presentOption={this.presentOption}
+      />
+    )
   }
 
   loadOptionsFromArray(options, searchValue) {
@@ -351,11 +431,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     }
   }
 
+  onChangeSearchText = (searchText) => this.setState({searchText})
+
   openOptions() {
     this.setOptionsPositionBelow()
     this.loadOptions()
     this.setState(
-      {opened: true},
+      {opened: true, searchText: ""},
       () => {
         this.focusTextInput()
         this.setOptionsPositionAboveIfOutsideScreen()
@@ -380,8 +462,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
     const scrollTop = document.documentElement.scrollTop
     const optionsTotalHeight = optionsHeight + optionsTop + scrollTop
+    const windowHeightWithScroll = window.innerHeight + scrollTop
 
-    if (window.innerHeight < optionsTotalHeight) {
+    if (windowHeightWithScroll < optionsTotalHeight) {
       this.setOptionsPositionAbove()
     } else {
       this.setState({optionsVisibility: "visible"})
@@ -389,11 +472,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionAbove() {
-    const {optionsContainerRef, currentSelectedRef, searchTextInputRef} = this.tt
+    const {optionsContainerRef, currentSelectedRef, endOfSelectRef} = this.tt
     const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
     const position = currentSelectedRef.current.getBoundingClientRect()
-    const {left, top, width} = digs(position, "left", "top", "width")
+    const {top} = digs(position, "top")
     const optionsTop = top - optionsHeight + 2
+    const {left, width} = digs(endOfSelectRef.current.getBoundingClientRect(), "left", "width")
 
     this.setState(
       {
@@ -411,7 +495,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionBelow() {
-    const {endOfSelectRef, searchTextInputRef} = this.tt
+    const {endOfSelectRef} = this.tt
     const position = endOfSelectRef.current.getBoundingClientRect()
     const {left, top, width} = digs(position, "left", "top", "width")
 
@@ -461,15 +545,20 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {loadedOptions, optionsLeft, optionsTop, optionsVisibility, optionsWidth, scrollLeft, scrollTop} = this.s
 
     return (
-      <div
-        className="haya-select-options-container"
-        data-id={idForComponent(this)}
+      <View
+        dataSet={{class: "options-container", id: idForComponent(this)}}
         ref={optionsContainerRef}
         style={{
+          position: "absolute",
           left: optionsLeft + scrollLeft,
           top: optionsTop + scrollTop - 1,
+          zIndex: 99999,
           visibility: optionsVisibility,
           width: optionsWidth,
+          backgroundColor: "#fff",
+          border: "1px solid #999",
+          maxHeight: 300,
+          overflowY: "auto"
         }}
       >
         {loadedOptions?.map((loadedOption) =>
@@ -479,11 +568,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           })
         )}
         {loadedOptions?.length === 0 &&
-          <div className="haya-select-no-options-container">
-            {this.t(".no_options_found")}
-          </div>
+          <View dataSet={{class: "no-options-container"}}>
+            <Text>
+              {this.t(".no_options_found")}
+            </Text>
+          </View>
         }
-      </div>
+      </View>
     )
   }
 
@@ -573,8 +664,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
 
     return (
-      <div
-        className="haya-select-option-presentation"
+      <View
+        dataSet={{class: "option-presentation"}}
         data-toggle-icon={toggleOption?.icon}
         data-toggle-value={toggleOption?.value}
         data-value={currentValue.value}
@@ -586,11 +677,24 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           <i className={`fa fa-fw fa-${icon}`} />
         }
         {currentValue.content}
-        {!currentValue.content && currentValue.text}
+        {!currentValue.content &&
+          <Text>{currentValue.text}</Text>
+        }
         {("html" in currentValue) &&
           <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
         }
-      </div>
+      </View>
     )
+  }
+
+  async setCurrentFromGivenValues() {
+    const {options, values} = this.p
+    const currentOptions = await options({values})
+    const currentValues = currentOptions?.map((currentOption) => currentOption.value)
+    const stateValues = this.s.currentOptions?.map((currentOption) => currentOption.value)
+
+    if (anythingDifferent(currentValues, stateValues)) {
+      this.setState({currentOptions})
+    }
   }
 }))

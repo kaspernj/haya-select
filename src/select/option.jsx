@@ -1,6 +1,7 @@
 import PropTypes from "prop-types"
 import {memo} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
+import {View} from "react-native"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
   static propTypes = {
@@ -12,21 +13,57 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     presentOption: PropTypes.func.isRequired
   }
 
+  setup() {
+    this.useStates({
+      hover: false
+    })
+  }
+
   render() {
+    const disabled = Boolean(this.props.option.disabled)
     const selected = Boolean(this.props.currentOptions.find((currentOption) => currentOption.value == this.props.option.value))
+    const style = {
+      paddingTop: 4,
+      paddingRight: 8,
+      paddingBottom: 4,
+      paddingLeft: 8,
+      color: "#000"
+    }
+
+    if (disabled) {
+      style.cursor = "default"
+      style.opacity = 0.6
+    } else {
+      style.cursor = "pointer"
+    }
+
+    if (selected) {
+      style.backgroundColor = "#80b2ff"
+    }
+
+    if (this.state.hover) {
+      style.backgroundColor = "steelblue"
+    }
 
     return (
-      <div
-        className="haya-select-option"
-        data-disabled={Boolean(this.props.option.disabled)}
-        data-selected={selected}
-        data-value={this.props.option.value}
+      <View
+        dataSet={{
+          class: "haya-select-option",
+          disabled,
+          selected,
+          value: this.props.option.value
+        }}
         onClick={this.onClick}
+        onPointerOver={this.onPointerOver}
+        onPointerOut={this.onPointerOut}
+        style={style}
       >
         {this.props.presentOption(this.props.option)}
-      </div>
+      </View>
     )
   }
 
   onClick = (e) => this.props.onOptionClicked(e, this.props.option)
+  onPointerOver = () => this.setState({hover: true})
+  onPointerOut = () => this.setState({hover: false})
 }))
