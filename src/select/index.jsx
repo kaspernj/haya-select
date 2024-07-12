@@ -665,10 +665,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={{class: "option-presentation"}}
-        data-toggle-icon={toggleOption?.icon}
-        data-toggle-value={toggleOption?.value}
-        data-value={currentValue.value}
+        dataSet={{
+          class: "option-presentation",
+          toggleIcon: toggleOption?.icon,
+          toggleValue: toggleOption?.value,
+          value: currentValue.value
+        }}
       >
         {toggleOptions && !(currentValue.value in toggled) &&
           <i className="fa fa-fw" />
