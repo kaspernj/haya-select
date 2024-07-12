@@ -48,7 +48,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     return (
       <View
         dataSet={{
-          class: "haya-select-option",
+          class: "select-option",
           disabled,
           selected,
           value: this.props.option.value
