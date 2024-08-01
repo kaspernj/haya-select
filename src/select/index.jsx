@@ -1,6 +1,6 @@
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
 import config from "../config.js"
-import {digg, digs} from "diggerize"
+import {dig, digg, digs} from "diggerize"
 import debounce from "debounce"
 import idForComponent from "@kaspernj/api-maker/src/inputs/id-for-component.mjs"
 import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.mjs"
@@ -44,6 +44,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
     selectContainerStyle: PropTypes.object,
+    styles: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
       icon: PropTypes.string.isRequired,
@@ -166,62 +167,44 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   render() {
     const {currentSelectedRef, endOfSelectRef} = this.tt
-    const {
-      attribute,
-      className,
-      defaultToggled,
-      defaultValue,
-      defaultValues,
-      id,
-      model,
-      multiple,
-      name,
-      onChange,
-      onOptionsClosed,
-      options,
-      placeholder,
-      search,
-      selectContainerStyle,
-      toggleOptions,
-      ...restProps
-    } = this.props
+    const {className, placeholder, toggleOptions} = this.props
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
     const BodyPortal = config.getBodyPortal()
 
-    const selectContainerStyleActual = Object.assign(
-      {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        border: "1px solid #999",
-        color: "#000",
-        cursor: "pointer",
-        paddingTop: 5,
-        paddingBottom: 5,
-        paddingLeft: 5
-      },
-      selectContainerStyle
-    )
+    const selectContainerStyleActual = this.stylingFor("selectContainer", {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#fff",
+      border: "1px solid #999",
+      borderRadius: 4,
+      color: "#000",
+      cursor: "pointer",
+      paddingTop: 5,
+      paddingBottom: 5,
+      paddingLeft: 5
+    })
 
     if (opened) {
       if (optionsPlacement == "above") {
         selectContainerStyleActual.borderTopLeftRadius = 0
         selectContainerStyleActual.borderTopRightRadius = 0
-        selectContainerStyleActual.borderBottomRightRadius = 4
-        selectContainerStyleActual.borderBottomLeftRadius = 4
+        selectContainerStyleActual.borderBottomRightRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderBottomLeftRadius = selectContainerStyleActual.borderRadius
+
+        delete selectContainerStyleActual.borderRadius
       } else if (optionsPlacement == "below") {
-        selectContainerStyleActual.borderTopLeftRadius = 4
-        selectContainerStyleActual.borderTopRightRadius = 4
+        selectContainerStyleActual.borderTopLeftRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderTopRightRadius = selectContainerStyleActual.borderRadius
         selectContainerStyleActual.borderBottomRightRadius = 0
         selectContainerStyleActual.borderBottomLeftRadius = 0
+
+        delete selectContainerStyleActual.borderRadius
       }
-    } else {
-      selectContainerStyleActual.borderRadius = 4
     }
 
-    const chevronStyle = {fontSize: 24}
+    const chevronStyle = this.stylingFor("chevron", {fontSize: 24})
 
     if (opened) {
       chevronStyle.marginBottom = -9
@@ -231,8 +214,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={{class: className, component: "haya-select", id: idForComponent(this), opened, optionsPlacement, toggles: Boolean(toggleOptions)}}
-        {...restProps}
+        dataSet={{
+          class: className,
+          component: "haya-select",
+          id: idForComponent(this),
+          opened,
+          optionsPlacement,
+          toggles: Boolean(toggleOptions)
+        }}
+        style={this.stylingFor("main")}
       >
         {opened &&
           <BodyPortal>
@@ -247,7 +237,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           <View
             dataSet={{class: "current-selected"}}
             ref={currentSelectedRef}
-            style={{flexWrap: "wrap"}}
+            style={this.stylingFor("currentSelected", {width: "calc(100% - 27px)", flexWrap: "wrap"})}
           >
             {opened &&
               <TextInput
@@ -256,19 +246,19 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.t(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
-                style={{
+                style={this.stylingFor("searchTextInput", {
                   width: "100%",
                   border: 0,
                   outline: "none",
                   padding: 0
-                }}
+                })}
                 value={this.state.searchText}
               />
             }
             {!opened &&
               <>
                 {currentOptions.length == 0 &&
-                  <Text style={{color: "grey"}}>
+                  <Text style={this.stylingFor("nothingSelected", {color: "grey"})}>
                     {placeholder || this.t(".nothing_selected")}
                   </Text>
                 }
@@ -281,10 +271,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                   />
                 }
                 {currentOptions.map((currentOption) =>
-                  <View dataSet={{class: "current-option"}} key={currentOption.key || `current-value-${currentOption.value}`} style={{marginRight: 6}}>
+                  <View
+                    dataSet={{class: "current-option"}}
+                    key={currentOption.key || `current-value-${currentOption.value}`}
+                    style={this.stylingFor("currentOption", {marginRight: 6})}
+                  >
                     {currentOption.type == "group" &&
-                      <View style={{fontWeight: "bold"}}>
-                        <Text>
+                      <View style={this.stylingFor("currentOptionGroup", {fontWeight: "bold"})}>
+                        <Text style={this.stylingFor("currentOptionGroupText")}>
                           {currentOption.text}
                         </Text>
                       </View>
@@ -309,14 +303,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </View>
           <View
             className="chevron-container"
-            style={{
+            style={this.stylingFor("chevronContainer", {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
               marginRight: 8,
               marginLeft: "auto"
-            }}
+            })}
           >
             <Text style={chevronStyle}>
               {opened &&
@@ -548,18 +542,20 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       <View
         dataSet={{class: "options-container", id: idForComponent(this)}}
         ref={optionsContainerRef}
-        style={{
-          position: "absolute",
-          left: optionsLeft + scrollLeft,
-          top: optionsTop + scrollTop - 1,
-          zIndex: 99999,
-          visibility: optionsVisibility,
-          width: optionsWidth,
-          backgroundColor: "#fff",
-          border: "1px solid #999",
-          maxHeight: 300,
-          overflowY: "auto"
-        }}
+        style={
+          this.stylingFor("optionsContainer", {
+            position: "absolute",
+            left: optionsLeft + scrollLeft,
+            top: optionsTop + scrollTop - 1,
+            zIndex: 99999,
+            visibility: optionsVisibility,
+            width: optionsWidth,
+            backgroundColor: "#fff",
+            border: "1px solid #999",
+            maxHeight: 300,
+            overflowY: "auto"
+          })
+        }
       >
         {loadedOptions?.map((loadedOption) =>
           this.hayaSelectOption({
@@ -640,6 +636,18 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState(newState)
   }
 
+  stylingFor(stylingName, style = {}) {
+    let customStyling = dig(this, "props", "styles", stylingName)
+
+    if (typeof customStyling == "function") customStyling = customStyling({state: this.state, style})
+
+    if (customStyling) {
+      return Object.assign(style, customStyling)
+    }
+
+    return style
+  }
+
   iconForOption(option) {
     const {toggleOptions} = this.props || {}
     const toggled = this.getToggled()
@@ -680,7 +688,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         }
         {currentValue.content}
         {!currentValue.content &&
-          <Text>{currentValue.text}</Text>
+          <Text className="option-presentation-text" style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
+            {currentValue.text}
+          </Text>
         }
         {("html" in currentValue) &&
           <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
