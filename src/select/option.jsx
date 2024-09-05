@@ -5,7 +5,7 @@ import {View} from "react-native"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
   static propTypes = {
-    currentOptions: PropTypes.array.isRequired,
+    currentOptionValues: PropTypes.array.isRequired,
     disabled: PropTypes.bool,
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
@@ -20,8 +20,9 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
   }
 
   render() {
-    const disabled = Boolean(this.props.option.disabled)
-    const selected = Boolean(this.props.currentOptions.find((currentOption) => currentOption.value == this.props.option.value))
+    const {currentOptionValues, option} = this.p
+    const disabled = Boolean(option.disabled)
+    const selected = Boolean(currentOptionValues.find((currentOptionValue) => currentOptionValue == option.value))
     const style = {
       paddingTop: 4,
       paddingRight: 8,
@@ -53,12 +54,12 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
           selected,
           value: this.props.option.value
         }}
-        onClick={this.onClick}
-        onPointerOver={this.onPointerOver}
-        onPointerOut={this.onPointerOut}
+        onClick={this.tt.onClick}
+        onPointerOver={this.tt.onPointerOver}
+        onPointerOut={this.tt.onPointerOut}
         style={style}
       >
-        {this.props.presentOption(this.props.option)}
+        {this.props.presentOption(option)}
       </View>
     )
   }

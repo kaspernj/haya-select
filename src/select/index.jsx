@@ -127,7 +127,21 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
         if (this.s.loadedOptions) {
-          return this.p.values.map((value) => this.s.loadedOptions.find((option) => option.value == value))
+          const result = this.p.values.map((value) => {
+            let foundOption = this.s.loadedOptions.find((option) => option.value == value)
+
+            if (!foundOption) {
+              foundOption = this.s.currentOptions.find((option) => option.value == value)
+
+              if (!foundOption) {
+                throw new Error(`Couldn't find option: ${value} in loadedOptions or state currentOptions`)
+              }
+            }
+
+            return foundOption
+          })
+
+          return result
         } else {
           this.setCurrentFromGivenValues()
         }
@@ -139,6 +153,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     }
 
     return this.s.currentOptions
+  }
+
+  getCurrentOptionValues() {
+    if ("values" in this.props) {
+      return this.p.values
+    }
+
+    return this.getCurrentOptions().map((option) => option.value)
   }
 
   componentDidMount() {
@@ -382,7 +404,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <Option
-        currentOptions={this.getCurrentOptions()}
+        currentOptionValues={this.getCurrentOptionValues()}
         icon={this.iconForOption(loadedOption)}
         key={key}
         option={loadedOption}
