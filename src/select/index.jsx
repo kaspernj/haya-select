@@ -39,6 +39,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     multiple: PropTypes.bool.isRequired,
     name: PropTypes.string,
     onChange: PropTypes.func,
+    onChangeValue: PropTypes.func,
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     placeholder: PropTypes.node,
@@ -646,12 +647,26 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
     }
 
+    const options = newState.currentOptions || currentOptions
+
     if (onChange) {
       onChange({
         event,
-        options: newState.currentOptions || currentOptions,
+        options,
         toggles: newToggled
       })
+    }
+
+    if (this.props.onChangeValue) {
+      let optionValue
+
+      if (multiple) {
+        optionValue = options.map((option) => option.value)
+      } else {
+        optionValue = dig(options, 0, "value")
+      }
+
+      this.p.onChangeValue(optionValue)
     }
 
     if (!multiple) this.closeOptions()
