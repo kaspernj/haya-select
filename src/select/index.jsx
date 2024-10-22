@@ -126,7 +126,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
-      if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
+      if (Array.isArray(this.props.options)) {
+        return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
+      } else if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
         if (this.s.loadedOptions) {
           const result = this.p.values.map((value) => {
             let foundOption = this.s.loadedOptions.find((option) => option.value == value)
@@ -135,7 +137,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               foundOption = this.s.currentOptions.find((option) => option.value == value)
 
               if (!foundOption) {
-                throw new Error(`Couldn't find option: ${value} in loadedOptions or state currentOptions`)
+                console.error(
+                  `Couldn't find option: ${value} in loadedOptions or state currentOptions`,
+                  {stateLoadedOptions: this.s.loadedOptions, stateCurrentOptions: this.s.currentOptions, propsOptions: this.props.options}
+                )
               }
             }
 
@@ -146,8 +151,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         } else {
           this.setCurrentFromGivenValues()
         }
-      } else if (Array.isArray(this.props.options)) {
-        return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
       } else {
         return this.p.values.map((value) => ({value}))
       }
@@ -635,7 +638,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
       if (toggleOptions) {
         // Set fresh toggle
-
         newToggled[loadedOption.value] = toggleOptions[0].value
         newState.toggled = newToggled
       }
