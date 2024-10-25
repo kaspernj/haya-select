@@ -284,7 +284,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             {!opened &&
               <>
                 {currentOptions.length == 0 &&
-                  <Text style={this.stylingFor("nothingSelected", {color: "grey"})}>
+                  <Text numberOfLines={1} style={this.stylingFor("nothingSelected", {color: "grey"})}>
                     {placeholder || this.t(".nothing_selected")}
                   </Text>
                 }
