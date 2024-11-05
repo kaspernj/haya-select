@@ -2,13 +2,15 @@ import {anythingDifferent} from "set-state-compare/src/diff-utils"
 import config from "../config.js"
 import {dig, digg, digs} from "diggerize"
 import debounce from "debounce"
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"
 import idForComponent from "@kaspernj/api-maker/src/inputs/id-for-component.mjs"
 import nameForComponent from "@kaspernj/api-maker/src/inputs/name-for-component.mjs"
 import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
-import {memo, useRef} from "react"
+import RenderHtml from "react-native-render-html"
+import {memo, useEffect, useRef} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import {Platform, Pressable, Text, TextInput, View} from "react-native"
 import useEventListener from "@kaspernj/api-maker/src/use-event-listener"
@@ -24,6 +26,7 @@ const nameForComponentWithMultiple = (component) => {
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
+    optionsWidth: null,
     search: false
   }
 
@@ -42,6 +45,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
+    optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
     selectContainerStyle: PropTypes.object,
@@ -55,6 +59,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     values: PropTypes.array
   })
 
+  callOptionsPositionAboveIfOutsideScreen = false
   p = fetchingObject(() => this.props)
   s = fetchingObject(() => this.state)
   tt = fetchingObject(this)
@@ -73,27 +78,38 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setInstance({
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
-      currentSelectedRef: useRef(),
       searchTextInputRef: useRef(),
       t
     })
     this.useStates({
       currentOptions: () => this.defaultCurrentOptions(),
+      selectContainerLayout: null,
+      endOfSelectLayout: null,
       loadedOptions: () => this.defaultLoadedOptions(),
       opened: false,
-      optionsLeft: undefined,
+      optionsContainerLayout: null,
       optionsPlacement: undefined,
       optionsTop: undefined,
       optionsVisibility: undefined,
       optionsWidth: undefined,
+      scrollLeft: document.documentElement.scrollLeft,
+      scrollTop: document.documentElement.scrollTop,
       searchText: "",
-      scrollLeft: undefined,
-      scrollTop: undefined,
       toggled: () => this.defaultToggled()
     })
-    useEventListener(window, "click", this.onWindowClicked)
-    useEventListener(window, "resize", this.tt.onAnythingResizedDebounced)
-    useEventListener(window, "scroll", this.tt.onAnythingScrolledDebounced)
+
+    if (Platform.OS == "web") {
+      useEventListener(window, "click", this.tt.onWindowClicked)
+      useEventListener(window, "resize", this.tt.onAnythingResizedDebounced)
+      useEventListener(window, "scroll", this.tt.onAnythingScrolledDebounced)
+    }
+
+    useEffect(() => {
+      if (this.tt.callOptionsPositionAboveIfOutsideScreen && this.s.optionsContainerLayout) {
+        this.callOptionsPositionAboveIfOutsideScreen = false
+        this.setOptionsPositionAboveIfOutsideScreen()
+      }
+    }, [this.tt.callOptionsPositionAboveIfOutsideScreen, this.s.optionsContainerLayout])
   }
 
   defaultCurrentOptions() {
@@ -126,7 +142,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
-      if (Array.isArray(this.props.options)) {
+      if (Array.isArray(this.props.options) && this.props.values) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
       } else if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
         if (this.s.loadedOptions) {
@@ -151,7 +167,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         } else {
           this.setCurrentFromGivenValues()
         }
-      } else {
+      } else if (this.props.values) {
         return this.p.values.map((value) => ({value}))
       }
     }
@@ -192,7 +208,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   render() {
-    const {currentSelectedRef, endOfSelectRef} = this.tt
+    const {endOfSelectRef} = this.tt
     const {className, placeholder, toggleOptions} = this.props
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
@@ -257,12 +273,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         }
         <Pressable
           dataSet={{class: "select-container"}}
+          onLayout={this.tt.onSelectContainerLayout}
           onPress={this.tt.onSelectClicked}
           style={selectContainerStyleActual}
         >
           <View
             dataSet={{class: "current-selected"}}
-            ref={currentSelectedRef}
             style={this.stylingFor("currentSelected", {width: "calc(100% - 27px)", flexWrap: "wrap"})}
           >
             {opened &&
@@ -348,7 +364,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             </Text>
           </View>
         </Pressable>
-        <View ref={endOfSelectRef} />
+        <View onLayout={this.tt.onEndOfSelectLayout} ref={endOfSelectRef} />
       </View>
     )
   }
@@ -425,6 +441,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState({loadedOptions})
   }
 
+  onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onEndOfSelectLayout = (e) => this.setState({endOfSelectLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+
   onSelectClicked = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -443,7 +463,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   closeOptions() {
     this.setState({
       loadedOptions: undefined,
-      opened: false
+      opened: false,
+      optionsContainerLayout: null
     })
 
     if (this.props.onOptionsClosed) {
@@ -456,11 +477,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   openOptions() {
     this.setOptionsPositionBelow()
     this.loadOptions()
+    this.callOptionsPositionAboveIfOutsideScreen = true
     this.setState(
-      {opened: true, searchText: ""},
+      {
+        opened: true,
+        scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
+        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
+        searchText: ""
+      },
       () => {
         this.focusTextInput()
-        this.setOptionsPositionAboveIfOutsideScreen()
       }
     )
   }
@@ -472,19 +498,17 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       return // Debounce after un-mount handeling.
     }
 
+    this.callOptionsPositionAboveIfOutsideScreen = true
     this.setOptionsPositionBelow()
-    this.setOptionsPositionAboveIfOutsideScreen()
   }
 
   setOptionsPositionAboveIfOutsideScreen() {
-    const {optionsContainerRef} = this.tt
-    const {optionsTop} = this.s
-    const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
-    const scrollTop = document.documentElement.scrollTop
-    const optionsTotalHeight = optionsHeight + optionsTop + scrollTop
-    const windowHeightWithScroll = window.innerHeight + scrollTop
+    const {optionsContainerLayout} = this.s
+    const optionsTop = this.s.endOfSelectLayout.top
+    const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
+    const windowHeightWithScroll = document.body.clientHeight + this.s.scrollTop
 
-    if (windowHeightWithScroll < optionsTotalHeight) {
+    if (windowHeightWithScroll < optionsTotalBottomPosition) {
       this.setOptionsPositionAbove()
     } else {
       this.setState({optionsVisibility: "visible"})
@@ -492,49 +516,32 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionAbove() {
-    const {optionsContainerRef, currentSelectedRef, endOfSelectRef} = this.tt
-    const optionsHeight = digg(optionsContainerRef, "current", "offsetHeight")
-    const position = currentSelectedRef.current.getBoundingClientRect()
-    const {top} = digs(position, "top")
-    const optionsTop = top - optionsHeight + 2
-    const {left, width} = digs(endOfSelectRef.current.getBoundingClientRect(), "left", "width")
+    const {endOfSelectLayout} = this.s
 
     this.setState(
       {
         opened: true,
-        optionsLeft: left,
         optionsPlacement: "above",
-        optionsTop,
         optionsVisibility: "visible",
-        optionsWidth: width,
-        scrollLeft: document.documentElement.scrollLeft,
-        scrollTop: document.documentElement.scrollTop
+        optionsWidth: endOfSelectLayout.width
       },
       () => this.focusTextInput()
     )
   }
 
   setOptionsPositionBelow() {
-    const {endOfSelectRef} = this.tt
-    const position = endOfSelectRef.current.getBoundingClientRect()
-    const {left, top, width} = digs(position, "left", "top", "width")
-
     this.setState(
       {
         opened: true,
-        optionsLeft: left,
         optionsPlacement: "below",
-        optionsTop: top,
         optionsVisibility: "hidden",
-        optionsWidth: width,
-        scrollLeft: document.documentElement.scrollLeft,
-        scrollTop: document.documentElement.scrollTop
+        optionsWidth: this.s.endOfSelectLayout.width
       },
       () => this.focusTextInput()
     )
   }
 
-  onAnythingResized = (e) => {
+  onAnythingResized = () => {
     if (this.s.opened) {
       this.setOptionsPosition()
     }
@@ -542,8 +549,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   onAnythingResizedDebounced = debounce(this.tt.onAnythingResized, 25)
 
-  onAnythingScrolled = (e) => {
+  onAnythingScrolled = () => {
     if (this.s.opened) {
+      this.setState({
+        scrollLeft: document.documentElement.scrollLeft,
+        scrollTop: document.documentElement.scrollTop
+      })
       this.setOptionsPosition()
     }
   }
@@ -562,26 +573,38 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   optionsContainer() {
     const {optionsContainerRef} = this.tt
-    const {loadedOptions, optionsLeft, optionsTop, optionsVisibility, optionsWidth, scrollLeft, scrollTop} = this.s
+    const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
+    let left, top
+
+    if (optionsPlacement == "below") {
+      left = this.s.endOfSelectLayout.left
+      top = this.s.endOfSelectLayout.top - 2
+    } else if (optionsPlacement == "above") {
+      left = endOfSelectLayout.left
+      top = selectContainerLayout.top - optionsContainerLayout.height + 1
+    } else {
+      throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
+    }
+
+    const style = this.stylingFor("optionsContainer", {
+      position: "absolute",
+      left,
+      top,
+      zIndex: 99999,
+      visibility: optionsVisibility,
+      width: this.p.optionsWidth || this.s.optionsWidth,
+      backgroundColor: "#fff",
+      border: "1px solid #999",
+      maxHeight: 300,
+      overflowY: "auto"
+    })
 
     return (
       <View
         dataSet={{class: "options-container", id: idForComponent(this)}}
+        onLayout={this.onOptionsContainerLayout}
         ref={optionsContainerRef}
-        style={
-          this.stylingFor("optionsContainer", {
-            position: "absolute",
-            left: optionsLeft + scrollLeft,
-            top: optionsTop + scrollTop - 1,
-            zIndex: 99999,
-            visibility: optionsVisibility,
-            width: optionsWidth,
-            backgroundColor: "#fff",
-            border: "1px solid #999",
-            maxHeight: 300,
-            overflowY: "auto"
-          })
-        }
+        style={style}
       >
         {loadedOptions?.map((loadedOption) =>
           this.hayaSelectOption({
@@ -720,18 +743,21 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         }}
       >
         {toggleOptions && !(currentValue.value in toggled) &&
-          <i className="fa fa-fw" />
+          <View dataSet={{class: "toggle-icon-placeholder"}} style={{width: 25}} />
         }
         {toggleOptions && (currentValue.value in toggled) &&
-          <i className={`fa fa-fw fa-${icon}`} />
+          <FontAwesomeIcon dataSet={{class: "toggle-icon"}} name={icon} style={{width: 25}} />
         }
         {currentValue.content}
         {!currentValue.content &&
-          <Text className="option-presentation-text" style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
+          <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
             {currentValue.text}
           </Text>
         }
-        {("html" in currentValue) &&
+        {("html" in currentValue) && Platform.OS != "web" &&
+          <RenderHtml source={{html: digg(currentValue, "html")}} />
+        }
+        {("html" in currentValue) && Platform.OS == "web" &&
           <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
         }
       </View>
