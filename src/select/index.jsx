@@ -1,6 +1,5 @@
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
-import config from "../config.js"
-import {dig, digg, digs} from "diggerize"
+import {dig, digg} from "diggerize"
 import debounce from "debounce"
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"
 import idForComponent from "@kaspernj/api-maker/src/inputs/id-for-component.mjs"
@@ -10,6 +9,7 @@ import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
+import {Portal} from "react-native-portalize"
 import {memo, useEffect, useRef} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import {Platform, Pressable, Text, TextInput, View} from "react-native"
@@ -26,6 +26,7 @@ const nameForComponentWithMultiple = (component) => {
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
+    optionsAbsolute: true,
     optionsWidth: null,
     search: false
   }
@@ -45,6 +46,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
+    optionsAbsolute: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
@@ -79,6 +81,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
       searchTextInputRef: useRef(),
+      selectContainerRef: useRef(),
       t
     })
     this.useStates({
@@ -212,8 +215,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {className, placeholder, toggleOptions} = this.props
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
-    const BodyPortal = config.getBodyPortal()
-
     const selectContainerStyleActual = this.stylingFor("selectContainer", {
       display: "flex",
       flexDirection: "row",
@@ -266,15 +267,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         }}
         style={this.stylingFor("main")}
       >
-        {opened &&
-          <BodyPortal>
-            {this.optionsContainer()}
-          </BodyPortal>
-        }
         <Pressable
           dataSet={{class: "select-container"}}
           onLayout={this.tt.onSelectContainerLayout}
           onPress={this.tt.onSelectClicked}
+          ref={this.tt.selectContainerRef}
           style={selectContainerStyleActual}
         >
           <View
@@ -364,7 +361,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             </Text>
           </View>
         </Pressable>
-        <View onLayout={this.tt.onEndOfSelectLayout} ref={endOfSelectRef} />
+        <View dataSet={{class: "end-of-select"}} onLayout={this.tt.onEndOfSelectLayout} ref={endOfSelectRef} />
+        {opened &&
+          <Portal dataSet={{class: "haya-select-portal"}}>
+            {this.optionsContainer()}
+          </Portal>
+        }
       </View>
     )
   }
@@ -573,24 +575,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   optionsContainer() {
     const {optionsContainerRef} = this.tt
+    const {optionsAbsolute} = this.p
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
-    let left, top
-
-    if (optionsPlacement == "below") {
-      left = this.s.endOfSelectLayout.left
-      top = this.s.endOfSelectLayout.top - 2
-    } else if (optionsPlacement == "above") {
-      left = endOfSelectLayout.left
-      top = selectContainerLayout.top - optionsContainerLayout.height + 1
-    } else {
-      throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
-    }
+    let top
 
     const style = this.stylingFor("optionsContainer", {
       position: "absolute",
-      left,
-      top,
       zIndex: 99999,
+      elevation: 99999,
       visibility: optionsVisibility,
       width: this.p.optionsWidth || this.s.optionsWidth,
       backgroundColor: "#fff",
@@ -599,10 +591,37 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       overflowY: "auto"
     })
 
+    if (!optionsAbsolute) {
+      style.left = 0
+      style.bottom = 0
+    } else if (optionsPlacement == "below") {
+      if (Platform.OS == "web") {
+        // onLayout top value is sometimes negative so use browser JS to get it instead
+        top = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "top")
+      } else {
+        top = selectContainerLayout.top
+      }
+
+      style.left = this.s.endOfSelectLayout.left
+      style.top = top - 2
+    } else if (optionsPlacement == "above") {
+      if (Platform.OS == "web") {
+        // onLayout top value is sometimes negative so use browser JS to get it instead
+        top = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "top")
+      } else {
+        top = selectContainerLayout.top
+      }
+
+      style.left = endOfSelectLayout.left
+      style.top = top - optionsContainerLayout.height + 1
+    } else {
+      throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
+    }
+
     return (
       <View
         dataSet={{class: "options-container", id: idForComponent(this)}}
-        onLayout={this.onOptionsContainerLayout}
+        onLayout={this.tt.onOptionsContainerLayout}
         ref={optionsContainerRef}
         style={style}
       >
