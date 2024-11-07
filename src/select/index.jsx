@@ -147,29 +147,25 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (Array.isArray(this.props.options) && this.props.values) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
-      } else if (this.s.loadedOptions || typeof this.props.options == "function" && this.props.values) {
-        if (this.s.loadedOptions) {
-          const result = this.p.values.map((value) => {
-            let foundOption = this.s.loadedOptions.find((option) => option.value == value)
+      } else if (this.s.loadedOptions && this.props.values) {
+        return this.p.values.map((value) => {
+          let foundOption = this.s.loadedOptions.find((option) => option.value == value)
+
+          if (!foundOption) {
+            foundOption = this.s.currentOptions.find((option) => option.value == value)
 
             if (!foundOption) {
-              foundOption = this.s.currentOptions.find((option) => option.value == value)
-
-              if (!foundOption) {
-                console.error(
-                  `Couldn't find option: ${value} in loadedOptions or state currentOptions`,
-                  {stateLoadedOptions: this.s.loadedOptions, stateCurrentOptions: this.s.currentOptions, propsOptions: this.props.options}
-                )
-              }
+              console.error(
+                `Couldn't find option: ${value} in loadedOptions or state currentOptions`,
+                {stateLoadedOptions: this.s.loadedOptions, stateCurrentOptions: this.s.currentOptions, propsOptions: this.props.options}
+              )
             }
+          }
 
-            return foundOption
-          })
-
-          return result
-        } else {
-          this.setCurrentFromGivenValues()
-        }
+          return foundOption
+        })
+      } else if (this.props.options == "function" && this.props.values) {
+        this.setCurrentFromGivenValues()
       } else if (this.props.values) {
         return this.p.values.map((value) => ({value}))
       }
