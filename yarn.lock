@@ -47,10 +47,10 @@ classnames@^2.3.1:
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
   integrity sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==
 
-conjointment@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/conjointment/-/conjointment-0.1.2.tgz#4d2e23387e8f9aca97f85f8e16b243e7fdb738cf"
-  integrity sha512-CeFa0cVFY+cunVOpdmzAMzFXodVc8pm2iOj235WRsxwO5EneGS+K77RHyO+4roeFslXt73d8zykyhwonfCaJ0g==
+conjointment@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/conjointment/-/conjointment-0.1.3.tgz#3b8c57f64c115bbbaa99faad0b95493f219efd3b"
+  integrity sha512-5KvQrAfUW2R5LGJwA2jFxvvAqf5dJdGERAMWHFYjVGkCzCEtNCL7huJ3Hx1u2myoBnSu1hLG2GuBO5HyGZJqVw==
   dependencies:
     prop-types "^15.8.1"
     prop-types-exact "^1.2.5"
