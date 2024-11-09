@@ -359,7 +359,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         </Pressable>
         <View dataSet={{class: "end-of-select"}} onLayout={this.tt.onEndOfSelectLayout} ref={endOfSelectRef} />
         {opened &&
-          <Portal dataSet={{class: "haya-select-portal"}}>
+          <Portal>
             {this.optionsContainer()}
           </Portal>
         }
