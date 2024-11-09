@@ -145,9 +145,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
-      if (Array.isArray(this.props.options) && this.props.values) {
+      if (Array.isArray(this.props.options)) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
-      } else if (this.s.loadedOptions && this.props.values) {
+      } else if (this.s.loadedOptions) {
         return this.p.values.map((value) => {
           let foundOption = this.s.loadedOptions.find((option) => option.value == value)
 
@@ -164,9 +164,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
           return foundOption
         })
-      } else if (this.props.options == "function" && this.props.values) {
+      } else if (typeof this.props.options == "function") {
         this.setCurrentFromGivenValues()
-      } else if (this.props.values) {
+      } else {
         return this.p.values.map((value) => ({value}))
       }
     }
