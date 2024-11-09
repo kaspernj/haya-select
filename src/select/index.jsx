@@ -575,7 +575,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
     let left, top
 
-    const style = this.stylingFor("optionsContainer", {
+    let style = {
       position: "absolute",
       zIndex: 99999,
       elevation: 99999,
@@ -585,7 +585,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       border: "1px solid #999",
       maxHeight: 300,
       overflowY: "auto"
-    })
+    }
 
     if (!optionsAbsolute) {
       style.left = 0
@@ -593,10 +593,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     } else if (optionsPlacement == "below") {
       if (Platform.OS == "web") {
         // onLayout top value is sometimes negative so use browser JS to get it instead
-        top = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop + 2
+        top = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop + 1
 
         // onLayout left values doesn't always update when changed
-        left = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft + 2
+        left = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft
       } else {
         left = this.s.endOfSelectLayout.left
         top = selectContainerLayout.top
@@ -607,10 +607,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     } else if (optionsPlacement == "above") {
       if (Platform.OS == "web") {
         // onLayout top value is sometimes negative so use browser JS to get it instead
-        top = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop - 1
+        top = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop
 
         // onLayout left values doesn't always update when changed
-        left = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft - 1
+        left = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft
       } else {
         left = endOfSelectLayout.left
         top = selectContainerLayout.top
@@ -621,6 +621,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     } else {
       throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
     }
+
+    style = this.stylingFor("optionsContainer", style)
 
     return (
       <View
