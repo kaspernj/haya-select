@@ -427,8 +427,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         icon={this.iconForOption(loadedOption)}
         key={key}
         option={loadedOption}
-        onOptionClicked={this.onOptionClicked}
-        presentOption={this.presentOption}
+        onOptionClicked={this.tt.onOptionClicked}
+        presentOption={this.tt.presentOption}
       />
     )
   }
@@ -765,6 +765,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       <View
         dataSet={{
           class: "option-presentation",
+          text: option.text,
           toggleIcon: toggleOption?.icon,
           toggleValue: toggleOption?.value,
           value: option.value

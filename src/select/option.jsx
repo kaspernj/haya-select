@@ -4,9 +4,13 @@ import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-compon
 import {View} from "react-native"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
+  static defaultProps = {
+    disabled: false
+  }
+
   static propTypes = {
     currentOptionValues: PropTypes.array.isRequired,
-    disabled: PropTypes.bool,
+    disabled: PropTypes.bool.isRequired,
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
     option: PropTypes.object.isRequired,
@@ -59,12 +63,12 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
         onPointerOut={this.tt.onPointerOut}
         style={style}
       >
-        {this.props.presentOption(option, "option")}
+        {this.p.presentOption(option, "option")}
       </View>
     )
   }
 
-  onClick = (e) => this.props.onOptionClicked(e, this.props.option)
+  onClick = (e) => this.p.onOptionClicked(e, this.props.option)
   onPointerOver = () => this.setState({hover: true})
   onPointerOut = () => this.setState({hover: false})
 }))
