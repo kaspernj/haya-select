@@ -769,12 +769,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           toggleValue: toggleOption?.value,
           value: option.value
         }}
+        style={{flexDirection: "row"}}
       >
         {toggleOptions && !(option.value in toggled) &&
-          <View dataSet={{class: "toggle-icon-placeholder"}} style={{width: 25}} />
+          <View dataSet={{class: "toggle-icon-placeholder"}} style={{width: 20}} />
         }
         {toggleOptions && (option.value in toggled) &&
-          <FontAwesomeIcon dataSet={{class: "toggle-icon"}} name={icon} style={{width: 25}} />
+          <View style={{alignItems: "center", justifyContent: "center", width: 20}}>
+            <FontAwesomeIcon dataSet={{class: "toggle-icon"}} name={icon} />
+          </View>
         }
         {(() => {
           if (mode == "current" && option.currentContent) {
@@ -787,7 +790,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             return <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
           } else {
             return (
-              <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
+              <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {flex: 1, whiteSpace: "nowrap"})}>
                 {option.text}
               </Text>
             )
@@ -802,8 +805,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const currentOptions = await options({values})
     const currentValues = currentOptions?.map((currentOption) => currentOption.value)
     const stateValues = this.s.currentOptions?.map((currentOption) => currentOption.value)
-
-    console.log("setCurrentFromGivenValues", {stateValues})
 
     if (anythingDifferent(currentValues, stateValues)) {
       this.setState({currentOptions})

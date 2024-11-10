@@ -13,7 +13,8 @@
     "debounce": "^2.1.0",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
-    "set-state-compare": "^1.0.45"
+    "react-native-render-html": "^6.3.4",
+    "set-state-compare": "^1.0.52"
   },
   "peerDependencies": {
     "conjointment": ">= 0.1.4",
