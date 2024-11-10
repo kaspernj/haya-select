@@ -88,6 +88,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       currentOptions: () => this.defaultCurrentOptions(),
       selectContainerLayout: null,
       endOfSelectLayout: null,
+      height: null,
       loadedOptions: () => this.defaultLoadedOptions(),
       opened: false,
       optionsContainerLayout: null,
@@ -212,7 +213,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
     const selectContainerStyleActual = this.stylingFor("selectContainer", {
-      display: "flex",
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "#fff",
@@ -226,6 +226,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     })
 
     if (opened) {
+      // Prevent select from changing size once the content is replaced with search text once opened
+      selectContainerStyleActual.height = this.s.height
+
       if (optionsPlacement == "above") {
         selectContainerStyleActual.borderTopLeftRadius = 0
         selectContainerStyleActual.borderTopRightRadius = 0
@@ -246,7 +249,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const chevronStyle = this.stylingFor("chevron", {fontSize: 24})
 
     if (opened) {
-      chevronStyle.marginBottom = -9
+      chevronStyle.marginBottom = -15
     } else {
       chevronStyle.marginTop = -9
     }
@@ -272,7 +275,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         >
           <View
             dataSet={{class: "current-selected"}}
-            style={this.stylingFor("currentSelected", {width: "calc(100% - 27px)", flexWrap: "wrap"})}
+            style={this.stylingFor("currentSelected", {width: "calc(100% - 25px)", flexWrap: "wrap"})}
           >
             {opened &&
               <TextInput
@@ -328,7 +331,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                             value={digg(currentOption, "value")}
                           />
                         }
-                        {this.presentOption(currentOption)}
+                        {this.presentOption(currentOption, "current")}
                       </>
                     }
                   </View>
@@ -339,11 +342,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           <View
             className="chevron-container"
             style={this.stylingFor("chevronContainer", {
-              display: "flex",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              marginRight: 8,
               marginLeft: "auto"
             })}
           >
@@ -460,6 +461,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   closeOptions() {
     this.setState({
+      height: null,
       loadedOptions: undefined,
       opened: false,
       optionsContainerLayout: null
@@ -478,6 +480,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.callOptionsPositionAboveIfOutsideScreen = true
     this.setState(
       {
+        height: this.s.selectContainerLayout.height,
         opened: true,
         scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
         scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
@@ -751,11 +754,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     }
   }
 
-  presentOption = (currentValue) => {
+  presentOption = (option, mode) => {
     const {toggleOptions} = this.props || {}
     const toggled = this.getToggled()
-    const icon = this.iconForOption(currentValue)
-    const toggleValue = toggled[currentValue.value]
+    const icon = this.iconForOption(option)
+    const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
 
     return (
@@ -764,27 +767,32 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           class: "option-presentation",
           toggleIcon: toggleOption?.icon,
           toggleValue: toggleOption?.value,
-          value: currentValue.value
+          value: option.value
         }}
       >
-        {toggleOptions && !(currentValue.value in toggled) &&
+        {toggleOptions && !(option.value in toggled) &&
           <View dataSet={{class: "toggle-icon-placeholder"}} style={{width: 25}} />
         }
-        {toggleOptions && (currentValue.value in toggled) &&
+        {toggleOptions && (option.value in toggled) &&
           <FontAwesomeIcon dataSet={{class: "toggle-icon"}} name={icon} style={{width: 25}} />
         }
-        {currentValue.content}
-        {!currentValue.content &&
-          <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
-            {currentValue.text}
-          </Text>
-        }
-        {("html" in currentValue) && Platform.OS != "web" &&
-          <RenderHtml source={{html: digg(currentValue, "html")}} />
-        }
-        {("html" in currentValue) && Platform.OS == "web" &&
-          <div dangerouslySetInnerHTML={{__html: digg(currentValue, "html")}} />
-        }
+        {(() => {
+          if (mode == "current" && option.currentContent) {
+            return option.currentContent()
+          } else if (option.content) {
+            return option.content()
+          } else if ("html" in option && Platform.OS != "web") {
+            return <RenderHtml source={{html: digg(option, "html")}} />
+          } else if ("html" in option && Platform.OS == "web") {
+            return <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
+          } else {
+            return (
+              <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {whiteSpace: "nowrap"})}>
+                {option.text}
+              </Text>
+            )
+          }
+        })()}
       </View>
     )
   }

@@ -59,7 +59,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
         onPointerOut={this.tt.onPointerOut}
         style={style}
       >
-        {this.props.presentOption(option)}
+        {this.props.presentOption(option, "option")}
       </View>
     )
   }
