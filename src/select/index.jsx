@@ -118,7 +118,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     useEffect(() => {
       const currentOptionIds = this.s.currentOptions?.map((currentOption) => currentOption.value)
 
-      if (this.props.values && anythingDifferent(currentOptionIds, this.props.values)) {
+      if (this.props.values && anythingDifferent(currentOptionIds, this.props.values) && typeof this.props.options == "function") {
         this.setCurrentFromGivenValues()
       }
     }, [this.props.values])
