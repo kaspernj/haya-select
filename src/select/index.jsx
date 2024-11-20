@@ -114,6 +114,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         this.setOptionsPositionAboveIfOutsideScreen()
       }
     }, [this.tt.callOptionsPositionAboveIfOutsideScreen, this.s.optionsContainerLayout])
+
+    useEffect(() => {
+      const currentOptionIds = this.s.currentOptions?.map((currentOption) => currentOption.value)
+
+      if (this.props.values && anythingDifferent(currentOptionIds, this.props.values)) {
+        this.setCurrentFromGivenValues()
+      }
+    }, [this.props.values])
   }
 
   defaultCurrentOptions() {
@@ -166,7 +174,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           return foundOption
         })
       } else if (typeof this.props.options == "function" && this.props.values) {
-        this.setCurrentFromGivenValues()
+        // Options haven't been loaded yet.
       } else if (this.props.values) {
         return this.p.values.map((value) => ({value}))
       }

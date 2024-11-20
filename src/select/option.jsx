@@ -26,7 +26,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
   render() {
     const {currentOptionValues, option} = this.p
     const disabled = Boolean(option.disabled)
-    const selected = Boolean(currentOptionValues.find((currentOptionValue) => currentOptionValue == option.value))
+    const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
     const style = {
       paddingTop: 4,
       paddingRight: 8,
