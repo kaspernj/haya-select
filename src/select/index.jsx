@@ -18,7 +18,11 @@ import useEventListener from "@kaspernj/api-maker/src/use-event-listener"
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
 
-  if (component.props.multiple && name) name += "[]"
+  const currentOptions = component.getCurrentOptions()
+
+  if (component.props.multiple && name && currentOptions.length > 0) {
+    name += "[]"
+  }
 
   return name
 }
