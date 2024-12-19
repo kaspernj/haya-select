@@ -9,7 +9,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
   }
 
   static propTypes = {
-    currentOptionValues: PropTypes.array.isRequired,
+    currentOptionValues: PropTypes.array,
     disabled: PropTypes.bool.isRequired,
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
