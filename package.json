@@ -1,6 +1,6 @@
 {
   "name": "haya-select",
-  "version": "1.0.63",
+  "version": "1.0.64",
   "description": "Just another select component for React Native + Web.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -39,14 +39,13 @@
   "devDependencies": {
     "@types/react": "~18.3.12",
     "expo-module-scripts": "^4.0.2",
-    "expo": "~52.0.0",
-    "react-native": "0.76.0"
+    "expo": "~52.0.0"
   },
   "peerDependencies": {
     "expo": "*",
     "react": "*",
     "react-native": "*",
-    "conjointment": ">= 0.1.4",
-    "prop-types": ">= 15.7.2"
+    "conjointment": "*",
+    "prop-types": "*"
   }
 }
