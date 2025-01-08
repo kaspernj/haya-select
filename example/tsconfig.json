@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "haya-select": ["../src/index"],
+      "haya-select/*": ["../src/*"]
+    }
+  }
+}
