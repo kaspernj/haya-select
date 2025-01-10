@@ -46,6 +46,7 @@
     "react": "*",
     "react-native": "*",
     "conjointment": "*",
+    "i18n-on-steroids": "*",
     "prop-types": "*"
   }
 }

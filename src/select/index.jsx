@@ -1,5 +1,8 @@
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
 import {dig, digg} from "diggerize"
+import {Platform, Pressable, Text, TextInput, View} from "react-native"
+import React, {memo, useEffect, useRef} from "react"
+import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import debounce from "debounce"
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"
 import idForComponent from "@kaspernj/api-maker/build/inputs/id-for-component"
@@ -10,10 +13,8 @@ import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
-import {memo, useEffect, useRef} from "react"
-import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
-import {Platform, Pressable, Text, TextInput, View} from "react-native"
 import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
+import useI18n from "i18n-on-steroids/src/use-i18n.mjs"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -66,9 +67,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
-  p = fetchingObject(() => this.props)
-  s = fetchingObject(() => this.state)
-  tt = fetchingObject(this)
 
   setup() {
     const {t} = useI18n({namespace: "haya_select"})
