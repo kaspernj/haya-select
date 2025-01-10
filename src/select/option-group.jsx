@@ -1,5 +1,6 @@
-import PropTypes from "prop-types"
 import {memo} from "react"
+import PropTypes from "prop-types"
+import React from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import {Text, View} from "react-native"
 
