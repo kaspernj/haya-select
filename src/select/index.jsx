@@ -31,9 +31,12 @@ const nameForComponentWithMultiple = (component) => {
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
+    onBlur: null,
+    onFocus: null,
     optionsAbsolute: true,
     optionsWidth: null,
-    search: false
+    search: false,
+    transparent: false
   }
 
   static propTypes = propTypesExact({
@@ -47,15 +50,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
     name: PropTypes.string,
+    onBlur: PropTypes.func,
     onChange: PropTypes.func,
     onChangeValue: PropTypes.func,
+    onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     optionsAbsolute: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
-    selectContainerStyle: PropTypes.object,
     styles: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
@@ -63,6 +67,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       label: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired
     })),
+    transparent: PropTypes.bool.isRequired,
     values: PropTypes.array
   })
 
@@ -219,15 +224,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   render() {
     const {endOfSelectRef} = this.tt
+    const {transparent} = this.p
     const {className, placeholder, toggleOptions} = this.props
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
     const selectContainerStyleActual = this.stylingFor("selectContainer", {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#fff",
-      border: "1px solid #999",
-      borderRadius: 4,
+      backgroundColor: transparent ? undefined : "#fff",
+      border: transparent ? undefined : "1px solid #999",
+      borderRadius: transparent ? undefined : 4,
       color: "#000",
       cursor: "pointer",
       paddingTop: 5,
@@ -480,6 +486,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (this.props.onOptionsClosed) {
       this.props.onOptionsClosed({options: this.getCurrentOptions()})
     }
+
+    if (this.p.onBlur) this.p.onBlur()
   }
 
   onChangeSearchText = (searchText) => this.setState({searchText})
@@ -500,6 +508,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         this.focusTextInput()
       }
     )
+
+    if (this.p.onFocus) this.p.onFocus()
   }
 
   focusTextInput = () => digg(this.tt.searchTextInputRef, "current")?.focus()
