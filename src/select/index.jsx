@@ -682,6 +682,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const newState = {}
     const existingOption = currentOptions.find((currentOption) => currentOption.value == loadedOption.value)
     const newToggled = {...toggled}
+    let newCurrentOptions
 
     if (existingOption) {
       if (toggleOptions) {
@@ -714,13 +715,19 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
 
       if (multiple || toggleOptions) {
-        newState.currentOptions = currentOptions.concat([loadedOption])
+        newCurrentOptions = currentOptions.concat([loadedOption])
       } else {
-        newState.currentOptions = [loadedOption]
+        newCurrentOptions = [loadedOption]
+      }
+
+      if ("values" in this.props && this.props.values !== undefined) {
+        // currentOptions are controlled and a useMemo callback is handeling setting current options.
+      } else {
+        newState.currentOptions = newCurrentOptions
       }
     }
 
-    const options = newState.currentOptions || currentOptions
+    const options = newCurrentOptions || currentOptions
 
     if (onChange) {
       onChange({
