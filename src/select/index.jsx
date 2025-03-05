@@ -693,7 +693,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           // No next toggled - remove toggled and option
           delete newToggled[loadedOption.value]
 
-          newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
+          newCurrentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
         } else {
           // Already toggled - set to next toggle
           newToggled[loadedOption.value] = digg(toggleOptions, currentIndex + 1, "value")
@@ -702,7 +702,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         newState.toggled = newToggled
       } else {
         // Remove from current options
-        newState.currentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
+        newCurrentOptions = currentOptions.filter((currentOption) => currentOption.value != loadedOption.value)
       }
     } else {
       // Don't do anything if the clicked option is disabled
@@ -719,12 +719,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       } else {
         newCurrentOptions = [loadedOption]
       }
+    }
 
-      if ("values" in this.props && this.props.values !== undefined) {
-        // currentOptions are controlled and a useMemo callback is handeling setting current options.
-      } else {
-        newState.currentOptions = newCurrentOptions
-      }
+    if ("values" in this.props && this.props.values !== undefined) {
+      // currentOptions are controlled and a useMemo callback is handeling setting current options.
+    } else if (newCurrentOptions) {
+      newState.currentOptions = newCurrentOptions
     }
 
     const options = newCurrentOptions || currentOptions
