@@ -228,6 +228,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {className, placeholder, toggleOptions} = this.props
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
+    const id = idForComponent(this)
+
     const selectContainerStyleActual = this.stylingFor("selectContainer", {
       flexDirection: "row",
       alignItems: "center",
@@ -275,7 +277,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         dataSet={{
           class: className,
           component: "haya-select",
-          id: idForComponent(this),
+          id,
           opened,
           optionsPlacement,
           toggles: Boolean(toggleOptions)
@@ -283,19 +285,19 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         style={this.stylingFor("main")}
       >
         <Pressable
-          dataSet={{class: "select-container"}}
+          dataSet={this.selectContainerDataSet ||= {class: "select-container"}}
           onLayout={this.tt.onSelectContainerLayout}
           onPress={this.tt.onSelectClicked}
           ref={this.tt.selectContainerRef}
           style={selectContainerStyleActual}
         >
           <View
-            dataSet={{class: "current-selected"}}
+            dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
             style={this.stylingFor("currentSelected", {width: "calc(100% - 25px)", flexWrap: "wrap"})}
           >
             {opened &&
               <TextInput
-                dataSet={{class: "search-text-input"}}
+                dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
                 onChange={this.tt.onSearchTextInputChangedDebounced}
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.t(".search_dot_dot_dot")}
@@ -326,7 +328,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 }
                 {currentOptions.map((currentOption) =>
                   <View
-                    dataSet={{class: "current-option"}}
+                    dataSet={this.currentOptionDataSet ||= {class: "current-option"}}
                     key={currentOption.key || `current-value-${currentOption.value}`}
                     style={this.stylingFor("currentOption", {marginRight: 6})}
                   >
@@ -356,7 +358,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             }
           </View>
           <View
-            className="chevron-container"
+            dataSet={this.chevronContainerDataSet ||= {class: "chevron-container"}}
             style={this.stylingFor("chevronContainer", {
               alignItems: "center",
               justifyContent: "center",
@@ -374,7 +376,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             </Text>
           </View>
         </Pressable>
-        <View dataSet={{class: "end-of-select"}} onLayout={this.tt.onEndOfSelectLayout} ref={endOfSelectRef} />
+        <View
+          dataSet={this.endOfSelectDataSet ||= {class: "end-of-select"}}
+          onLayout={this.tt.onEndOfSelectLayout}
+          ref={endOfSelectRef}
+        />
         {opened &&
           <Portal>
             {this.optionsContainer()}
@@ -787,6 +793,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const icon = this.iconForOption(option)
     const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
+    let style
+
+    if (mode == "current") {
+      style = this.stylingFor("currentOptionPresentationText", {flex: 1, whiteSpace: "nowrap"})
+    } else {
+      style = this.stylingFor("optionPresentationText", {flex: 1, whiteSpace: "nowrap"})
+    }
 
     return (
       <View
@@ -797,14 +810,20 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           toggleValue: toggleOption?.value,
           value: option.value
         }}
-        style={{flexDirection: "row"}}
+        style={this.optionPresentationStyle ||= {flexDirection: "row"}}
       >
         {toggleOptions && !(option.value in toggled) &&
-          <View dataSet={{class: "toggle-icon-placeholder"}} style={{width: 20}} />
+          <View
+            dataSet={this.toggleIconPlaceholderDataSet ||= {class: "toggle-icon-placeholder"}}
+            style={this.toggleIconPlaceholderStyle ||= {width: 20}}
+          />
         }
         {toggleOptions && (option.value in toggled) &&
-          <View style={{alignItems: "center", justifyContent: "center", width: 20}}>
-            <FontAwesomeIcon dataSet={{class: "toggle-icon"}} name={icon} />
+          <View style={this.toggleIconContainerStyle ||= {alignItems: "center", justifyContent: "center", width: 20}}>
+            <FontAwesomeIcon
+              dataSet={this.toggleIconDataSet ||= {class: "toggle-icon"}}
+              name={icon}
+            />
           </View>
         }
         {(() => {
@@ -818,7 +837,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             return <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
           } else {
             return (
-              <Text dataSet={{class: "option-presentation-text"}} style={this.stylingFor("optionPresentationText", {flex: 1, whiteSpace: "nowrap"})}>
+              <Text
+                dataSet={this.optionPresentationTextDataSet ||= {class: "option-presentation-text"}}
+                style={style}
+              >
                 {option.text}
               </Text>
             )
