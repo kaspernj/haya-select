@@ -264,14 +264,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
     }
 
-    const chevronStyle = this.stylingFor("chevron", {fontSize: 24})
-
-    if (opened) {
-      chevronStyle.marginBottom = -15
-    } else {
-      chevronStyle.marginTop = -9
-    }
-
     return (
       <View
         dataSet={{
@@ -293,7 +285,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         >
           <View
             dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
-            style={this.stylingFor("currentSelected", {width: "calc(100% - 25px)", flexWrap: "wrap"})}
+            style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {width: "calc(100% - 25px)", flexWrap: "wrap"})}
           >
             {opened &&
               <TextInput
@@ -302,7 +294,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.t(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
-                style={this.stylingFor("searchTextInput", {
+                style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
                   width: "100%",
                   border: 0,
                   outline: "none",
@@ -314,7 +306,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             {!opened &&
               <>
                 {currentOptions.length == 0 &&
-                  <Text numberOfLines={1} style={this.stylingFor("nothingSelected", {color: "grey"})}>
+                  <Text numberOfLines={1} style={this.stylingFor("nothingSelected", this.nothingSelectedStyle ||= {color: "grey"})}>
                     {placeholder || this.t(".nothing_selected")}
                   </Text>
                 }
@@ -333,7 +325,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                     style={this.stylingFor("currentOption", {marginRight: 6})}
                   >
                     {currentOption.type == "group" &&
-                      <View style={this.stylingFor("currentOptionGroup", {fontWeight: "bold"})}>
+                      <View style={this.stylingFor("currentOptionGroup", this.currentOptionGroupStyle ||= {fontWeight: "bold"})}>
                         <Text style={this.stylingFor("currentOptionGroupText")}>
                           {currentOption.text}
                         </Text>
@@ -359,21 +351,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </View>
           <View
             dataSet={this.chevronContainerDataSet ||= {class: "chevron-container"}}
-            style={this.stylingFor("chevronContainer", {
+            style={this.stylingFor("chevronContainer", this.chevronContainerStyle ||= {
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
               marginLeft: "auto"
             })}
           >
-            <Text style={chevronStyle}>
-              {opened &&
-                <>&#8963;</>
-              }
-              {!opened &&
-                <>&#8964;</>
-              }
-            </Text>
+            <FontAwesomeIcon name={opened ? "chevron-up" : "chevron-down"} style={this.stylingFor("chevron", this.chevronStyle ||= {fontSize: 12})} />
           </View>
         </Pressable>
         <View
@@ -653,9 +638,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     style = this.stylingFor("optionsContainer", style)
 
+    const id = idForComponent(this)
+
     return (
       <View
-        dataSet={{class: "options-container", id: idForComponent(this)}}
+        dataSet={this.cache("optionsContainerDataSet", {class: "options-container", id}, [id])}
         onLayout={this.tt.onOptionsContainerLayout}
         ref={optionsContainerRef}
         style={style}
@@ -667,10 +654,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           })
         )}
         {loadedOptions?.length === 0 &&
-          <View dataSet={{class: "no-options-container"}}>
-            <Text>
-              {this.t(".no_options_found")}
-            </Text>
+          <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
+            <Text>{this.t(".no_options_found")}</Text>
           </View>
         }
       </View>
