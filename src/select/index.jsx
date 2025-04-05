@@ -285,7 +285,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         >
           <View
             dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
-            style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {width: "calc(100% - 25px)", flexWrap: "wrap"})}
+            style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {width: "calc(100% - 25px)", flexWrap: "wrap", overflow: "hidden"})}
           >
             {opened &&
               <TextInput
