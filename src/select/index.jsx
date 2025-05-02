@@ -355,7 +355,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              marginLeft: "auto"
+              marginLeft: "auto",
+              marginRight: 8
             })}
           >
             <FontAwesomeIcon name={opened ? "chevron-up" : "chevron-down"} style={this.stylingFor("chevron", this.chevronStyle ||= {fontSize: 12})} />
