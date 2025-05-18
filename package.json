@@ -37,7 +37,7 @@
     "set-state-compare": "^1.0.54"
   },
   "devDependencies": {
-    "@types/react": "~18.2.6",
+    "@types/react": "~19.1.4",
     "expo-module-scripts": "^4.0.2",
     "expo": "~52.0.0"
   },
