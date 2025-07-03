@@ -1,4 +1,5 @@
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
+import config from "../config.js"
 import {dig, digg} from "diggerize"
 import {Platform, Pressable, Text, TextInput, View} from "react-native"
 import React, {memo, useEffect, useRef} from "react"
@@ -14,7 +15,6 @@ import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
 import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
-import useI18n from "i18n-on-steroids/src/use-i18n.mjs"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -26,6 +26,15 @@ const nameForComponentWithMultiple = (component) => {
   }
 
   return name
+}
+
+
+const t = (msgID) => {
+  if (msgID.startsWith(".")) {
+    return config.getTranslate()(`haya_select${msgID}`)
+  } else {
+    return config.getTranslate()(msgID)
+  }
 }
 
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
@@ -74,8 +83,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   callOptionsPositionAboveIfOutsideScreen = false
 
   setup() {
-    const {t} = useI18n({namespace: "haya_select"})
-
     if (this.props.values) {
       for (const value of this.props.values) {
         if (typeof value == "undefined") {
@@ -88,8 +95,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
       searchTextInputRef: useRef(),
-      selectContainerRef: useRef(),
-      t
+      selectContainerRef: useRef()
     })
     this.useStates({
       currentOptions: () => this.defaultCurrentOptions(),
@@ -292,7 +298,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
                 onChange={this.tt.onSearchTextInputChangedDebounced}
                 onChangeText={this.tt.onChangeSearchText}
-                placeholder={this.t(".search_dot_dot_dot")}
+                placeholder={t(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
                 style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
                   width: "100%",
@@ -307,7 +313,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               <>
                 {currentOptions.length == 0 &&
                   <Text numberOfLines={1} style={this.stylingFor("nothingSelected", this.nothingSelectedStyle ||= {color: "grey"})}>
-                    {placeholder || this.t(".nothing_selected")}
+                    {placeholder || t(".nothing_selected")}
                   </Text>
                 }
                 {currentOptions.length == 0 && Platform.OS == "web" &&
@@ -656,7 +662,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         )}
         {loadedOptions?.length === 0 &&
           <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.t(".no_options_found")}</Text>
+            <Text>{t(".no_options_found")}</Text>
           </View>
         }
       </View>

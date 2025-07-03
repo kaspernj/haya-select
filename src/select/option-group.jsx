@@ -12,8 +12,8 @@ export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
   render() {
     return (
       <View
-        dataSet={{class: "haya-select--option-group"}}
-        style={{
+        dataSet={this.rootViewDataSet ||= {class: "haya-select--option-group"}}
+        style={this.rootViewStyle ||= {
           paddingTop: 4,
           paddingRight: 8,
           paddingBottom: 4,

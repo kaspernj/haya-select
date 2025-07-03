@@ -1,4 +1,4 @@
-import {memo} from "react"
+import {memo, useMemo} from "react"
 import PropTypes from "prop-types"
 import React from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
@@ -26,39 +26,45 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
 
   render() {
     const {currentOptionValues, option} = this.p
+    const {hover} = this.s
     const disabled = Boolean(option.disabled)
     const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
-    const style = {
-      paddingTop: 4,
-      paddingRight: 8,
-      paddingBottom: 4,
-      paddingLeft: 8,
-      color: "#000"
-    }
 
-    if (disabled) {
-      style.cursor = "default"
-      style.opacity = 0.6
-    } else {
-      style.cursor = "pointer"
-    }
+    const style = useMemo(() => {
+      const style = {
+        paddingTop: 4,
+        paddingRight: 8,
+        paddingBottom: 4,
+        paddingLeft: 8,
+        color: "#000"
+      }
 
-    if (selected) {
-      style.backgroundColor = "#80b2ff"
-    }
+      if (disabled) {
+        style.cursor = "default"
+        style.opacity = 0.6
+      } else {
+        style.cursor = "pointer"
+      }
 
-    if (this.state.hover) {
-      style.backgroundColor = "steelblue"
-    }
+      if (selected) {
+        style.backgroundColor = "#80b2ff"
+      }
+
+      if (hover) {
+        style.backgroundColor = "steelblue"
+      }
+
+      return style
+    }, [disabled, hover, selected])
 
     return (
       <View
-        dataSet={{
+        dataSet={this.cache("rootViewDataSet", {
           class: "select-option",
           disabled,
           selected,
           value: this.props.option.value
-        }}
+        }, [disabled, selected, this.props.option.value])}
         onClick={this.tt.onClick}
         onPointerOver={this.tt.onPointerOver}
         onPointerOut={this.tt.onPointerOut}
