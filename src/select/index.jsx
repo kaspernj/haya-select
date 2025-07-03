@@ -1,7 +1,7 @@
 import {anythingDifferent} from "set-state-compare/src/diff-utils"
 import config from "../config.js"
 import {dig, digg} from "diggerize"
-import {Platform, Pressable, Text, TextInput, View} from "react-native"
+import {Dimensions, Platform, Pressable, Text, TextInput, View} from "react-native"
 import React, {memo, useEffect, useRef} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import debounce from "debounce"
@@ -83,6 +83,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  windowWidth = Dimensions.get("window").width
+  windowHeight = Dimensions.get("window").height
 
   setup() {
     if (this.props.values) {
@@ -111,11 +113,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       optionsTop: undefined,
       optionsVisibility: undefined,
       optionsWidth: undefined,
-      scrollLeft: document.documentElement.scrollLeft,
-      scrollTop: document.documentElement.scrollTop,
+      scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
+      scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
       searchText: "",
       toggled: () => this.defaultToggled()
     })
+
+    useEventListener(Dimensions, "change", this.tt.onDimensionsChange)
 
     if (Platform.OS == "web") {
       useEventListener(window, "click", this.tt.onWindowClicked)
@@ -461,6 +465,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState({loadedOptions})
   }
 
+  onDimensionsChange = ({window}) => {
+    this.windowWidth = window.width
+    this.windowHeight = window.height
+  }
+
   onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
   onEndOfSelectLayout = (e) => this.setState({endOfSelectLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
   onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
@@ -529,10 +538,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionAboveIfOutsideScreen() {
+    const {windowHeight} = this.tt
     const {optionsContainerLayout} = this.s
     const optionsTop = this.s.endOfSelectLayout.top
     const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
-    const windowHeightWithScroll = document.body.clientHeight + this.s.scrollTop
+    const windowHeightWithScroll = windowHeight + this.s.scrollTop
 
     if (windowHeightWithScroll < optionsTotalBottomPosition) {
       this.setOptionsPositionAbove()
@@ -578,8 +588,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   onAnythingScrolled = () => {
     if (this.s.opened) {
       this.setState({
-        scrollLeft: document.documentElement.scrollLeft,
-        scrollTop: document.documentElement.scrollTop
+        scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
+        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
       })
       this.setOptionsPosition()
     }
@@ -657,7 +667,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={this.cache("optionsContainerDataSet", {class: "options-container", id}, [id])}
+        dataSet={this.cache("optionsContainerDataSet", {class: "options-container", id, role: "dialog"}, [id])}
         onLayout={this.tt.onOptionsContainerLayout}
         ref={this.tt.optionsContainerRef}
         style={style}

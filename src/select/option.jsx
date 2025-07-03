@@ -1,8 +1,8 @@
+import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
 import {memo, useMemo} from "react"
+import {Pressable} from "react-native"
 import PropTypes from "prop-types"
 import React from "react"
-import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
-import {View} from "react-native"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
   static defaultProps = {
@@ -58,24 +58,24 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     }, [disabled, hover, selected])
 
     return (
-      <View
-        dataSet={this.cache("rootViewDataSet", {
+      <Pressable
+        dataSet={this.cache("pressableDataSet", {
           class: "select-option",
           disabled,
           selected,
           value: this.props.option.value
         }, [disabled, selected, this.props.option.value])}
-        onClick={this.tt.onClick}
+        onPress={this.tt.onPress}
         onPointerOver={this.tt.onPointerOver}
         onPointerOut={this.tt.onPointerOut}
         style={style}
       >
         {this.p.presentOption(option, "option")}
-      </View>
+      </Pressable>
     )
   }
 
-  onClick = (e) => this.p.onOptionClicked(e, this.props.option)
   onPointerOver = () => this.setState({hover: true})
   onPointerOut = () => this.setState({hover: false})
+  onPress = (e) => this.p.onOptionClicked(e, this.props.option)
 }))
