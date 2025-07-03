@@ -43,6 +43,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onBlur: null,
     onFocus: null,
     optionsAbsolute: true,
+    optionsPortal: true,
     optionsWidth: null,
     search: false,
     transparent: false
@@ -66,6 +67,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onOptionsClosed: PropTypes.func,
     options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
     optionsAbsolute: PropTypes.bool.isRequired,
+    optionsPortal: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
     search: PropTypes.bool.isRequired,
@@ -272,14 +274,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={{
+        dataSet={this.cache("rootViewDataSet", {
           class: className,
           component: "haya-select",
           id,
           opened,
           optionsPlacement,
           toggles: Boolean(toggleOptions)
-        }}
+        }, [className, id, opened, optionsPlacement, Boolean(toggleOptions)])}
         style={this.stylingFor("main")}
       >
         <Pressable
@@ -373,10 +375,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           onLayout={this.tt.onEndOfSelectLayout}
           ref={endOfSelectRef}
         />
-        {opened &&
+        {opened && this.p.optionsPortal &&
           <Portal>
             {this.optionsContainer()}
           </Portal>
+        }
+        {opened && !this.p.optionsPortal &&
+          <View>
+            {this.optionsContainer()}
+          </View>
         }
       </View>
     )
@@ -591,8 +598,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   optionsContainer() {
-    const {optionsContainerRef} = this.tt
-    const {optionsAbsolute} = this.p
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
     let left, top
 
@@ -608,7 +613,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       overflowY: "auto"
     }
 
-    if (!optionsAbsolute) {
+    if (!this.p.optionsPortal) {
+      style.top = 0
+      style.left = 0
+    } else if (!this.p.optionsAbsolute) {
       style.left = 0
       style.bottom = 0
     } else if (optionsPlacement == "below") {
@@ -651,7 +659,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       <View
         dataSet={this.cache("optionsContainerDataSet", {class: "options-container", id}, [id])}
         onLayout={this.tt.onOptionsContainerLayout}
-        ref={optionsContainerRef}
+        ref={this.tt.optionsContainerRef}
         style={style}
       >
         {loadedOptions?.map((loadedOption) =>
