@@ -1,5 +1,18 @@
+const shared = {}
+
+const t = (msgID) => {
+  if (!shared._translateWarning) {
+    shared._translateWarning = true
+    console.log("HayaSelect: Translate method not set")
+  }
+
+  return msgID
+}
+
+const useTranslateFallback = () => ({t})
+
 class HayaSelectConfiguration {
-  _translate = (msgID) => msgID
+  _useTranslate = useTranslateFallback
 
   getBodyPortal() {
     if (!this._bodyPortal) throw new Error("bodyPortal wasn't set")
@@ -7,19 +20,21 @@ class HayaSelectConfiguration {
     return this._bodyPortal
   }
 
-  getTranslate() {
-    return this._translate
+  getUseTranslate() {
+    return this._useTranslate
   }
 
   setBodyPortal(newBodyPortal) {
     this._bodyPortal = newBodyPortal
   }
 
-  setTranslate(callback) {
-    this._translate = callback
+  setUseTranslate(callback) {
+    this._useTranslate = callback
   }
 }
 
-const configuration = new HayaSelectConfiguration()
+if (!globalThis.hayaSelectConfig) {
+  globalThis.hayaSelectConfig = new HayaSelectConfiguration()
+}
 
-export default configuration
+export default globalThis.hayaSelectConfig

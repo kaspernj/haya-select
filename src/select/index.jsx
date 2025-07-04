@@ -28,15 +28,6 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
-
-const t = (msgID) => {
-  if (msgID.startsWith(".")) {
-    return config.getTranslate()(`haya_select${msgID}`)
-  } else {
-    return config.getTranslate()(msgID)
-  }
-}
-
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
@@ -87,6 +78,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   windowHeight = Dimensions.get("window").height
 
   setup() {
+    const {t} = config.getUseTranslate()()
+
     if (this.props.values) {
       for (const value of this.props.values) {
         if (typeof value == "undefined") {
@@ -99,7 +92,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
       searchTextInputRef: useRef(),
-      selectContainerRef: useRef()
+      selectContainerRef: useRef(),
+      t
     })
     this.useStates({
       currentOptions: () => this.defaultCurrentOptions(),
@@ -141,6 +135,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         this.setCurrentFromGivenValues()
       }
     }, [this.props.values])
+  }
+
+  translate(msgID) {
+    if (msgID.startsWith(".")) {
+      return this.t(`haya_select${msgID}`)
+    } else {
+      return this.t(msgID)
+    }
   }
 
   defaultCurrentOptions() {
@@ -253,7 +255,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       paddingTop: 5,
       paddingBottom: 5,
       paddingLeft: 5
-    })
+    }, [transparent])
 
     if (opened) {
       // Prevent select from changing size once the content is replaced with search text once opened
@@ -304,7 +306,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
                 onChange={this.tt.onSearchTextInputChangedDebounced}
                 onChangeText={this.tt.onChangeSearchText}
-                placeholder={t(".search_dot_dot_dot")}
+                placeholder={this.translate(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
                 style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
                   width: "100%",
@@ -319,7 +321,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               <>
                 {currentOptions.length == 0 &&
                   <Text numberOfLines={1} style={this.stylingFor("nothingSelected", this.nothingSelectedStyle ||= {color: "grey"})}>
-                    {placeholder || t(".nothing_selected")}
+                    {placeholder || this.translate(".nothing_selected")}
                   </Text>
                 }
                 {currentOptions.length == 0 && Platform.OS == "web" &&
@@ -661,7 +663,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
     }
 
-    style = this.stylingFor("optionsContainer", style)
+    style = this.stylingFor("optionsContainer", style, [left, top, style.visibility, style.width])
 
     const id = idForComponent(this)
 
@@ -680,7 +682,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         )}
         {loadedOptions?.length === 0 &&
           <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{t(".no_options_found")}</Text>
+            <Text>{this.translate(".no_options_found")}</Text>
           </View>
         }
       </View>
@@ -769,7 +771,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState(newState)
   }
 
-  stylingFor(stylingName, style = {}) {
+  stylingFor(stylingName, style = {}, caches = []) {
     let customStyling = dig(this, "props", "styles", stylingName)
 
     if (typeof customStyling == "function") customStyling = customStyling({state: this.state, style})
@@ -778,7 +780,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       return Object.assign(style, customStyling)
     }
 
-    return style
+    return this.cache(`stylingFor-${stylingName}`, style, caches)
   }
 
   iconForOption(option) {
