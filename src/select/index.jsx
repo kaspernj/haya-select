@@ -615,6 +615,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     let style = {
       position: "absolute",
+      zIndex: 99999,
+      elevation: 99999,
       visibility: optionsVisibility,
       width: this.p.optionsWidth || this.s.optionsWidth,
       backgroundColor: "#fff",
