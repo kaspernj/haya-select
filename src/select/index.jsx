@@ -32,6 +32,7 @@ const nameForComponentWithMultiple = (component) => {
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
+    noOptionsText: null,
     onBlur: null,
     onFocus: null,
     optionsAbsolute: true,
@@ -52,6 +53,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
     name: PropTypes.string,
+    noOptionsText: PropTypes.func,
     onBlur: PropTypes.func,
     onChange: PropTypes.func,
     onChangeValue: PropTypes.func,
@@ -680,7 +682,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         )}
         {loadedOptions?.length === 0 &&
           <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.translate(".no_options_found")}</Text>
+            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
           </View>
         }
       </View>
