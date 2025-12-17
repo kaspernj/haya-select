@@ -17,6 +17,7 @@ import {Portal} from "conjointment"
 import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
 
+/** @returns {string} */
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
 
