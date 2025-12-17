@@ -15,6 +15,7 @@ import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
 import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
+import usePressOutside from "outside-eye/build/use-press-outside"
 
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -31,6 +32,7 @@ const nameForComponentWithMultiple = (component) => {
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
+    noOptionsText: null,
     onBlur: null,
     onFocus: null,
     optionsAbsolute: true,
@@ -51,6 +53,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
     name: PropTypes.string,
+    noOptionsText: PropTypes.func,
     onBlur: PropTypes.func,
     onChange: PropTypes.func,
     onChangeValue: PropTypes.func,
@@ -114,9 +117,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     })
 
     useEventListener(Dimensions, "change", this.tt.onDimensionsChange)
+    usePressOutside(this.tt.optionsContainerRef, this.tt.onPressOutsideOptions)
 
     if (Platform.OS == "web") {
-      useEventListener(window, "click", this.tt.onWindowClicked)
       useEventListener(window, "resize", this.tt.onAnythingResizedDebounced)
       useEventListener(window, "scroll", this.tt.onAnythingScrolledDebounced)
     }
@@ -599,12 +602,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   onAnythingScrolledDebounced = debounce(this.tt.onAnythingScrolled, 25)
 
-  onWindowClicked = (e) => {
-    const {optionsContainerRef} = this.tt
-    const {opened} = this.s
-
+  onPressOutsideOptions = () => {
     // If options are open and a click is made outside of the options container
-    if (opened && optionsContainerRef.current && !optionsContainerRef.current?.contains(e.target)) {
+    if (this.s.opened) {
       this.closeOptions()
     }
   }
@@ -682,7 +682,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         )}
         {loadedOptions?.length === 0 &&
           <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.translate(".no_options_found")}</Text>
+            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
           </View>
         }
       </View>
