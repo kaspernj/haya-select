@@ -1,4 +1,4 @@
-import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
+import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import {memo, useMemo} from "react"
 import {Pressable} from "react-native"
 import PropTypes from "prop-types"

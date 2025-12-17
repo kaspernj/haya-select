@@ -35,7 +35,7 @@
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
     "react-native-render-html": "^6.3.4",
-    "set-state-compare": "^1.0.54"
+    "set-state-compare": "^1.0.61"
   },
   "devDependencies": {
     "@types/react": "~18.2.6",

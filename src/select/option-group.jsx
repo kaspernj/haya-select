@@ -1,7 +1,7 @@
 import {memo} from "react"
 import PropTypes from "prop-types"
 import React from "react"
-import {shapeComponent, ShapeComponent} from "set-state-compare/src/shape-component.js"
+import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import {Text, View} from "react-native"
 
 export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
