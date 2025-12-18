@@ -33,7 +33,7 @@
   "homepage": "https://github.com/kaspernj/haya-select#readme",
   "dependencies": {
     "classnames": "^2.3.1",
-    "debounce": "^2.1.0",
+    "debounce": "^3.0.0",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
     "react-native-render-html": "^6.3.4",
