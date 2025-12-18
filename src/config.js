@@ -1,6 +1,16 @@
+// @ts-check
+
+/**
+ * @typedef {function(): {t: function(string) : string}} TranslateFunctionType
+ */
+
 const shared = {}
 
-const t = (msgID) => {
+/**
+ * @param {string} msgID
+ * @returns {string}
+ */
+function t(msgID) {
   if (!shared._translateWarning) {
     shared._translateWarning = true
     console.log("HayaSelect: Translate method not set")
@@ -9,9 +19,12 @@ const t = (msgID) => {
   return msgID
 }
 
-const useTranslateFallback = () => ({t})
+function useTranslateFallback() {
+  return {t}
+}
 
 class HayaSelectConfiguration {
+  /** @type {TranslateFunctionType} */
   _useTranslate = useTranslateFallback
 
   getBodyPortal() {
@@ -20,6 +33,7 @@ class HayaSelectConfiguration {
     return this._bodyPortal
   }
 
+  /** @returns {TranslateFunctionType} */
   getUseTranslate() {
     return this._useTranslate
   }
@@ -28,6 +42,10 @@ class HayaSelectConfiguration {
     this._bodyPortal = newBodyPortal
   }
 
+  /**
+   * @param {TranslateFunctionType} callback
+   * @returns {void}
+   */
   setUseTranslate(callback) {
     this._useTranslate = callback
   }

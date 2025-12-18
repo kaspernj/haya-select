@@ -2,8 +2,11 @@
   "extends": "expo-module-scripts/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "jsx": "react",
-    "outDir": "./build"
+    "outDir": "./build",
+    "sourceMap": false
   },
   "include": ["./src"],
   "exclude": ["**/__mocks__/*", "**/__tests__/*", "**/__rsc_tests__/*"]
