@@ -23,7 +23,18 @@ function useTranslateFallback() {
   return {t}
 }
 
-class HayaSelectConfiguration {
+export default class HayaSelectConfiguration {
+  /** @returns {HayaSelectConfiguration} */
+  static current() {
+    if (!globalThis.hayaSelectConfig) {
+      globalThis.hayaSelectConfig = new HayaSelectConfiguration()
+    }
+
+    const hayaSelectConfig = /** @type {HayaSelectConfiguration} */ (globalThis.hayaSelectConfig)
+
+    return hayaSelectConfig
+  }
+
   /** @type {TranslateFunctionType} */
   _useTranslate = useTranslateFallback
 
@@ -51,8 +62,4 @@ class HayaSelectConfiguration {
   }
 }
 
-if (!globalThis.hayaSelectConfig) {
-  globalThis.hayaSelectConfig = new HayaSelectConfiguration()
-}
 
-export default globalThis.hayaSelectConfig

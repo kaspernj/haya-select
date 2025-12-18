@@ -1,5 +1,5 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
-import config from "../config.js"
+import Config from "../config.js"
 import {dig, digg} from "diggerize"
 import {Dimensions, Platform, Pressable, Text, TextInput, View} from "react-native"
 import React, {memo, useEffect, useRef} from "react"
@@ -78,11 +78,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
   windowHeight = Dimensions.get("window").height
 
   setup() {
-    const {t} = config.getUseTranslate()()
+    const {t} = Config.current().getUseTranslate()()
+
+    this.t = t
 
     if (this.props.values) {
       for (const value of this.props.values) {
@@ -96,8 +99,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
       searchTextInputRef: useRef(),
-      selectContainerRef: useRef(),
-      t
+      selectContainerRef: useRef()
     })
     this.useStates({
       currentOptions: () => this.defaultCurrentOptions(),
@@ -816,26 +818,26 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={{
-          class: "option-presentation",
+        dataSet={this.cache("presentOptionViewDataSet", {
           text: option.text,
           toggleIcon: toggleOption?.icon,
           toggleValue: toggleOption?.value,
           value: option.value
-        }}
-        style={this.optionPresentationStyle ||= {flexDirection: "row"}}
+        }, [option.text, option.value, toggleOption?.icon, toggleOption?.value])}
+        style={this.cache("optionPresentationStyle", {flexDirection: "row"})}
+        testID="option-presentation"
       >
         {toggleOptions && !(option.value in toggled) &&
           <View
-            dataSet={this.toggleIconPlaceholderDataSet ||= {class: "toggle-icon-placeholder"}}
-            style={this.toggleIconPlaceholderStyle ||= {width: 20}}
+            style={this.cache("toggleIconPlaceholderStyle", {width: 20})}
+            testID="toggle-icon-placeholder"
           />
         }
         {toggleOptions && (option.value in toggled) &&
-          <View style={this.toggleIconContainerStyle ||= {alignItems: "center", justifyContent: "center", width: 20}}>
+          <View style={this.cache("toggleIconContainerStyle", {alignItems: "center", justifyContent: "center", width: 20})}>
             <FontAwesomeIcon
-              dataSet={this.toggleIconDataSet ||= {class: "toggle-icon"}}
               name={icon}
+              testID="toggle-icon"
             />
           </View>
         }
@@ -851,8 +853,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           } else {
             return (
               <Text
-                dataSet={this.optionPresentationTextDataSet ||= {class: "option-presentation-text"}}
                 style={style}
+                testID="option-presentation-text"
               >
                 {option.text}
               </Text>

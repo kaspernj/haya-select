@@ -37,22 +37,23 @@
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
     "react-native-render-html": "^6.3.4",
-    "set-state-compare": "^1.0.61"
+    "set-state-compare": "^1.0.64"
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
-    "expo-module-scripts": "^4.0.2",
     "expo": "~52.0.48",
+    "expo-module-scripts": "^4.0.2",
     "react": "18.3.1",
     "react-native": "0.76.9"
   },
   "peerDependencies": {
-    "expo": "*",
-    "react": "*",
-    "react-native": "*",
+    "@kaspernj/api-maker": "*",
     "conjointment": "*",
-    "outside-eye": ">= 0.1.5",
-    "prop-types": "*"
+    "expo": "*",
+    "outside-eye": "*",
+    "prop-types": "*",
+    "react": "*",
+    "react-native": "*"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
