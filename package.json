@@ -44,7 +44,7 @@
     "expo": "~52.0.48",
     "expo-module-scripts": "^4.0.2",
     "react": "18.3.1",
-    "react-native": "0.76.9"
+    "react-native": "0.83.1"
   },
   "peerDependencies": {
     "@kaspernj/api-maker": "*",
