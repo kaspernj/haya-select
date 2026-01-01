@@ -13,6 +13,7 @@
     "lint": "expo-module lint",
     "test": "node scripts/velocious-test.js",
     "prepare": "expo-module prepare",
+    "release:patch": "npm version patch",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
     "open:android": "open -a \"Android Studio\" example/android",
