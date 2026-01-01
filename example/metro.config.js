@@ -19,6 +19,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
+  'outside-eye': path.resolve(__dirname, '../node_modules/outside-eye'),
   'haya-select': '..',
 };
 
