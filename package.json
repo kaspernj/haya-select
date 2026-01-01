@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "@kaspernj/api-maker": "*",
-    "conjointment": "*",
+    "conjointment": "^0.1.9",
     "expo": "*",
     "outside-eye": "*",
     "prop-types": "*",
