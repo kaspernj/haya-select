@@ -2,4 +2,5 @@ before_script:
   - npm install
 script:
   - npm run typecheck
+  - npm test
   - npx expo-doctor
