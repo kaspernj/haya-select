@@ -1,5 +1,5 @@
 import { useEvent } from 'expo';
-import HayaSelectModule, { HayaSelectView } from 'haya-select';
+import HayaSelectModule, { HayaSelectView } from './haya-select-module';
 import SystemTestBrowserHelper from 'system-testing/build/system-test-browser-helper.js';
 import React, { useEffect } from 'react';
 import { Button, Platform, SafeAreaView, ScrollView, Text, View } from 'react-native';
