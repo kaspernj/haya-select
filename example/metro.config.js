@@ -19,7 +19,6 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
-  'set-state-compare/src/memo': path.resolve(__dirname, '../node_modules/set-state-compare/build/memo.js'),
   'haya-select': '..',
 };
 
