@@ -19,6 +19,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
+  'conjointment': path.resolve(__dirname, './node_modules/conjointment'),
   'haya-select': '..',
 };
 
