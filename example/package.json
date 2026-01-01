@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
     "expo": "~52.0.23",
+    "haya-select": "file:..",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
