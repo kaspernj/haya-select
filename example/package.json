@@ -18,7 +18,6 @@
     "expo": "~52.0.23",
     "fetching-object": "^1.0.1",
     "haya-select": "file:..",
-    "outside-eye": "*",
     "prop-types": "*",
     "prop-types-exact": "*",
     "react": "18.3.1",

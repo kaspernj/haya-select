@@ -107,8 +107,8 @@ const styles = {
     height: 200,
   },
   blankText: {
-    height: 0,
-    opacity: 0,
-    width: 0,
+    height: 1,
+    opacity: 0.01,
+    width: 1,
   },
 };
