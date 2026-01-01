@@ -1,6 +1,10 @@
 before_script:
   - npm install
+  - cd example
+  - npm install
+  - npx expo export --platform web --output-dir ../dist
+  - cd ..
 script:
   - npm run typecheck
-  - npm test
+  - SYSTEM_TEST_HOST=dist npm test
   - npx expo-doctor
