@@ -119,13 +119,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       toggled: () => this.defaultToggled()
     })
 
+    const windowTarget = Platform.OS == "web" && typeof window != "undefined" ? window : null
+
     useEventListener(Dimensions, "change", this.tt.onDimensionsChange)
     usePressOutside(this.tt.optionsContainerRef, this.tt.onPressOutsideOptions)
-
-    if (Platform.OS == "web") {
-      useEventListener(window, "resize", this.tt.onAnythingResizedDebounced)
-      useEventListener(window, "scroll", this.tt.onAnythingScrolledDebounced)
-    }
+    useEventListener(windowTarget, "resize", this.tt.onAnythingResizedDebounced)
+    useEventListener(windowTarget, "scroll", this.tt.onAnythingScrolledDebounced)
 
     useEffect(() => {
       if (this.tt.callOptionsPositionAboveIfOutsideScreen && this.s.optionsContainerLayout) {
