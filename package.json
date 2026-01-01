@@ -11,7 +11,7 @@
     "build": "expo-module build",
     "clean": "expo-module clean",
     "lint": "expo-module lint",
-    "test": "expo-module test",
+    "test": "velocious test",
     "prepare": "expo-module prepare",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
@@ -45,6 +45,8 @@
     "expo-module-scripts": "^4.0.2",
     "react": "18.3.1",
     "react-native": "0.76.9",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
     "system-testing": "^1.0.56",
     "velocious": "^1.0.171"
   },
