@@ -78,6 +78,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  searchTextValue = ""
   t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
   windowHeight = Dimensions.get("window").height
@@ -115,7 +116,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       optionsWidth: undefined,
       scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
       scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
-      searchText: "",
       toggled: () => this.defaultToggled()
     })
 
@@ -309,7 +309,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             {opened &&
               <TextInput
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
-                onChange={this.tt.onSearchTextInputChangedDebounced}
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.translate(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
@@ -319,7 +318,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                   outline: "none",
                   padding: 0
                 })}
-                value={this.state.searchText}
+                defaultValue={this.searchTextValue}
               />
             }
             {!opened &&
@@ -428,7 +427,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (!defaultValues) return
 
     const result = await this.props.options({
-      searchValue: this.s.searchText,
+      searchValue: this.getSearchText(),
       values: defaultValues
     })
 
@@ -437,7 +436,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   loadOptions = async () => {
     const {options} = this.p
-    const searchValue = this.s.searchText
+    const searchValue = this.getSearchText()
 
     if (Array.isArray(options)) {
       return this.loadOptionsFromArray(options, searchValue)
@@ -511,9 +510,32 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (this.p.onBlur) this.p.onBlur()
   }
 
-  onChangeSearchText = (searchText) => this.setState({searchText})
+  getSearchText = () => this.searchTextValue || ""
+
+  resetSearchTextInput = () => {
+    this.searchTextValue = ""
+    const input = this.tt.searchTextInputRef.current
+
+    if (input?.clear) {
+      input.clear()
+    } else if (input?.setNativeProps) {
+      input.setNativeProps({text: ""})
+    } else if (input) {
+      try {
+        input.value = ""
+      } catch (error) {
+        // Ignore if the ref doesn't support direct value assignment.
+      }
+    }
+  }
+
+  onChangeSearchText = (searchText) => {
+    this.searchTextValue = searchText
+    this.tt.onSearchTextInputChangedDebounced()
+  }
 
   openOptions() {
+    this.searchTextValue = ""
     this.setOptionsPositionBelow()
     this.loadOptions()
     this.callOptionsPositionAboveIfOutsideScreen = true
@@ -522,10 +544,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         height: this.s.selectContainerLayout.height,
         opened: true,
         scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
-        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
-        searchText: ""
+        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
       },
       () => {
+        this.resetSearchTextInput()
         this.focusTextInput()
       }
     )

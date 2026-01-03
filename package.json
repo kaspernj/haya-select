@@ -9,9 +9,11 @@
   "types": "build/index.d.ts",
   "scripts": {
     "build": "expo-module build",
+    "build:example:dist": "EXPO_NONINTERACTIVE=1 cd example && npx expo export --platform web --output-dir ../dist",
     "clean": "expo-module clean",
     "lint": "expo-module lint",
     "test": "node scripts/velocious-test.js",
+    "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
     "prepare": "expo-module prepare",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
