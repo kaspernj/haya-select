@@ -249,7 +249,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const currentOptions = this.getCurrentOptions()
     const id = idForComponent(this)
 
-    const selectContainerStyleActual = this.stylingFor("selectContainer", {
+    const selectContainerStyleActual = {...this.stylingFor("selectContainer", {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: transparent ? undefined : "#fff",
@@ -260,22 +260,24 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       paddingTop: 5,
       paddingBottom: 5,
       paddingLeft: 5
-    }, [transparent])
+    }, [transparent])}
 
     if (opened) {
       // Prevent select from changing size once the content is replaced with search text once opened
       selectContainerStyleActual.height = this.s.height
 
+      const baseBorderRadius = selectContainerStyleActual.borderRadius
+
       if (optionsPlacement == "above") {
         selectContainerStyleActual.borderTopLeftRadius = 0
         selectContainerStyleActual.borderTopRightRadius = 0
-        selectContainerStyleActual.borderBottomRightRadius = selectContainerStyleActual.borderRadius
-        selectContainerStyleActual.borderBottomLeftRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderBottomRightRadius = baseBorderRadius
+        selectContainerStyleActual.borderBottomLeftRadius = baseBorderRadius
 
         delete selectContainerStyleActual.borderRadius
       } else if (optionsPlacement == "below") {
-        selectContainerStyleActual.borderTopLeftRadius = selectContainerStyleActual.borderRadius
-        selectContainerStyleActual.borderTopRightRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderTopLeftRadius = baseBorderRadius
+        selectContainerStyleActual.borderTopRightRadius = baseBorderRadius
         selectContainerStyleActual.borderBottomRightRadius = 0
         selectContainerStyleActual.borderBottomLeftRadius = 0
 
