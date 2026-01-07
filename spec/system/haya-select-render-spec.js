@@ -80,24 +80,22 @@ describe("HayaSelect", () => {
 
         const scoundrel = await systemTest.getScoundrelClient()
         const colors = await scoundrel.evalResult(`
-          (() => {
-            const toRgb = (color) => {
-              const element = document.createElement("div")
-              element.style.backgroundColor = color
-              document.body.appendChild(element)
-              const rgb = window.getComputedStyle(element).backgroundColor
-              element.remove()
-              return rgb
-            }
+          const toRgb = (color) => {
+            const element = document.createElement("div")
+            element.style.backgroundColor = color
+            document.body.appendChild(element)
+            const rgb = window.getComputedStyle(element).backgroundColor
+            element.remove()
+            return rgb
+          }
 
-            const selected = Array.from(document.querySelectorAll("[data-class='select-option'][data-selected='true']"))
-              .map((element) => window.getComputedStyle(element).backgroundColor)
+          const selected = Array.from(document.querySelectorAll("[data-class='select-option'][data-selected='true']"))
+            .map((element) => window.getComputedStyle(element).backgroundColor)
 
-            return {
-              allowed: [toRgb("#cfe1ff"), toRgb("#9bbcfb")],
-              selected
-            }
-          })()
+          return {
+            allowed: [toRgb("#cfe1ff"), toRgb("#9bbcfb")],
+            selected
+          }
         `)
 
         expect(colors.selected.length).toBeGreaterThan(0)
@@ -127,24 +125,20 @@ describe("HayaSelect", () => {
 
         const scoundrel = await systemTest.getScoundrelClient()
         const getBorderRadii = async () => await scoundrel.evalResult(`
-          (() => {
-            const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-            if (!element) return null
-            const style = window.getComputedStyle(element)
+          const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']")
+          if (!element) return null
+          const style = window.getComputedStyle(element)
 
-            return {
-              topLeft: style.borderTopLeftRadius,
-              topRight: style.borderTopRightRadius,
-              bottomLeft: style.borderBottomLeftRadius,
-              bottomRight: style.borderBottomRightRadius
-            }
-          })()
+          return {
+            topLeft: style.borderTopLeftRadius,
+            topRight: style.borderTopRightRadius,
+            bottomLeft: style.borderBottomLeftRadius,
+            bottomRight: style.borderBottomRightRadius
+          }
         `)
 
         const isOpen = await scoundrel.evalResult(`
-          (() => {
-            return Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
-          })()
+          return Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
         `)
 
         if (isOpen) {
