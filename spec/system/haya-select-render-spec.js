@@ -50,6 +50,48 @@ describe("HayaSelect", () => {
     });
   });
 
+  it("highlights selected options in multiple select", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000});
+        await systemTest.click("[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']");
+
+        const optionOne = await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false});
+        await systemTest.click(optionOne);
+
+        const optionTwo = await systemTest.find("[data-class='select-option'][data-value='two']", {useBaseSelector: false});
+        await systemTest.click(optionTwo);
+
+        const scoundrel = await systemTest.getScoundrelClient();
+        const colors = await scoundrel.evalResult(`
+          (() => {
+            const toRgb = (color) => {
+              const element = document.createElement("div");
+              element.style.backgroundColor = color;
+              document.body.appendChild(element);
+              const rgb = window.getComputedStyle(element).backgroundColor;
+              element.remove();
+              return rgb;
+            };
+
+            const selected = Array.from(document.querySelectorAll("[data-class='select-option'][data-selected='true']"))
+              .map((element) => window.getComputedStyle(element).backgroundColor);
+
+            return {
+              allowed: [toRgb("#cfe1ff"), toRgb("#9bbcfb")],
+              selected
+            };
+          })()
+        `);
+
+        expect(colors.selected.length).toBeGreaterThan(0);
+        colors.selected.forEach((color) => {
+          expect(colors.allowed.includes(color)).toBe(true);
+        });
+      });
+    });
+  });
+
   it("keeps rounded corners after opening and closing", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
