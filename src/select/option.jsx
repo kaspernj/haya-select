@@ -31,6 +31,8 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
 
     const style = useMemo(() => {
+      const selectedBackgroundColor = "#cfe1ff"
+      const selectedHoverBackgroundColor = "#9bbcfb"
       const style = {
         paddingTop: 4,
         paddingRight: 8,
@@ -47,11 +49,11 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
       }
 
       if (selected) {
-        style.backgroundColor = "#80b2ff"
+        style.backgroundColor = selectedBackgroundColor
       }
 
       if (hover) {
-        style.backgroundColor = "steelblue"
+        style.backgroundColor = selected ? selectedHoverBackgroundColor : "steelblue"
       }
 
       return style

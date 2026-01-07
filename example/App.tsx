@@ -11,6 +11,11 @@ import HayaSelect from '../src/select/index.jsx';
 
 export default function App() {
   const onChangePayload = useEvent(HayaSelectModule, 'onChange');
+  const selectOptions = [
+    { value: 'one', text: 'One' },
+    { value: 'two', text: 'Two' },
+    { value: 'three', text: 'Three' },
+  ];
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -56,11 +61,17 @@ export default function App() {
               <Group name="Select">
                 <View testID="hayaSelectRoot">
                   <HayaSelect
-                    options={[
-                      { value: 'one', text: 'One' },
-                      { value: 'two', text: 'Two' },
-                    ]}
+                    options={selectOptions}
                     placeholder="Pick one"
+                  />
+                </View>
+              </Group>
+              <Group name="Multiple Select">
+                <View testID="hayaSelectMultipleRoot">
+                  <HayaSelect
+                    multiple
+                    options={selectOptions}
+                    placeholder="Pick multiple"
                   />
                 </View>
               </Group>
