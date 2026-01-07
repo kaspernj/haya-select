@@ -127,19 +127,24 @@ describe("HayaSelect", () => {
 
         const scoundrel = await systemTest.getScoundrelClient()
         const getBorderRadii = async () => await scoundrel.evalResult(`
-          const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-          const style = element ? window.getComputedStyle(element) : null
+          (() => {
+            const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']")
+            if (!element) return null
+            const style = window.getComputedStyle(element)
 
-          style ? ({
-            topLeft: style.borderTopLeftRadius,
-            topRight: style.borderTopRightRadius,
-            bottomLeft: style.borderBottomLeftRadius,
-            bottomRight: style.borderBottomRightRadius
-          }) : null
+            return {
+              topLeft: style.borderTopLeftRadius,
+              topRight: style.borderTopRightRadius,
+              bottomLeft: style.borderBottomLeftRadius,
+              bottomRight: style.borderBottomRightRadius
+            }
+          })()
         `)
 
         const isOpen = await scoundrel.evalResult(`
-          Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
+          (() => {
+            return Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
+          })()
         `)
 
         if (isOpen) {
