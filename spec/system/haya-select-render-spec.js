@@ -4,7 +4,7 @@ import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
 
 SystemTest.rootPath = "/?systemTest=true"
-const systemTestArgs = {debug: true}
+const systemTestArgs = {}
 
 beforeAll(async () => {
   const systemTest = SystemTest.current(systemTestArgs)
