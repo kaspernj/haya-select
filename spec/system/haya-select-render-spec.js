@@ -33,9 +33,9 @@ describe("HayaSelect", () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000});
-        await systemTest.click("[data-class='select-container']");
+        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']");
 
-        const searchInput = await systemTest.find("[data-class='search-text-input']");
+        const searchInput = await systemTest.find("[data-testid='hayaSelectRoot'] [data-class='search-text-input']");
         await systemTest.interact(searchInput, "sendKeys", "tw");
 
         await waitFor({timeout: 5000}, async () => {
@@ -44,6 +44,18 @@ describe("HayaSelect", () => {
 
           if (texts.length !== 1 || texts[0] !== "Two") {
             throw new Error(`Unexpected options: ${texts.join(", ")}`);
+          }
+        });
+
+        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']");
+        await waitFor({timeout: 5000}, async () => {
+          const searchInputs = await systemTest.all(
+            "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
+            {timeout: 0, visible: false}
+          );
+
+          if (searchInputs.length > 0) {
+            throw new Error("Search input is still visible");
           }
         });
       });
@@ -88,6 +100,18 @@ describe("HayaSelect", () => {
         colors.selected.forEach((color) => {
           expect(colors.allowed.includes(color)).toBe(true);
         });
+
+        await systemTest.click("[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']");
+        await waitFor({timeout: 5000}, async () => {
+          const searchInputs = await systemTest.all(
+            "[data-testid='hayaSelectMultipleRoot'] [data-class='search-text-input']",
+            {timeout: 0, visible: false}
+          );
+
+          if (searchInputs.length > 0) {
+            throw new Error("Search input is still visible");
+          }
+        });
       });
     });
   });
@@ -100,8 +124,7 @@ describe("HayaSelect", () => {
         const scoundrel = await systemTest.getScoundrelClient();
         const getBorderRadii = async () => await scoundrel.evalResult(`
           (() => {
-            const root = document.querySelector("[data-testid='systemTestingComponent'][data-focussed='true']");
-            const element = root?.querySelector("[data-class='select-container']");
+            const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']");
             if (!element) return null;
             const style = window.getComputedStyle(element);
             return {
@@ -114,13 +137,16 @@ describe("HayaSelect", () => {
         `);
 
         const isOpen = await scoundrel.evalResult(`
-          Boolean(document.querySelector("[data-class='search-text-input']"))
+          Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
         `);
 
         if (isOpen) {
-          await systemTest.click("[data-class='select-container']");
+          await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']");
           await waitFor({timeout: 5000}, async () => {
-            const searchInputs = await systemTest.all("[data-class='search-text-input']", {timeout: 0, visible: false});
+            const searchInputs = await systemTest.all(
+              "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
+              {timeout: 0, visible: false}
+            );
 
             if (searchInputs.length > 0) {
               throw new Error("Search input is still visible");
@@ -131,12 +157,15 @@ describe("HayaSelect", () => {
         const initialRadii = await getBorderRadii();
         expect(initialRadii).not.toBeNull();
 
-        await systemTest.click("[data-class='select-container']");
-        await systemTest.find("[data-class='search-text-input']");
-        await systemTest.click("[data-class='select-container']");
+        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']");
+        await systemTest.find("[data-testid='hayaSelectRoot'] [data-class='search-text-input']");
+        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']");
 
         await waitFor({timeout: 5000}, async () => {
-          const searchInputs = await systemTest.all("[data-class='search-text-input']", {timeout: 0, visible: false});
+          const searchInputs = await systemTest.all(
+            "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
+            {timeout: 0, visible: false}
+          );
 
           if (searchInputs.length > 0) {
             throw new Error("Search input is still visible");
