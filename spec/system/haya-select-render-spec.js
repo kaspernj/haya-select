@@ -68,6 +68,10 @@ describe("HayaSelect", () => {
         await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000})
         await systemTest.click("[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']")
 
+        await waitFor({timeout: 5000}, async () => {
+          await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false})
+        })
+
         const optionOne = await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false})
         await systemTest.click(optionOne)
 
@@ -123,9 +127,8 @@ describe("HayaSelect", () => {
 
         const scoundrel = await systemTest.getScoundrelClient()
         const getBorderRadii = async () => await scoundrel.evalResult(`
-          (() => {
-            const element = document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']");
-            if (!element) return null;
+          ((element) => {
+            if (!element) return null
             const style = window.getComputedStyle(element)
             return {
               topLeft: style.borderTopLeftRadius,
@@ -133,7 +136,7 @@ describe("HayaSelect", () => {
               bottomLeft: style.borderBottomLeftRadius,
               bottomRight: style.borderBottomRightRadius
             }
-          })()
+          })(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='select-container']"))
         `)
 
         const isOpen = await scoundrel.evalResult(`
