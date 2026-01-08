@@ -487,7 +487,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       newState.optionsWidth = endOfSelectLayout.width
     }
 
-    this.setState(newState)
+    this.setState(newState, () => {
+      if (this.s.opened && this.s.optionsContainerLayout) {
+        this.setOptionsPositionAboveIfOutsideScreen()
+      }
+    })
   }
   onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
 
@@ -580,7 +584,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   setOptionsPositionAboveIfOutsideScreen() {
     const {windowHeight} = this.tt
     const {optionsContainerLayout} = this.s
-    const optionsTop = this.s.endOfSelectLayout.top
+    const endOfSelectLayout = this.s.endOfSelectLayout
+
+    if (!endOfSelectLayout) {
+      this.setState({optionsVisibility: "visible"})
+      return
+    }
+
+    const optionsTop = endOfSelectLayout.top
     const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
     const windowHeightWithScroll = windowHeight + this.s.scrollTop
 
