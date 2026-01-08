@@ -479,7 +479,20 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
-  onEndOfSelectLayout = (e) => this.setState({endOfSelectLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onEndOfSelectLayout = (e) => {
+    const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    const newState = {endOfSelectLayout}
+
+    if (this.s.opened && endOfSelectLayout?.width) {
+      newState.optionsWidth = endOfSelectLayout.width
+    }
+
+    this.setState(newState, () => {
+      if (this.s.opened && this.s.optionsContainerLayout) {
+        this.setOptionsPositionAboveIfOutsideScreen()
+      }
+    })
+  }
   onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
 
   onSelectClicked = (e) => {
@@ -571,7 +584,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   setOptionsPositionAboveIfOutsideScreen() {
     const {windowHeight} = this.tt
     const {optionsContainerLayout} = this.s
-    const optionsTop = this.s.endOfSelectLayout.top
+    const endOfSelectLayout = this.s.endOfSelectLayout
+
+    if (!endOfSelectLayout) {
+      this.setState({optionsVisibility: "visible"})
+      return
+    }
+
+    const optionsTop = endOfSelectLayout.top
     const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
     const windowHeightWithScroll = windowHeight + this.s.scrollTop
 
@@ -590,7 +610,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "above",
         optionsVisibility: "visible",
-        optionsWidth: endOfSelectLayout.width
+        optionsWidth: endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
@@ -602,7 +622,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "below",
         optionsVisibility: "hidden",
-        optionsWidth: this.s.endOfSelectLayout.width
+        optionsWidth: this.s.endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
