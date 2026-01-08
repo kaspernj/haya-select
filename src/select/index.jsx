@@ -479,7 +479,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
-  onEndOfSelectLayout = (e) => this.setState({endOfSelectLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onEndOfSelectLayout = (e) => {
+    const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    const newState = {endOfSelectLayout}
+
+    if (this.s.opened && endOfSelectLayout?.width) {
+      newState.optionsWidth = endOfSelectLayout.width
+    }
+
+    this.setState(newState)
+  }
   onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
 
   onSelectClicked = (e) => {
@@ -590,7 +599,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "above",
         optionsVisibility: "visible",
-        optionsWidth: endOfSelectLayout.width
+        optionsWidth: endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
@@ -602,7 +611,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "below",
         optionsVisibility: "hidden",
-        optionsWidth: this.s.endOfSelectLayout.width
+        optionsWidth: this.s.endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
