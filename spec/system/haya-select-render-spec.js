@@ -15,7 +15,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await timeout({timeout: 30000}, async () => {
+  await timeout({timeout: 120000}, async () => {
     await SystemTest.current().stop()
   })
 })

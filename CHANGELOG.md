@@ -8,3 +8,4 @@
 - Disable ESLint rules that fail against existing config/select code style.
 - Disable Prettier's semicolon enforcement in ESLint.
 - Run linting in the peak_flow script.
+- Increase system test teardown timeout to reduce CI flakiness.
