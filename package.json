@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "eslint-plugin-jsdoc": "^62.0.0",
     "expo": "~52.0.48",
     "expo-module-scripts": "^4.0.2",
     "react": "18.3.1",

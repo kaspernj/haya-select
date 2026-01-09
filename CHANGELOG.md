@@ -10,3 +10,4 @@
 - Run linting in the peak_flow script.
 - Increase system test teardown timeout to reduce CI flakiness.
 - Bump `system-testing` to 1.0.60.
+- Add ESLint JSDoc checks for type safety.
