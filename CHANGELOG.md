@@ -9,3 +9,4 @@
 - Disable Prettier's semicolon enforcement in ESLint.
 - Run linting in the peak_flow script.
 - Increase system test teardown timeout to reduce CI flakiness.
+- Bump `system-testing` to 1.0.60.

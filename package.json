@@ -50,7 +50,7 @@
     "scoundrel-remote-eval": "1.0.27",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "system-testing": "^1.0.56",
+    "system-testing": "^1.0.60",
     "velocious": "^1.0.176"
   },
   "peerDependencies": {
