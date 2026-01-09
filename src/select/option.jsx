@@ -1,8 +1,7 @@
-import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
-import {memo, useMemo} from "react"
-import {Pressable} from "react-native"
 import PropTypes from "prop-types"
-import React from "react"
+import {Pressable} from "react-native"
+import React, {memo, useMemo} from "react"
+import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
   static defaultProps = {
