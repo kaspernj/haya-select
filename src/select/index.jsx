@@ -17,6 +17,54 @@ import {Portal} from "conjointment"
 import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
 
+/**
+ * @typedef {object} HayaSelectToggleOption
+ * @property {string} icon
+ * @property {string} label
+ * @property {string} value
+ */
+
+/**
+ * @typedef {object} HayaSelectOption
+ * @property {string|number} value
+ * @property {import("react").ReactNode} [text]
+ * @property {function(): import("react").ReactNode} [content]
+ * @property {function(): import("react").ReactNode} [currentContent]
+ * @property {boolean} [disabled]
+ * @property {string} [html]
+ */
+
+/**
+ * @typedef {object} HayaSelectProps
+ * @property {string} [attribute]
+ * @property {string} [className]
+ * @property {object} [defaultToggled]
+ * @property {string|number} [defaultValue]
+ * @property {Array<string|number>} [defaultValues]
+ * @property {Array<HayaSelectOption>} [defaultValuesFromOptions]
+ * @property {import("react").ReactNode} [id]
+ * @property {object} [model]
+ * @property {boolean} multiple
+ * @property {string} [name]
+ * @property {function(): import("react").ReactNode} [noOptionsText]
+ * @property {function(import("react").SyntheticEvent=): void} [onBlur]
+ * @property {function(import("react").SyntheticEvent=): void} [onChange]
+ * @property {function(Array<string|number>=): void} [onChangeValue]
+ * @property {function(import("react").SyntheticEvent=): void} [onFocus]
+ * @property {function(): void} [onOptionsClosed]
+ * @property {Array<HayaSelectOption>|function(): Array<HayaSelectOption>} options
+ * @property {boolean} optionsAbsolute
+ * @property {boolean} optionsPortal
+ * @property {number} [optionsWidth]
+ * @property {import("react").ReactNode} [placeholder]
+ * @property {boolean} search
+ * @property {object} [styles]
+ * @property {object} [toggled]
+ * @property {Array<HayaSelectToggleOption>} [toggleOptions]
+ * @property {boolean} transparent
+ * @property {Array<string|number>} [values]
+ */
+
 /** @returns {string} */
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -30,6 +78,7 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
+/** @extends {ShapeComponent<HayaSelectProps>} */
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
@@ -60,7 +109,17 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
-    options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
+    options: PropTypes.oneOfType([
+      PropTypes.arrayOf(PropTypes.shape({
+        content: PropTypes.func,
+        currentContent: PropTypes.func,
+        disabled: PropTypes.bool,
+        html: PropTypes.string,
+        text: PropTypes.node,
+        value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+      })),
+      PropTypes.func
+    ]).isRequired,
     optionsAbsolute: PropTypes.bool.isRequired,
     optionsPortal: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
