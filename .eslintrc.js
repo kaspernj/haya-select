@@ -2,7 +2,10 @@ module.exports = {
   root: true,
   extends: ["universe/native", "universe/web"],
   ignorePatterns: ["build"],
+  plugins: ["jsdoc"],
   rules: {
+    "jsdoc/check-types": "warn",
+    "jsdoc/no-undefined-types": "warn",
     "prettier/prettier": [
       "warn",
       {
