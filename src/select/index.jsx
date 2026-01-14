@@ -14,7 +14,7 @@ import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
-import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
+import useEventListener from "ya-use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
 
 /**

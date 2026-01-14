@@ -13,3 +13,4 @@
 - Add ESLint JSDoc checks for type safety.
 - Add JSDoc prop typings for HayaSelect.
 - Expand HayaSelect options prop typing and shape validation.
+- Switch `useEventListener` import to `ya-use-event-listener`.
