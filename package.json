@@ -39,7 +39,8 @@
     "debounce": "^3.0.0",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
-    "react-native-render-html": "^6.3.4"
+    "react-native-render-html": "^6.3.4",
+    "ya-use-event-listener": "^0.1.1"
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
@@ -51,7 +52,7 @@
     "scoundrel-remote-eval": "1.0.27",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "system-testing": "^1.0.60",
+    "system-testing": "^1.0.62",
     "velocious": "^1.0.176"
   },
   "peerDependencies": {
