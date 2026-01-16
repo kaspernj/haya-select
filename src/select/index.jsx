@@ -1359,7 +1359,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const icon = this.iconForOption(option)
     const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
-    const selected = this.getCurrentOptionValues().includes(option.value)
+    const selected = this.getCurrentOptionValues().some((value) => value == option.value)
     let style
 
     if (mode == "current") {

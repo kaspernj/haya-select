@@ -31,3 +31,4 @@
 - Move system test helpers into src for consumer access.
 - Validate HayaSelect system test helper options to reject unexpected keys.
 - Validate selectOption criteria to reject unexpected keys.
+- Align optionContent selected flag with loose equality behavior.
