@@ -49,18 +49,9 @@ const openPaginatedSelect = async (systemTest) => {
   if (labelText && !labelText.startsWith("Page 1 of ")) {
     const pageOne = await findPaginationPageButton(systemTest, 1)
     await systemTest.click(pageOne)
-
-    await waitFor({timeout: 5000}, async () => {
-      const resetText = await scoundrel.evalResult(`
-        const resetLabel = document.querySelector("[data-class='pagination-label']")
-        return resetLabel ? resetLabel.textContent.trim() : null
-      `)
-
-      if (resetText !== "Page 1 of 5") {
-        throw new Error(`Unexpected pagination label after reset: ${resetText}`)
-      }
-    })
   }
+
+  await waitForPaginationLabel(systemTest, "Page 1 of 5")
 }
 
 const closePaginatedSelect = async (systemTest) => {
@@ -81,6 +72,16 @@ const paginationLabelText = async (systemTest) => {
     const element = document.querySelector("[data-class='pagination-label']")
     return element ? element.textContent.trim() : null
   `)
+}
+
+const waitForPaginationLabel = async (systemTest, expectedText) => {
+  await waitFor({timeout: 5000}, async () => {
+    const labelText = await paginationLabelText(systemTest)
+
+    if (labelText !== expectedText) {
+      throw new Error(`Unexpected pagination label: ${labelText}`)
+    }
+  })
 }
 
 const findPaginationPageButton = async (systemTest, pageNumber) => {
@@ -313,16 +314,13 @@ describe("HayaSelect", () => {
         const paginationLabel = await systemTest.find("[data-class='pagination-label']", {useBaseSelector: false})
         await systemTest.click(paginationLabel)
         const paginationInput = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false, timeout: 5000})
-        await systemTest.interact(paginationInput, "sendKeys", "\b")
+        await systemTest.interact(paginationInput, "click")
+        await systemTest.interact(paginationInput, "sendKeys", "\uE009a")
+        await systemTest.interact(paginationInput, "sendKeys", "\uE003")
         await systemTest.interact(paginationInput, "sendKeys", "4")
-        await systemTest.interact(paginationInput, "sendKeys", "\n")
+        await systemTest.interact(paginationInput, "sendKeys", "\uE006")
 
-        await waitFor({timeout: 5000}, async () => {
-          const labelText = await paginationLabelText(systemTest)
-          if (labelText !== "Page 4 of 5") {
-            throw new Error(`Unexpected pagination label: ${labelText}`)
-          }
-        })
+        await waitForPaginationLabel(systemTest, "Page 4 of 5")
       })
     })
   })
@@ -332,24 +330,15 @@ describe("HayaSelect", () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
         await openPaginatedSelect(systemTest)
+        await waitForPaginationLabel(systemTest, "Page 1 of 5")
 
         const nextButton = await systemTest.find("[data-class='pagination-next']", {useBaseSelector: false, timeout: 5000})
         await systemTest.click(nextButton)
-        await waitFor({timeout: 5000}, async () => {
-          const labelText = await paginationLabelText(systemTest)
-          if (labelText !== "Page 2 of 5") {
-            throw new Error(`Unexpected pagination label after next: ${labelText}`)
-          }
-        })
+        await waitForPaginationLabel(systemTest, "Page 2 of 5")
 
         const prevButton = await systemTest.find("[data-class='pagination-prev']", {useBaseSelector: false, timeout: 5000})
         await systemTest.click(prevButton)
-        await waitFor({timeout: 5000}, async () => {
-          const labelText = await paginationLabelText(systemTest)
-          if (labelText !== "Page 1 of 5") {
-            throw new Error(`Unexpected pagination label after prev: ${labelText}`)
-          }
-        })
+        await waitForPaginationLabel(systemTest, "Page 1 of 5")
       })
     })
   })
