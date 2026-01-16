@@ -30,6 +30,52 @@ npm install haya-select
 
 Run `npx pod-install` after installing the npm package.
 
+# Usage
+
+```jsx
+import {View} from "react-native"
+import React from "react"
+import HayaSelect from "haya-select"
+
+export default function ExampleSelect() {
+  return (
+    <View>
+      <HayaSelect
+        options={[
+          {value: 1, text: "Option 1"},
+          {value: 2, text: "Option 2"}
+        ]}
+      />
+    </View>
+  )
+}
+```
+
+## Async options with pagination
+
+When `options` is a callback, it can return either an array of options or an object with pagination metadata.
+
+The callback receives the current `searchValue`, `page`, and optional `values` when loading default selections.
+
+```jsx
+<HayaSelect
+  search
+  options={async ({searchValue, page}) => {
+    const response = await fetch(`/api/options?query=${searchValue}&page=${page}`)
+    const data = await response.json()
+
+    return {
+      options: data.options,
+      totalCount: data.totalCount,
+      page: data.page,
+      pageSize: data.pageSize
+    }
+  }}
+/>
+```
+
+If `totalCount` and `page` are provided, the options list shows pagination controls with previous/next buttons, a page range around the current page, and a "Page X of Y" label that can be clicked to enter a page number manually.
+
 # Contributing
 
 Contributions are very welcome! Please refer to guidelines described in the [contributing guide]( https://github.com/expo/expo#contributing).

@@ -1,44 +1,69 @@
-import { useEvent } from 'expo';
-import HayaSelectModule, { HayaSelectView } from './haya-select-module';
-import SystemTestBrowserHelper from 'system-testing/build/system-test-browser-helper.js';
-import { PortalHost, PortalProvider } from 'conjointment';
-import OutsideEyeProvider from 'outside-eye/build/provider.js';
-import React, { useEffect } from 'react';
-import { Button, Platform, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import Text from "@kaspernj/api-maker/build/utils/text"
+import {PortalHost,PortalProvider} from "conjointment"
+import {useEvent} from "expo"
+import OutsideEyeProvider from "outside-eye/build/provider.js"
+import React,{useEffect} from "react"
+import {Button,Platform,SafeAreaView,ScrollView,View} from "react-native"
+import SystemTestBrowserHelper from "system-testing/build/system-test-browser-helper.js"
+
+import HayaSelectModule,{HayaSelectView} from "./haya-select-module"
 // The example app needs the select component for system testing.
 // @ts-expect-error - the component is authored in JS.
-import HayaSelect from '../src/select/index.jsx';
+import HayaSelect from "../src/select/index.jsx"
 
 export default function App() {
-  const onChangePayload = useEvent(HayaSelectModule, 'onChange');
+  const onChangePayload = useEvent(HayaSelectModule, "onChange")
   const selectOptions = [
-    { value: 'one', text: 'One' },
-    { value: 'two', text: 'Two' },
-    { value: 'three', text: 'Three' },
-  ];
+    {value: "one", text: "One"},
+    {value: "two", text: "Two"},
+    {value: "three", text: "Three"}
+  ]
+  const paginationPageSize = 5
+  const paginationTotalCount = 24
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('systemTest') !== 'true') return;
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("systemTest") !== "true") return;
 
-    const helper = new SystemTestBrowserHelper();
-    helper.enableOnBrowser();
-  }, []);
+    const helper = new SystemTestBrowserHelper()
+    helper.enableOnBrowser()
+  }, [])
+
+  const paginatedOptions = async ({searchValue, page = 1}: {searchValue?: string; page?: number}) => {
+    const availableOptions = Array.from({length: paginationTotalCount}).map((_, index) => ({
+      value: `option-${index + 1}`,
+      text: `Item ${index + 1}`
+    }))
+    const filteredOptions = searchValue
+      ? availableOptions.filter((option) => option.text.toLowerCase().includes(searchValue.toLowerCase()))
+      : availableOptions
+    const startIndex = (page - 1) * paginationPageSize
+    const pageOptions = filteredOptions
+      .slice(startIndex, startIndex + paginationPageSize)
+      .map((option) => ({...option, text: `Page ${page} ${option.text}`}))
+
+    return {
+      options: pageOptions,
+      totalCount: filteredOptions.length,
+      page,
+      pageSize: paginationPageSize
+    }
+  }
 
   return (
     <PortalProvider>
       <PortalHost>
         <OutsideEyeProvider>
           <SafeAreaView
-            dataSet={{ focussed: 'true' }}
+            dataSet={{focussed: "true"}}
             style={styles.container}
             testID="systemTestingComponent"
           >
             <ScrollView style={styles.container}>
               <Text testID="blankText" style={styles.blankText}>
-                {' '}
+                {" "}
               </Text>
               <Text style={styles.header}>Module API Example</Text>
               <Group name="Constants">
@@ -75,10 +100,19 @@ export default function App() {
                   />
                 </View>
               </Group>
+              <Group name="Paginated Select">
+                <View testID="hayaSelectPaginationRoot">
+                  <HayaSelect
+                    options={paginatedOptions}
+                    placeholder="Pick a page"
+                    search
+                  />
+                </View>
+              </Group>
               <Group name="Views">
                 <HayaSelectView
                   url="https://www.example.com"
-                  onLoad={({ nativeEvent: { url } }) => console.log(`Loaded: ${url}`)}
+                  onLoad={({nativeEvent: {url}}) => console.log(`Loaded: ${url}`)}
                   style={styles.view}
                 />
               </Group>
@@ -90,7 +124,7 @@ export default function App() {
   );
 }
 
-function Group(props: { name: string; children: React.ReactNode }) {
+function Group(props: {name: string; children: React.ReactNode}) {
   return (
     <View style={styles.group}>
       <Text style={styles.groupHeader}>{props.name}</Text>
@@ -127,4 +161,4 @@ const styles = {
     opacity: 0.01,
     width: 1,
   },
-};
+}

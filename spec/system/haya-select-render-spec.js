@@ -1,7 +1,7 @@
 import "velocious/build/src/testing/test.js"
-import SystemTest from "system-testing/build/system-test.js"
 import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
+import SystemTest from "system-testing/build/system-test.js"
 
 SystemTest.rootPath = "/?systemTest=true"
 const systemTestArgs = {debug: true}
@@ -20,7 +20,99 @@ afterAll(async () => {
   })
 })
 
+const openPaginatedSelect = async (systemTest) => {
+  const scoundrel = await systemTest.getScoundrelClient()
+  const isOpen = await scoundrel.evalResult(`
+    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+  `)
+
+  if (!isOpen) {
+    await systemTest.click("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+    await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']")
+  }
+
+  await waitFor({timeout: 5000}, async () => {
+    const paginationVisible = await scoundrel.evalResult(`
+      return Boolean(document.querySelector("[data-class='options-pagination']"))
+    `)
+
+    if (!paginationVisible) {
+      throw new Error("Pagination not visible yet")
+    }
+  })
+
+  const labelText = await scoundrel.evalResult(`
+    const label = document.querySelector("[data-class='pagination-label']")
+    return label ? label.textContent.trim() : null
+  `)
+
+  if (labelText && !labelText.startsWith("Page 1 of ")) {
+    const pageOne = await findPaginationPageButton(systemTest, 1)
+    await systemTest.click(pageOne)
+
+    await waitFor({timeout: 5000}, async () => {
+      const resetText = await scoundrel.evalResult(`
+        const resetLabel = document.querySelector("[data-class='pagination-label']")
+        return resetLabel ? resetLabel.textContent.trim() : null
+      `)
+
+      if (resetText !== "Page 1 of 5") {
+        throw new Error(`Unexpected pagination label after reset: ${resetText}`)
+      }
+    })
+  }
+}
+
+const closePaginatedSelect = async (systemTest) => {
+  const scoundrel = await systemTest.getScoundrelClient()
+  const isOpen = await scoundrel.evalResult(`
+    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+  `)
+
+  if (isOpen) {
+    await systemTest.click("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+  }
+}
+
+const paginationLabelText = async (systemTest) => {
+  const scoundrel = await systemTest.getScoundrelClient()
+
+  return await scoundrel.evalResult(`
+    const element = document.querySelector("[data-class='pagination-label']")
+    return element ? element.textContent.trim() : null
+  `)
+}
+
+const findPaginationPageButton = async (systemTest, pageNumber) => {
+  let matchingButton
+
+  await waitFor({timeout: 5000}, async () => {
+    const pageButtons = await systemTest.all("[data-class='pagination-page']", {useBaseSelector: false})
+
+    for (const pageButton of pageButtons) {
+      const buttonText = (await pageButton.getText()).trim()
+
+      if (buttonText === String(pageNumber)) {
+        matchingButton = pageButton
+        return
+      }
+    }
+
+    throw new Error(`Pagination button not found for page ${pageNumber}`)
+  })
+
+  return matchingButton
+}
+
 describe("HayaSelect", () => {
+  afterEach(async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await closePaginatedSelect(systemTest)
+      })
+    })
+  })
+
   it("renders in the example app", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
@@ -180,6 +272,84 @@ describe("HayaSelect", () => {
         expect(finalRadii.topRight).not.toBe("0px")
         expect(finalRadii.bottomLeft).not.toBe("0px")
         expect(finalRadii.bottomRight).not.toBe("0px")
+      })
+    })
+  })
+
+  it("changes page when clicking a page number", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await openPaginatedSelect(systemTest)
+
+        const pageTwo = await findPaginationPageButton(systemTest, 2)
+        await systemTest.click(pageTwo)
+
+        await waitFor({timeout: 5000}, async () => {
+          const labelText = await paginationLabelText(systemTest)
+          if (labelText !== "Page 2 of 5") {
+            throw new Error(`Unexpected pagination label: ${labelText}`)
+          }
+        })
+
+        await waitFor({timeout: 5000}, async () => {
+          const options = await systemTest.all("[data-class='select-option']", {useBaseSelector: false})
+          const texts = await Promise.all(options.map(async (option) => (await option.getText()).trim()))
+
+          if (!texts[0]?.startsWith("Page 2 Item 6")) {
+            throw new Error(`Unexpected first option text: ${texts[0]}`)
+          }
+        })
+      })
+    })
+  })
+
+  it("accepts manual page entry from the pagination label", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await openPaginatedSelect(systemTest)
+
+        const paginationLabel = await systemTest.find("[data-class='pagination-label']", {useBaseSelector: false})
+        await systemTest.click(paginationLabel)
+        const paginationInput = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false, timeout: 5000})
+        await systemTest.interact(paginationInput, "sendKeys", "\b")
+        await systemTest.interact(paginationInput, "sendKeys", "4")
+        await systemTest.interact(paginationInput, "sendKeys", "\n")
+
+        await waitFor({timeout: 5000}, async () => {
+          const labelText = await paginationLabelText(systemTest)
+          if (labelText !== "Page 4 of 5") {
+            throw new Error(`Unexpected pagination label: ${labelText}`)
+          }
+        })
+      })
+    })
+  })
+
+  it("supports next and previous pagination buttons", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await openPaginatedSelect(systemTest)
+
+        const nextButton = await systemTest.find("[data-class='pagination-next']", {useBaseSelector: false, timeout: 5000})
+        await systemTest.click(nextButton)
+        await waitFor({timeout: 5000}, async () => {
+          const labelText = await paginationLabelText(systemTest)
+          if (labelText !== "Page 2 of 5") {
+            throw new Error(`Unexpected pagination label after next: ${labelText}`)
+          }
+        })
+
+        const prevButton = await systemTest.find("[data-class='pagination-prev']", {useBaseSelector: false, timeout: 5000})
+        await systemTest.click(prevButton)
+        await waitFor({timeout: 5000}, async () => {
+          const labelText = await paginationLabelText(systemTest)
+          if (labelText !== "Page 1 of 5") {
+            throw new Error(`Unexpected pagination label after prev: ${labelText}`)
+          }
+        })
       })
     })
   })

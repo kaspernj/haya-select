@@ -15,3 +15,5 @@
 - Expand HayaSelect options prop typing and shape validation.
 - Switch `useEventListener` import to `ya-use-event-listener`.
 - Bump `system-testing` to 1.0.62.
+- Add paginated async options support and pagination controls in HayaSelect.
+- Add system specs for pagination controls.
