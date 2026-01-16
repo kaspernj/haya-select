@@ -38,6 +38,8 @@ const paginationButtonStyles = {}
  * @property {function(): import("react").ReactNode} [currentContent]
  * @property {boolean} [disabled]
  * @property {string} [html]
+ *
+ * Additional option props are allowed; HayaSelect only uses the keys above.
  */
 
 /**
@@ -66,6 +68,7 @@ const paginationButtonStyles = {}
  * @property {function(Array<string|number>=): void} [onChangeValue]
  * @property {function(import("react").SyntheticEvent=): void} [onFocus]
  * @property {function(): void} [onOptionsClosed]
+ * @property {function(object): import("react").ReactNode} [optionContent]
  * @property {Array<HayaSelectOption>|function(): (Array<HayaSelectOption>|HayaSelectOptionsResult)} options
  * @property {boolean} optionsAbsolute
  * @property {boolean} optionsPortal
@@ -178,6 +181,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
+    optionContent: PropTypes.func,
     options: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.shape({
         content: PropTypes.func,
@@ -1350,11 +1354,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   presentOption = (option, mode) => {
-    const {toggleOptions} = this.props || {}
+    const {optionContent, toggleOptions} = this.props || {}
     const toggled = this.getToggled()
     const icon = this.iconForOption(option)
     const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
+    const selected = this.getCurrentOptionValues().includes(option.value)
     let style
 
     if (mode == "current") {
@@ -1389,7 +1394,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </View>
         }
         {(() => {
-          if (mode == "current" && option.currentContent) {
+          if (optionContent) {
+            return optionContent({icon, mode, option, selected, toggleOption, toggleValue, toggled})
+          } else if (mode == "current" && option.currentContent) {
             return option.currentContent()
           } else if (option.content) {
             return option.content()

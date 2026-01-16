@@ -91,6 +91,19 @@ export default function App() {
                   />
                 </View>
               </Group>
+              <Group name="Option Content Select">
+                <View testID="hayaSelectOptionContentRoot">
+                  <HayaSelect
+                    optionContent={({option}) => (
+                      <Text>
+                        Custom {option.text}
+                      </Text>
+                    )}
+                    options={selectOptions}
+                    placeholder="Pick custom"
+                  />
+                </View>
+              </Group>
               <Group name="Multiple Select">
                 <View testID="hayaSelectMultipleRoot">
                   <HayaSelect

@@ -20,3 +20,10 @@
 - Reset pagination page state on close to avoid stale page size inference.
 - Stabilize pagination system specs for manual entry and navigation.
 - Use scoundrel clicks in pagination specs to reduce selector flakiness.
+- Ensure pagination specs assert that option lists change with page.
+- Extract pagination system specs into a dedicated browser spec file.
+- Rename pagination spec to standard `*-spec.js` naming for this repo.
+- Clarify that options may include extra props beyond those HayaSelect uses.
+- Add `optionContent` callback support for custom option rendering.
+- Add system spec coverage for optionContent rendering.
+- Avoid starting/stopping system tests multiple times across spec files.
