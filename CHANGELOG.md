@@ -17,3 +17,4 @@
 - Bump `system-testing` to 1.0.62.
 - Add paginated async options support and pagination controls in HayaSelect.
 - Add system specs for pagination controls.
+- Reset pagination page state on close to avoid stale page size inference.

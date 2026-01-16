@@ -714,6 +714,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       loadedOptions: undefined,
       opened: false,
       optionsContainerLayout: null,
+      page: 1,
       pageInputActive: false,
       pageInputValue: "",
       pageSize: null,
