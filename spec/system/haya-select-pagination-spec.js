@@ -3,6 +3,8 @@ import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
 import SystemTest from "system-testing/build/system-test.js"
 
+import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
+
 SystemTest.rootPath = "/?systemTest=true"
 const systemTestArgs = {debug: true}
 let didStartSystemTest = false
@@ -111,12 +113,6 @@ const findPaginationPageButton = async (systemTest, pageNumber) => {
   return matchingButton
 }
 
-const optionTexts = async (systemTest) => {
-  const options = await systemTest.all("[data-class='select-option']", {useBaseSelector: false})
-
-  return await Promise.all(options.map(async (option) => (await option.getText()).trim()))
-}
-
 const clickPaginationSelector = async (systemTest, selector) => {
   const scoundrel = await systemTest.getScoundrelClient()
 
@@ -146,6 +142,8 @@ describe("HayaSelect pagination", () => {
   it("changes page when clicking a page number", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
+
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
         await openPaginatedSelect(systemTest)
 
@@ -154,7 +152,7 @@ describe("HayaSelect pagination", () => {
 
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
         await waitFor({timeout: 5000}, async () => {
-          const texts = await optionTexts(systemTest)
+          const texts = await helper.optionTexts()
 
           if (!texts[0]?.startsWith("Page 2 Item 6")) {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
@@ -167,6 +165,8 @@ describe("HayaSelect pagination", () => {
   it("accepts manual page entry from the pagination label", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
+
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
         await openPaginatedSelect(systemTest)
 
@@ -180,7 +180,7 @@ describe("HayaSelect pagination", () => {
 
         await waitForPaginationLabel(systemTest, "Page 4 of 5")
         await waitFor({timeout: 5000}, async () => {
-          const texts = await optionTexts(systemTest)
+          const texts = await helper.optionTexts()
 
           if (!texts[0]?.startsWith("Page 4 Item 16")) {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
@@ -193,6 +193,8 @@ describe("HayaSelect pagination", () => {
   it("supports next and previous pagination buttons", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
+
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
@@ -200,7 +202,7 @@ describe("HayaSelect pagination", () => {
         await clickPaginationSelector(systemTest, "[data-class='pagination-next']")
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
         await waitFor({timeout: 5000}, async () => {
-          const texts = await optionTexts(systemTest)
+          const texts = await helper.optionTexts()
 
           if (!texts[0]?.startsWith("Page 2 Item 6")) {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
@@ -210,7 +212,7 @@ describe("HayaSelect pagination", () => {
         await clickPaginationSelector(systemTest, "[data-class='pagination-prev']")
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
         await waitFor({timeout: 5000}, async () => {
-          const texts = await optionTexts(systemTest)
+          const texts = await helper.optionTexts()
 
           if (!texts[0]?.startsWith("Page 1 Item 1")) {
             throw new Error(`Unexpected first option text: ${texts[0]}`)

@@ -27,3 +27,7 @@
 - Add `optionContent` callback support for custom option rendering.
 - Add system spec coverage for optionContent rendering.
 - Avoid starting/stopping system tests multiple times across spec files.
+- Add a shared HayaSelect system test helper and reuse it in specs.
+- Move system test helpers into src for consumer access.
+- Validate HayaSelect system test helper options to reject unexpected keys.
+- Validate selectOption criteria to reject unexpected keys.

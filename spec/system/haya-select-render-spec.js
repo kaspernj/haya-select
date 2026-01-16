@@ -3,6 +3,8 @@ import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
 import SystemTest from "system-testing/build/system-test.js"
 
+import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
+
 SystemTest.rootPath = "/?systemTest=true"
 const systemTestArgs = {debug: true}
 let didStartSystemTest = false
@@ -38,29 +40,20 @@ describe("HayaSelect", () => {
   it("renders optionContent callbacks", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionContentRoot"})
+
         await systemTest.findByTestID("hayaSelectOptionContentRoot", {timeout: 60000})
-        await systemTest.click("[data-testid='hayaSelectOptionContentRoot'] [data-class='select-container']")
+        await helper.open()
 
         await waitFor({timeout: 5000}, async () => {
-          const options = await systemTest.all("[data-class='select-option']", {useBaseSelector: false})
-          const texts = await Promise.all(options.map(async (option) => (await option.getText()).trim()))
+          const texts = await helper.optionTexts()
 
           if (!texts.includes("Custom One")) {
             throw new Error(`Unexpected option content: ${texts.join(", ")}`)
           }
         })
 
-        await systemTest.click("[data-testid='hayaSelectOptionContentRoot'] [data-class='select-container']")
-        await waitFor({timeout: 5000}, async () => {
-          const searchInputs = await systemTest.all(
-            "[data-testid='hayaSelectOptionContentRoot'] [data-class='search-text-input']",
-            {timeout: 0, visible: false}
-          )
-
-          if (searchInputs.length > 0) {
-            throw new Error("Search input is still visible")
-          }
-        })
+        await helper.close()
       })
     })
   })
@@ -68,32 +61,23 @@ describe("HayaSelect", () => {
   it("filters options when searching", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
-        await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
-        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']")
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
 
-        const searchInput = await systemTest.find("[data-testid='hayaSelectRoot'] [data-class='search-text-input']")
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
+        await helper.open()
+
+        const searchInput = await systemTest.find(helper.searchInputSelector)
         await systemTest.interact(searchInput, "sendKeys", "tw")
 
         await waitFor({timeout: 5000}, async () => {
-          const options = await systemTest.all("[data-class='select-option']", {useBaseSelector: false})
-          const texts = await Promise.all(options.map(async (option) => (await option.getText()).trim()))
+          const texts = await helper.optionTexts()
 
           if (texts.length !== 1 || texts[0] !== "Two") {
             throw new Error(`Unexpected options: ${texts.join(", ")}`)
           }
         })
 
-        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-        await waitFor({timeout: 5000}, async () => {
-          const searchInputs = await systemTest.all(
-            "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
-            {timeout: 0, visible: false}
-          )
-
-          if (searchInputs.length > 0) {
-            throw new Error("Search input is still visible")
-          }
-        })
+        await helper.close()
       })
     })
   })
@@ -101,8 +85,10 @@ describe("HayaSelect", () => {
   it("highlights selected options in multiple select", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
+
         await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000})
-        await systemTest.click("[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']")
+        await helper.open()
 
         await waitFor({timeout: 5000}, async () => {
           await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false})
@@ -139,17 +125,7 @@ describe("HayaSelect", () => {
           expect(colors.allowed.includes(color)).toBe(true)
         })
 
-        await systemTest.click("[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']")
-        await waitFor({timeout: 5000}, async () => {
-          const searchInputs = await systemTest.all(
-            "[data-testid='hayaSelectMultipleRoot'] [data-class='search-text-input']",
-            {timeout: 0, visible: false}
-          )
-
-          if (searchInputs.length > 0) {
-            throw new Error("Search input is still visible")
-          }
-        })
+        await helper.close()
       })
     })
   })
@@ -157,6 +133,8 @@ describe("HayaSelect", () => {
   it("keeps rounded corners after opening and closing", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
+
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
 
         const scoundrel = await systemTest.getScoundrelClient()
@@ -173,41 +151,15 @@ describe("HayaSelect", () => {
           }
         `)
 
-        const isOpen = await scoundrel.evalResult(`
-          return Boolean(document.querySelector("[data-testid='hayaSelectRoot'] [data-class='search-text-input']"))
-        `)
-
-        if (isOpen) {
-          await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-          await waitFor({timeout: 5000}, async () => {
-            const searchInputs = await systemTest.all(
-              "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
-              {timeout: 0, visible: false}
-            )
-
-            if (searchInputs.length > 0) {
-              throw new Error("Search input is still visible")
-            }
-          })
+        if (await helper.isOpen()) {
+          await helper.close()
         }
 
         const initialRadii = await getBorderRadii()
         expect(initialRadii).not.toBeNull()
 
-        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-        await systemTest.find("[data-testid='hayaSelectRoot'] [data-class='search-text-input']")
-        await systemTest.click("[data-testid='hayaSelectRoot'] [data-class='select-container']")
-
-        await waitFor({timeout: 5000}, async () => {
-          const searchInputs = await systemTest.all(
-            "[data-testid='hayaSelectRoot'] [data-class='search-text-input']",
-            {timeout: 0, visible: false}
-          )
-
-          if (searchInputs.length > 0) {
-            throw new Error("Search input is still visible")
-          }
-        })
+        await helper.open()
+        await helper.close()
 
         const finalRadii = await getBorderRadii()
 
