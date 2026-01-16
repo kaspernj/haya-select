@@ -74,6 +74,23 @@ const paginationLabelText = async (systemTest) => {
   `)
 }
 
+const clickPaginationSelector = async (systemTest, selector) => {
+  const scoundrel = await systemTest.getScoundrelClient()
+
+  await waitFor({timeout: 5000}, async () => {
+    const clicked = await scoundrel.evalResult(`
+      const element = document.querySelector(${JSON.stringify(selector)})
+      if (!element) return false
+      element.click()
+      return true
+    `)
+
+    if (!clicked) {
+      throw new Error(`Pagination element not ready for selector: ${selector}`)
+    }
+  })
+}
+
 const waitForPaginationLabel = async (systemTest, expectedText) => {
   await waitFor({timeout: 5000}, async () => {
     const labelText = await paginationLabelText(systemTest)
@@ -311,8 +328,7 @@ describe("HayaSelect", () => {
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
         await openPaginatedSelect(systemTest)
 
-        const paginationLabel = await systemTest.find("[data-class='pagination-label']", {useBaseSelector: false})
-        await systemTest.click(paginationLabel)
+        await clickPaginationSelector(systemTest, "[data-class='pagination-label']")
         const paginationInput = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false, timeout: 5000})
         await systemTest.interact(paginationInput, "click")
         await systemTest.interact(paginationInput, "sendKeys", "\uE009a")
@@ -332,12 +348,10 @@ describe("HayaSelect", () => {
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 
-        const nextButton = await systemTest.find("[data-class='pagination-next']", {useBaseSelector: false, timeout: 5000})
-        await systemTest.click(nextButton)
+        await clickPaginationSelector(systemTest, "[data-class='pagination-next']")
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
 
-        const prevButton = await systemTest.find("[data-class='pagination-prev']", {useBaseSelector: false, timeout: 5000})
-        await systemTest.click(prevButton)
+        await clickPaginationSelector(systemTest, "[data-class='pagination-prev']")
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
       })
     })
