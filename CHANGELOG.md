@@ -20,3 +20,18 @@
 - Reset pagination page state on close to avoid stale page size inference.
 - Stabilize pagination system specs for manual entry and navigation.
 - Use scoundrel clicks in pagination specs to reduce selector flakiness.
+- Ensure pagination specs assert that option lists change with page.
+- Extract pagination system specs into a dedicated browser spec file.
+- Rename pagination spec to standard `*-spec.js` naming for this repo.
+- Clarify that options may include extra props beyond those HayaSelect uses.
+- Add `optionContent` callback support for custom option rendering.
+- Add system spec coverage for optionContent rendering.
+- Avoid starting/stopping system tests multiple times across spec files.
+- Add a shared HayaSelect system test helper and reuse it in specs.
+- Move system test helpers into src for consumer access.
+- Validate HayaSelect system test helper options to reject unexpected keys.
+- Validate selectOption criteria to reject unexpected keys.
+- Align optionContent selected flag with loose equality behavior.
+- Support `right` option content aligned with option text.
+- Add system spec coverage for right option content.
+- Scope system test helper option queries to the active options container.

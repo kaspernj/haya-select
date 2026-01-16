@@ -6,3 +6,4 @@
 - Avoid ending JavaScript lines with semicolons unless required for correctness.
 - For scoundrel evals that return data, use an explicit `return` statement inside the eval.
 - Suggest relevant git branch names for the work when asked to create a PR or branch.
+- In this repo, do not use `.browser-spec.js` suffix; keep specs named with the standard `*-spec.js` pattern.

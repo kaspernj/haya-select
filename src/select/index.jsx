@@ -38,6 +38,9 @@ const paginationButtonStyles = {}
  * @property {function(): import("react").ReactNode} [currentContent]
  * @property {boolean} [disabled]
  * @property {string} [html]
+ * @property {import("react").ReactNode} [right]
+ *
+ * Additional option props are allowed; HayaSelect only uses the keys above.
  */
 
 /**
@@ -66,6 +69,7 @@ const paginationButtonStyles = {}
  * @property {function(Array<string|number>=): void} [onChangeValue]
  * @property {function(import("react").SyntheticEvent=): void} [onFocus]
  * @property {function(): void} [onOptionsClosed]
+ * @property {function(object): import("react").ReactNode} [optionContent]
  * @property {Array<HayaSelectOption>|function(): (Array<HayaSelectOption>|HayaSelectOptionsResult)} options
  * @property {boolean} optionsAbsolute
  * @property {boolean} optionsPortal
@@ -178,12 +182,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
+    optionContent: PropTypes.func,
     options: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.shape({
         content: PropTypes.func,
         currentContent: PropTypes.func,
         disabled: PropTypes.bool,
         html: PropTypes.string,
+        right: PropTypes.node,
         text: PropTypes.node,
         value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
       })),
@@ -1350,12 +1356,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   presentOption = (option, mode) => {
-    const {toggleOptions} = this.props || {}
+    const {optionContent, toggleOptions} = this.props || {}
     const toggled = this.getToggled()
     const icon = this.iconForOption(option)
     const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
+    const selected = this.getCurrentOptionValues().some((value) => value == option.value)
     let style
+    let contentNode
 
     if (mode == "current") {
       style = this.stylingFor("currentOptionPresentationText", {flex: 1, whiteSpace: "nowrap"})
@@ -1371,7 +1379,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           toggleValue: toggleOption?.value,
           value: option.value
         }, [option.text, option.value, toggleOption?.icon, toggleOption?.value])}
-        style={this.cache("optionPresentationStyle", {flexDirection: "row"})}
+        style={this.cache("optionPresentationStyle", {flexDirection: "row", alignItems: "center"})}
         testID="option-presentation"
       >
         {toggleOptions && !(option.value in toggled) &&
@@ -1389,16 +1397,18 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </View>
         }
         {(() => {
-          if (mode == "current" && option.currentContent) {
-            return option.currentContent()
+          if (optionContent) {
+            contentNode = optionContent({icon, mode, option, selected, toggleOption, toggleValue, toggled})
+          } else if (mode == "current" && option.currentContent) {
+            contentNode = option.currentContent()
           } else if (option.content) {
-            return option.content()
+            contentNode = option.content()
           } else if ("html" in option && Platform.OS != "web") {
-            return <RenderHtml source={{html: digg(option, "html")}} />
+            contentNode = <RenderHtml source={{html: digg(option, "html")}} />
           } else if ("html" in option && Platform.OS == "web") {
-            return <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
+            contentNode = <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
           } else {
-            return (
+            contentNode = (
               <Text
                 style={style}
                 testID="option-presentation-text"
@@ -1407,6 +1417,19 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               </Text>
             )
           }
+
+          return (
+            <>
+              <View style={this.cache("optionPresentationContentStyle", {flex: 1})}>
+                {contentNode}
+              </View>
+              {option.right &&
+                <View style={this.cache("optionPresentationRightStyle", {alignItems: "center", justifyContent: "center", marginLeft: 8})}>
+                  {option.right}
+                </View>
+              }
+            </>
+          )
         })()}
       </View>
     )
