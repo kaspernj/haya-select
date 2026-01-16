@@ -18,6 +18,10 @@ export default function App() {
     {value: "two", text: "Two"},
     {value: "three", text: "Three"}
   ]
+  const rightSelectOptions = selectOptions.map((option) => ({
+    ...option,
+    right: <Text>Right {option.text}</Text>
+  }))
   const paginationPageSize = 5
   const paginationTotalCount = 24
 
@@ -88,6 +92,14 @@ export default function App() {
                   <HayaSelect
                     options={selectOptions}
                     placeholder="Pick one"
+                  />
+                </View>
+              </Group>
+              <Group name="Right Option Select">
+                <View testID="hayaSelectRightOptionRoot">
+                  <HayaSelect
+                    options={rightSelectOptions}
+                    placeholder="Pick with right"
                   />
                 </View>
               </Group>

@@ -32,3 +32,6 @@
 - Validate HayaSelect system test helper options to reject unexpected keys.
 - Validate selectOption criteria to reject unexpected keys.
 - Align optionContent selected flag with loose equality behavior.
+- Support `right` option content aligned with option text.
+- Add system spec coverage for right option content.
+- Scope system test helper option queries to the active options container.

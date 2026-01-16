@@ -58,6 +58,27 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("renders right option content", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRightOptionRoot"})
+
+        await systemTest.findByTestID("hayaSelectRightOptionRoot", {timeout: 60000})
+        await helper.open()
+
+        await waitFor({timeout: 5000}, async () => {
+          const texts = await helper.optionTexts()
+
+          if (!texts.some((text) => text.includes("Right One"))) {
+            throw new Error(`Unexpected right option content: ${texts.join(", ")}`)
+          }
+        })
+
+        await helper.close()
+      })
+    })
+  })
+
   it("filters options when searching", async () => {
     await timeout({timeout: 90000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
@@ -72,7 +93,7 @@ describe("HayaSelect", () => {
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
 
-          if (texts.length !== 1 || texts[0] !== "Two") {
+          if (texts.length !== 1 || !texts[0].includes("Two")) {
             throw new Error(`Unexpected options: ${texts.join(", ")}`)
           }
         })
@@ -94,11 +115,8 @@ describe("HayaSelect", () => {
           await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false})
         })
 
-        const optionOne = await systemTest.find("[data-class='select-option'][data-value='one']", {useBaseSelector: false})
-        await systemTest.click(optionOne)
-
-        const optionTwo = await systemTest.find("[data-class='select-option'][data-value='two']", {useBaseSelector: false})
-        await systemTest.click(optionTwo)
+        await helper.selectOption({value: "one"})
+        await helper.selectOption({value: "two"})
 
         const scoundrel = await systemTest.getScoundrelClient()
         const colors = await scoundrel.evalResult(`

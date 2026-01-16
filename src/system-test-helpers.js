@@ -22,6 +22,7 @@ export default class HayaSelectSystemTestHelper {
     this.systemTest = systemTest
     this.testId = testId
     this.rootSelector = `[data-testid='${testId}']`
+    this.componentSelector = `${this.rootSelector} [data-component='haya-select']`
     this.selectContainerSelector = `${this.rootSelector} [data-class='select-container']`
     this.searchInputSelector = `${this.rootSelector} [data-class='search-text-input']`
   }
@@ -53,9 +54,27 @@ export default class HayaSelectSystemTestHelper {
     `)
   }
 
+  /** @returns {Promise<string>} */
+  async optionsContainerSelector() {
+    if (this._optionsContainerSelector) return this._optionsContainerSelector
+
+    const scoundrel = await this.systemTest.getScoundrelClient()
+    const selector = await scoundrel.evalResult(`
+      const root = document.querySelector(${JSON.stringify(this.componentSelector)}) ||
+        document.querySelector(${JSON.stringify(this.rootSelector)})
+      const id = root?.dataset?.id
+      return id ? "[data-class='options-container'][data-id='" + id + "']" : null
+    `)
+
+    this._optionsContainerSelector = selector || "[data-class='options-container']"
+
+    return this._optionsContainerSelector
+  }
+
   /** @returns {Promise<string[]>} */
   async optionTexts() {
-    const options = await this.systemTest.all("[data-class='select-option']", {useBaseSelector: false})
+    const optionsContainerSelector = await this.optionsContainerSelector()
+    const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
 
     return await Promise.all(options.map(async (option) => (await option.getText()).trim()))
   }
@@ -76,13 +95,18 @@ export default class HayaSelectSystemTestHelper {
     }
 
     if (typeof value != "undefined") {
-      const option = await this.systemTest.find(`[data-class='select-option'][data-value='${value}']`, {useBaseSelector: false})
+      const optionsContainerSelector = await this.optionsContainerSelector()
+      const option = await this.systemTest.find(
+        `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
+        {useBaseSelector: false}
+      )
       await this.systemTest.click(option)
       return
     }
 
     if (typeof index == "number") {
-      const options = await this.systemTest.all("[data-class='select-option']", {useBaseSelector: false})
+      const optionsContainerSelector = await this.optionsContainerSelector()
+      const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
       const option = options[index]
 
       if (!option) throw new Error(`No option at index: ${index}`)
@@ -92,7 +116,8 @@ export default class HayaSelectSystemTestHelper {
     }
 
     if (text) {
-      const options = await this.systemTest.all("[data-class='select-option']", {useBaseSelector: false})
+      const optionsContainerSelector = await this.optionsContainerSelector()
+      const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
 
       for (const option of options) {
         const optionText = (await option.getText()).trim()
