@@ -14,7 +14,9 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
     option: PropTypes.object.isRequired,
-    presentOption: PropTypes.func.isRequired
+    presentOption: PropTypes.func.isRequired,
+    selectedBackgroundColor: PropTypes.string,
+    selectedHoverBackgroundColor: PropTypes.string
   }
 
   setup() {
@@ -30,8 +32,8 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
 
     const style = useMemo(() => {
-      const selectedBackgroundColor = "#cfe1ff"
-      const selectedHoverBackgroundColor = "#9bbcfb"
+      const selectedBackgroundColor = this.props.selectedBackgroundColor || "#cfe1ff"
+      const selectedHoverBackgroundColor = this.props.selectedHoverBackgroundColor || "#9bbcfb"
       const style = {
         paddingTop: 4,
         paddingRight: 8,
@@ -56,7 +58,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
       }
 
       return style
-    }, [disabled, hover, selected])
+    }, [disabled, hover, selected, this.props.selectedBackgroundColor, this.props.selectedHoverBackgroundColor])
 
     return (
       <Pressable
