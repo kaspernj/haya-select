@@ -35,3 +35,4 @@
 - Support `right` option content aligned with option text.
 - Add system spec coverage for right option content.
 - Scope system test helper option queries to the active options container.
+- Select pagination input text on focus to stabilize manual page entry.
