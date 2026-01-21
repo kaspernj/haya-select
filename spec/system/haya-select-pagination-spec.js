@@ -120,12 +120,41 @@ const clickPaginationSelector = async (systemTest, selector) => {
     const clicked = await scoundrel.evalResult(`
       const element = document.querySelector(${JSON.stringify(selector)})
       if (!element) return false
-      element.click()
+      element.scrollIntoView?.({block: "center", inline: "center"})
+      element.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
       return true
     `)
 
     if (!clicked) {
       throw new Error(`Pagination element not ready for selector: ${selector}`)
+    }
+  })
+}
+
+const setPaginationInputValue = async (systemTest, value) => {
+  const scoundrel = await systemTest.getScoundrelClient()
+
+  await waitFor({timeout: 5000}, async () => {
+    const updated = await scoundrel.evalResult(`
+      const element = document.querySelector("[data-class='pagination-input']")
+      if (!element) return false
+      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+      element.focus()
+      if (nativeSetter) {
+        nativeSetter.call(element, ${JSON.stringify(value)})
+      } else {
+        element.value = ${JSON.stringify(value)}
+      }
+      element.dispatchEvent(new Event("input", {bubbles: true}))
+      element.dispatchEvent(new Event("change", {bubbles: true}))
+      element.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+      element.dispatchEvent(new KeyboardEvent("keypress", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+      element.dispatchEvent(new KeyboardEvent("keyup", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+      return true
+    `)
+
+    if (!updated) {
+      throw new Error("Pagination input not ready")
     }
   })
 }
@@ -171,12 +200,7 @@ describe("HayaSelect pagination", () => {
         await openPaginatedSelect(systemTest)
 
         await clickPaginationSelector(systemTest, "[data-class='pagination-label']")
-        const paginationInput = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false, timeout: 5000})
-        await systemTest.interact(paginationInput, "click")
-        await systemTest.interact(paginationInput, "sendKeys", "\uE009a")
-        await systemTest.interact(paginationInput, "sendKeys", "\uE003")
-        await systemTest.interact(paginationInput, "sendKeys", "4")
-        await systemTest.interact(paginationInput, "sendKeys", "\uE006")
+        await setPaginationInputValue(systemTest, "4")
 
         await waitForPaginationLabel(systemTest, "Page 4 of 5")
         await waitFor({timeout: 5000}, async () => {

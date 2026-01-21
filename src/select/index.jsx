@@ -1092,6 +1092,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 onChangeText={this.tt.onPaginationInputChange}
                 onSubmitEditing={this.tt.onPaginationInputSubmit}
                 ref={this.tt.pageInputRef}
+                selectTextOnFocus
                 style={styles.paginationInputStyle ||= {
                   border: 0,
                   color: "#0f172a",
