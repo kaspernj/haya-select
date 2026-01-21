@@ -75,6 +75,8 @@ const paginationButtonStyles = {}
  * @property {boolean} optionsPortal
  * @property {number} [optionsWidth]
  * @property {import("react").ReactNode} [placeholder]
+ * @property {string} [selectedBackgroundColor]
+ * @property {string} [selectedHoverBackgroundColor]
  * @property {boolean} search
  * @property {object} [styles]
  * @property {object} [toggled]
@@ -199,6 +201,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     optionsPortal: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
+    selectedBackgroundColor: PropTypes.string,
+    selectedHoverBackgroundColor: PropTypes.string,
     search: PropTypes.bool.isRequired,
     styles: PropTypes.object,
     toggled: PropTypes.object,
@@ -659,6 +663,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         option={loadedOption}
         onOptionClicked={this.tt.onOptionClicked}
         presentOption={this.tt.presentOption}
+        selectedBackgroundColor={this.props.selectedBackgroundColor}
+        selectedHoverBackgroundColor={this.props.selectedHoverBackgroundColor}
       />
     )
   }
