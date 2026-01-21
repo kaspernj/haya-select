@@ -36,3 +36,6 @@
 - Add system spec coverage for right option content.
 - Scope system test helper option queries to the active options container.
 - Select pagination input text on focus to stabilize manual page entry.
+- Stabilize pagination manual entry system spec input handling.
+- Scroll pagination controls into view before scoundrel click dispatches.
+- Dispatch enter key events when setting pagination input value in system specs.
