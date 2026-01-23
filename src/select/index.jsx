@@ -399,10 +399,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   getCurrentOptionValues() {
     if ("values" in this.props) {
-      return this.p.values
+      return Array.isArray(this.p.values) ? this.p.values : []
     }
 
-    return this.getCurrentOptions().map((option) => option.value)
+    const currentOptions = this.getCurrentOptions()
+
+    if (!currentOptions) return []
+
+    return currentOptions
+      .map((option) => option?.value)
+      .filter((value) => typeof value != "undefined")
   }
 
   componentDidMount() {

@@ -39,3 +39,4 @@
 - Stabilize pagination manual entry system spec input handling.
 - Scroll pagination controls into view before scoundrel click dispatches.
 - Dispatch enter key events when setting pagination input value in system specs.
+- Guard current option value lookup when controlled values are null/undefined to avoid option rendering crashes.
