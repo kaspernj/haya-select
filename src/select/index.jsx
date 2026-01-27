@@ -226,7 +226,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     this.t = t
 
-    if (this.props.values) {
+    if (Array.isArray(this.props.values)) {
       for (const value of this.props.values) {
         if (typeof value == "undefined") {
           throw new Error("HayaSelect: Undefined given as value")
@@ -280,7 +280,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     useEffect(() => {
       const currentOptionIds = this.s.currentOptions?.map((currentOption) => currentOption.value)
 
-      if (this.props.values && anythingDifferent(currentOptionIds, this.props.values) && typeof this.props.options == "function") {
+      if (Array.isArray(this.props.values) && anythingDifferent(currentOptionIds, this.props.values) && typeof this.props.options == "function") {
         this.setCurrentFromGivenValues()
       }
     }, [this.props.values])
@@ -368,9 +368,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
-      if (Array.isArray(this.props.options) && this.props.values) {
+      if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
+
+      if (Array.isArray(this.props.options) && Array.isArray(this.p.values)) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
-      } else if (this.s.loadedOptions && this.props.values) {
+      } else if (this.s.loadedOptions && Array.isArray(this.p.values)) {
         return this.p.values.map((value) => {
           let foundOption = this.s.loadedOptions.find((option) => option.value == value)
 
@@ -387,9 +389,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
           return foundOption
         })
-      } else if (typeof this.props.options == "function" && this.props.values) {
+      } else if (typeof this.props.options == "function") {
         // Options haven't been loaded yet.
-      } else if (this.props.values) {
+      } else if (Array.isArray(this.p.values)) {
         return this.p.values.map((value) => ({value}))
       }
     }
@@ -1450,6 +1452,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   async setCurrentFromGivenValues() {
     const {options, values} = this.p
+
+    if (Array.isArray(values) && values.length === 0) {
+      if (this.s.currentOptions?.length) {
+        this.setState({currentOptions: []})
+      }
+
+      return
+    }
+
     const result = await options({page: this.getActivePage(), values})
     const {options: currentOptions} = this.parseOptionsResult(result)
     const currentValues = currentOptions?.map((currentOption) => currentOption.value)

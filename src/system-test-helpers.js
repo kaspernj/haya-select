@@ -31,6 +31,7 @@ export default class HayaSelectSystemTestHelper {
   async open() {
     await this.systemTest.click(this.selectContainerSelector)
     await this.systemTest.find(this.searchInputSelector)
+    this._optionsContainerSelector = null
   }
 
   /** @returns {Promise<void>} */
@@ -95,40 +96,48 @@ export default class HayaSelectSystemTestHelper {
     }
 
     if (typeof value != "undefined") {
-      const optionsContainerSelector = await this.optionsContainerSelector()
-      const option = await this.systemTest.find(
-        `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
-        {useBaseSelector: false}
-      )
-      await this.systemTest.click(option)
+      await waitFor({timeout: 5000}, async () => {
+        const optionsContainerSelector = await this.optionsContainerSelector()
+        const option = await this.systemTest.find(
+          `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
+          {useBaseSelector: false}
+        )
+
+        await this.systemTest.click(option)
+      })
       return
     }
 
     if (typeof index == "number") {
-      const optionsContainerSelector = await this.optionsContainerSelector()
-      const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
-      const option = options[index]
+      await waitFor({timeout: 5000}, async () => {
+        const optionsContainerSelector = await this.optionsContainerSelector()
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+        const option = options[index]
 
-      if (!option) throw new Error(`No option at index: ${index}`)
+        if (!option) throw new Error(`No option at index: ${index}`)
 
-      await this.systemTest.click(option)
+        await this.systemTest.click(option)
+      })
       return
     }
 
     if (text) {
-      const optionsContainerSelector = await this.optionsContainerSelector()
-      const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+      await waitFor({timeout: 5000}, async () => {
+        const optionsContainerSelector = await this.optionsContainerSelector()
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
 
-      for (const option of options) {
-        const optionText = (await option.getText()).trim()
+        for (const option of options) {
+          const optionText = (await option.getText()).trim()
 
-        if (optionText === text) {
-          await this.systemTest.click(option)
-          return
+          if (optionText === text) {
+            await this.systemTest.click(option)
+            return
+          }
         }
-      }
 
-      throw new Error(`No option found with text: ${text}`)
+        throw new Error(`No option found with text: ${text}`)
+      })
+      return
     }
 
     throw new Error("Expected value, text, or index when selecting an option")

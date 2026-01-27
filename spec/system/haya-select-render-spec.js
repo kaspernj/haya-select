@@ -143,7 +143,64 @@ describe("HayaSelect", () => {
           expect(colors.allowed.includes(color)).toBe(true)
         })
 
+        await helper.selectOption({value: "one"})
+        await helper.selectOption({value: "two"})
+
         await helper.close()
+      })
+    })
+  })
+
+  it("clears selected options after deselecting all values", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
+
+        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000})
+
+        const scoundrel = await systemTest.getScoundrelClient()
+        const currentSelectedText = async () => await scoundrel.evalResult(`
+          const element = document.querySelector("[data-testid='hayaSelectMultipleRoot'] [data-class='current-selected']")
+          return element ? element.textContent.trim() : ""
+        `)
+
+        const currentOptionCount = async () => await scoundrel.evalResult(`
+          const options = document.querySelectorAll("[data-testid='hayaSelectMultipleRoot'] [data-class='current-option']")
+          return options.length
+        `)
+
+        if (await helper.isOpen()) {
+          await helper.close()
+        }
+
+        await helper.open()
+        await helper.selectOption({value: "one"})
+        await helper.close()
+
+        await waitFor({timeout: 5000}, async () => {
+          const text = await currentSelectedText()
+
+          if (!text.includes("One")) {
+            throw new Error(`Expected selected label, got: ${text}`)
+          }
+        })
+
+        await helper.open()
+        await helper.selectOption({value: "one"})
+        await helper.close()
+
+        await waitFor({timeout: 5000}, async () => {
+          const count = await currentOptionCount()
+          const text = await currentSelectedText()
+
+          if (count !== 0) {
+            throw new Error(`Expected 0 current options, got: ${count}`)
+          }
+
+          if (!text.includes("Pick multiple")) {
+            throw new Error(`Expected placeholder, got: ${text}`)
+          }
+        })
       })
     })
   })
