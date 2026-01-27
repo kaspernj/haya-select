@@ -41,3 +41,4 @@
 - Dispatch enter key events when setting pagination input value in system specs.
 - Guard current option value lookup when controlled values are null/undefined to avoid option rendering crashes.
 - Stabilize system test option selection by resetting cached option selectors on open and waiting for options.
+- Deselect multi-select options after highlight spec to avoid leaking state across system tests.

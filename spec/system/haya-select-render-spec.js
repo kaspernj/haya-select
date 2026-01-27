@@ -143,6 +143,9 @@ describe("HayaSelect", () => {
           expect(colors.allowed.includes(color)).toBe(true)
         })
 
+        await helper.selectOption({value: "one"})
+        await helper.selectOption({value: "two"})
+
         await helper.close()
       })
     })
