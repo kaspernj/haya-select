@@ -51,7 +51,9 @@ export default class HayaSelectSystemTestHelper {
     const scoundrel = await this.systemTest.getScoundrelClient()
 
     return await scoundrel.evalResult(`
-      return Boolean(document.querySelector(${JSON.stringify(this.searchInputSelector)}))
+      (() => {
+        return Boolean(document.querySelector(${JSON.stringify(this.searchInputSelector)}))
+      })()
     `)
   }
 
@@ -61,10 +63,12 @@ export default class HayaSelectSystemTestHelper {
 
     const scoundrel = await this.systemTest.getScoundrelClient()
     const selector = await scoundrel.evalResult(`
-      const root = document.querySelector(${JSON.stringify(this.componentSelector)}) ||
-        document.querySelector(${JSON.stringify(this.rootSelector)})
-      const id = root?.dataset?.id
-      return id ? "[data-class='options-container'][data-id='" + id + "']" : null
+      (() => {
+        const root = document.querySelector(${JSON.stringify(this.componentSelector)}) ||
+          document.querySelector(${JSON.stringify(this.rootSelector)})
+        const id = root?.dataset?.id
+        return id ? "[data-class='options-container'][data-id='" + id + "']" : null
+      })()
     `)
 
     this._optionsContainerSelector = selector || "[data-class='options-container']"

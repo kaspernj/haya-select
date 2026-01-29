@@ -31,7 +31,9 @@ afterAll(async () => {
 const openPaginatedSelect = async (systemTest) => {
   const scoundrel = await systemTest.getScoundrelClient()
   const isOpen = await scoundrel.evalResult(`
-    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+    (() => {
+      return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+    })()
   `)
 
   if (!isOpen) {
@@ -41,7 +43,9 @@ const openPaginatedSelect = async (systemTest) => {
 
   await waitFor({timeout: 5000}, async () => {
     const paginationVisible = await scoundrel.evalResult(`
-      return Boolean(document.querySelector("[data-class='options-pagination']"))
+      (() => {
+        return Boolean(document.querySelector("[data-class='options-pagination']"))
+      })()
     `)
 
     if (!paginationVisible) {
@@ -50,8 +54,10 @@ const openPaginatedSelect = async (systemTest) => {
   })
 
   const labelText = await scoundrel.evalResult(`
-    const label = document.querySelector("[data-class='pagination-label']")
-    return label ? label.textContent.trim() : null
+    (() => {
+      const label = document.querySelector("[data-class='pagination-label']")
+      return label ? label.textContent.trim() : null
+    })()
   `)
 
   if (labelText && !labelText.startsWith("Page 1 of ")) {
@@ -65,7 +71,9 @@ const openPaginatedSelect = async (systemTest) => {
 const closePaginatedSelect = async (systemTest) => {
   const scoundrel = await systemTest.getScoundrelClient()
   const isOpen = await scoundrel.evalResult(`
-    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+    (() => {
+      return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
+    })()
   `)
 
   if (isOpen) {
@@ -77,8 +85,10 @@ const paginationLabelText = async (systemTest) => {
   const scoundrel = await systemTest.getScoundrelClient()
 
   return await scoundrel.evalResult(`
-    const element = document.querySelector("[data-class='pagination-label']")
-    return element ? element.textContent.trim() : null
+    (() => {
+      const element = document.querySelector("[data-class='pagination-label']")
+      return element ? element.textContent.trim() : null
+    })()
   `)
 }
 
@@ -118,11 +128,13 @@ const clickPaginationSelector = async (systemTest, selector) => {
 
   await waitFor({timeout: 5000}, async () => {
     const clicked = await scoundrel.evalResult(`
-      const element = document.querySelector(${JSON.stringify(selector)})
-      if (!element) return false
-      element.scrollIntoView?.({block: "center", inline: "center"})
-      element.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
-      return true
+      (() => {
+        const element = document.querySelector(${JSON.stringify(selector)})
+        if (!element) return false
+        element.scrollIntoView?.({block: "center", inline: "center"})
+        element.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
+        return true
+      })()
     `)
 
     if (!clicked) {
@@ -136,21 +148,23 @@ const setPaginationInputValue = async (systemTest, value) => {
 
   await waitFor({timeout: 5000}, async () => {
     const updated = await scoundrel.evalResult(`
-      const element = document.querySelector("[data-class='pagination-input']")
-      if (!element) return false
-      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-      element.focus()
-      if (nativeSetter) {
-        nativeSetter.call(element, ${JSON.stringify(value)})
-      } else {
-        element.value = ${JSON.stringify(value)}
-      }
-      element.dispatchEvent(new Event("input", {bubbles: true}))
-      element.dispatchEvent(new Event("change", {bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keypress", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keyup", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      return true
+      (() => {
+        const element = document.querySelector("[data-class='pagination-input']")
+        if (!element) return false
+        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+        element.focus()
+        if (nativeSetter) {
+          nativeSetter.call(element, ${JSON.stringify(value)})
+        } else {
+          element.value = ${JSON.stringify(value)}
+        }
+        element.dispatchEvent(new Event("input", {bubbles: true}))
+        element.dispatchEvent(new Event("change", {bubbles: true}))
+        element.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+        element.dispatchEvent(new KeyboardEvent("keypress", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+        element.dispatchEvent(new KeyboardEvent("keyup", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
+        return true
+      })()
     `)
 
     if (!updated) {

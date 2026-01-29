@@ -728,12 +728,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   onSearchTextInputChangedDebounced = debounce(this.tt.loadOptions, 200)
 
-  closeOptions() {
+  closeOptions({options} = {}) {
+    const closedOptions = options || this.getCurrentOptions()
+
     this.setState({
       height: null,
       loadedOptions: undefined,
       opened: false,
       optionsContainerLayout: null,
+      optionsVisibility: "hidden",
       page: 1,
       pageInputActive: false,
       pageInputValue: "",
@@ -742,7 +745,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     })
 
     if (this.props.onOptionsClosed) {
-      this.props.onOptionsClosed({options: this.getCurrentOptions()})
+      this.props.onOptionsClosed({options: closedOptions})
     }
 
     if (this.p.onBlur) this.p.onBlur()
@@ -1318,6 +1321,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     const options = newCurrentOptions || currentOptions
 
+    if (!multiple) this.closeOptions({options})
+
     if (onChange) {
       onChange({
         event,
@@ -1338,7 +1343,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       this.p.onChangeValue(optionValue)
     }
 
-    if (!multiple) this.closeOptions()
     this.setState(newState)
   }
 
