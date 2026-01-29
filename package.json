@@ -1,6 +1,6 @@
 {
   "name": "haya-select",
-  "version": "1.0.83",
+  "version": "1.0.94",
   "description": "Just another select component for React Native + Web.",
   "files": [
     "build/**"
@@ -9,14 +9,17 @@
   "types": "build/index.d.ts",
   "scripts": {
     "build": "expo-module build",
+    "build:example:dist": "EXPO_NONINTERACTIVE=1 cd example && npx expo export --platform web --output-dir ../dist",
     "clean": "expo-module clean",
     "lint": "expo-module lint",
     "test": "node scripts/velocious-test.js",
+    "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
     "prepare": "expo-module prepare",
     "release:patch": "npm version patch && npm publish",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
     "open:android": "open -a \"Android Studio\" example/android",
+    "release:patch": "npm version patch -m \"Bump version to %s\" && git push --follow-tags && npm whoami || npm login && npm publish",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -34,22 +37,24 @@
   "homepage": "https://github.com/kaspernj/haya-select#readme",
   "dependencies": {
     "classnames": "^2.3.1",
-    "debounce": "^2.1.0",
+    "debounce": "^3.0.0",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
     "react-native-render-html": "^6.3.4",
-    "set-state-compare": "^1.0.64"
+    "ya-use-event-listener": "^0.1.1"
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "eslint-plugin-jsdoc": "^62.0.0",
     "expo": "~52.0.48",
     "expo-module-scripts": "^4.0.2",
     "react": "18.3.1",
     "react-native": "0.76.9",
+    "scoundrel-remote-eval": "1.0.31",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "system-testing": "^1.0.56",
-    "velocious": "^1.0.171"
+    "system-testing": "^1.0.62",
+    "velocious": "^1.0.176"
   },
   "peerDependencies": {
     "@kaspernj/api-maker": "*",
@@ -58,7 +63,8 @@
     "outside-eye": "*",
     "prop-types": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "set-state-compare": ">= 1.0.67"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

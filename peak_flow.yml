@@ -3,6 +3,7 @@ before_script:
   - (cd example && npm install)
   - (cd example && npx expo export --platform web --output-dir ../dist)
 script:
+  - npm run lint
   - npm run typecheck
   - SYSTEM_TEST_HOST=dist npm test
   - npx expo-doctor

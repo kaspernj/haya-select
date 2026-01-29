@@ -1,8 +1,7 @@
-import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
-import {memo, useMemo} from "react"
-import {Pressable} from "react-native"
 import PropTypes from "prop-types"
-import React from "react"
+import {Pressable} from "react-native"
+import React, {memo, useMemo} from "react"
+import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 
 export default memo(shapeComponent(class Option extends ShapeComponent {
   static defaultProps = {
@@ -15,7 +14,9 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
     option: PropTypes.object.isRequired,
-    presentOption: PropTypes.func.isRequired
+    presentOption: PropTypes.func.isRequired,
+    selectedBackgroundColor: PropTypes.string,
+    selectedHoverBackgroundColor: PropTypes.string
   }
 
   setup() {
@@ -31,6 +32,8 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
 
     const style = useMemo(() => {
+      const selectedBackgroundColor = this.props.selectedBackgroundColor || "#cfe1ff"
+      const selectedHoverBackgroundColor = this.props.selectedHoverBackgroundColor || "#9bbcfb"
       const style = {
         paddingTop: 4,
         paddingRight: 8,
@@ -47,15 +50,15 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
       }
 
       if (selected) {
-        style.backgroundColor = "#80b2ff"
+        style.backgroundColor = selectedBackgroundColor
       }
 
       if (hover) {
-        style.backgroundColor = "steelblue"
+        style.backgroundColor = selected ? selectedHoverBackgroundColor : "steelblue"
       }
 
       return style
-    }, [disabled, hover, selected])
+    }, [disabled, hover, selected, this.props.selectedBackgroundColor, this.props.selectedHoverBackgroundColor])
 
     return (
       <Pressable

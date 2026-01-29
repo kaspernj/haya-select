@@ -1,0 +1,44 @@
+# Changelog
+
+## Unreleased
+- Fix crash when opening the select before layout measurements are available.
+- Update options width when layout data arrives after opening.
+- Guard options positioning until layout data is available.
+- Scope Prettier linting overrides to match existing config/select file styles.
+- Disable ESLint rules that fail against existing config/select code style.
+- Disable Prettier's semicolon enforcement in ESLint.
+- Run linting in the peak_flow script.
+- Increase system test teardown timeout to reduce CI flakiness.
+- Bump `system-testing` to 1.0.60.
+- Add ESLint JSDoc checks for type safety.
+- Add JSDoc prop typings for HayaSelect.
+- Expand HayaSelect options prop typing and shape validation.
+- Switch `useEventListener` import to `ya-use-event-listener`.
+- Bump `system-testing` to 1.0.62.
+- Add paginated async options support and pagination controls in HayaSelect.
+- Add system specs for pagination controls.
+- Reset pagination page state on close to avoid stale page size inference.
+- Stabilize pagination system specs for manual entry and navigation.
+- Use scoundrel clicks in pagination specs to reduce selector flakiness.
+- Ensure pagination specs assert that option lists change with page.
+- Extract pagination system specs into a dedicated browser spec file.
+- Rename pagination spec to standard `*-spec.js` naming for this repo.
+- Clarify that options may include extra props beyond those HayaSelect uses.
+- Add `optionContent` callback support for custom option rendering.
+- Add system spec coverage for optionContent rendering.
+- Avoid starting/stopping system tests multiple times across spec files.
+- Add a shared HayaSelect system test helper and reuse it in specs.
+- Move system test helpers into src for consumer access.
+- Validate HayaSelect system test helper options to reject unexpected keys.
+- Validate selectOption criteria to reject unexpected keys.
+- Align optionContent selected flag with loose equality behavior.
+- Support `right` option content aligned with option text.
+- Add system spec coverage for right option content.
+- Scope system test helper option queries to the active options container.
+- Select pagination input text on focus to stabilize manual page entry.
+- Stabilize pagination manual entry system spec input handling.
+- Scroll pagination controls into view before scoundrel click dispatches.
+- Dispatch enter key events when setting pagination input value in system specs.
+- Guard current option value lookup when controlled values are null/undefined to avoid option rendering crashes.
+- Stabilize system test option selection by resetting cached option selectors on open and waiting for options.
+- Deselect multi-select options after highlight spec to avoid leaking state across system tests.

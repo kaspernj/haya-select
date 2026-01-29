@@ -1,21 +1,89 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
-import {dig, digg} from "diggerize"
-import {Dimensions, Platform, Pressable, Text, TextInput, View} from "react-native"
-import React, {memo, useEffect, useRef} from "react"
-import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
+import {dig,digg} from "diggerize"
+import {Dimensions,Platform,Pressable,TextInput,View} from "react-native"
+import React,{memo,useEffect,useRef} from "react"
+import {shapeComponent,ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"
 import idForComponent from "@kaspernj/api-maker/build/inputs/id-for-component"
 import nameForComponent from "@kaspernj/api-maker/build/inputs/name-for-component"
+import Text from "@kaspernj/api-maker/build/utils/text"
 import Option from "./option"
 import OptionGroup from "./option-group"
 import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
-import useEventListener from "@kaspernj/api-maker/build/use-event-listener"
+import useEventListener from "ya-use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
+
+const styles = {}
+const dataSets = {}
+const paginationButtonDataSets = {}
+const paginationButtonStyles = {}
+
+/**
+ * @typedef {object} HayaSelectToggleOption
+ * @property {string} icon
+ * @property {string} label
+ * @property {string} value
+ */
+
+/**
+ * @typedef {object} HayaSelectOption
+ * @property {string|number} value
+ * @property {import("react").ReactNode} [text]
+ * @property {function(): import("react").ReactNode} [content]
+ * @property {function(): import("react").ReactNode} [currentContent]
+ * @property {boolean} [disabled]
+ * @property {string} [html]
+ * @property {import("react").ReactNode} [right]
+ *
+ * Additional option props are allowed; HayaSelect only uses the keys above.
+ */
+
+/**
+ * @typedef {object} HayaSelectOptionsResult
+ * @property {Array<HayaSelectOption>} options
+ * @property {number} [totalCount]
+ * @property {number} [page]
+ * @property {number} [pageSize]
+ */
+
+/**
+ * @typedef {object} HayaSelectProps
+ * @property {string} [attribute]
+ * @property {string} [className]
+ * @property {object} [defaultToggled]
+ * @property {string|number} [defaultValue]
+ * @property {Array<string|number>} [defaultValues]
+ * @property {Array<HayaSelectOption>} [defaultValuesFromOptions]
+ * @property {import("react").ReactNode} [id]
+ * @property {object} [model]
+ * @property {boolean} multiple
+ * @property {string} [name]
+ * @property {function(): import("react").ReactNode} [noOptionsText]
+ * @property {function(import("react").SyntheticEvent=): void} [onBlur]
+ * @property {function(import("react").SyntheticEvent=): void} [onChange]
+ * @property {function(Array<string|number>=): void} [onChangeValue]
+ * @property {function(import("react").SyntheticEvent=): void} [onFocus]
+ * @property {function(): void} [onOptionsClosed]
+ * @property {function(object): import("react").ReactNode} [optionContent]
+ * @property {Array<HayaSelectOption>|function(): (Array<HayaSelectOption>|HayaSelectOptionsResult)} options
+ * @property {boolean} optionsAbsolute
+ * @property {boolean} optionsPortal
+ * @property {number} [optionsWidth]
+ * @property {import("react").ReactNode} [placeholder]
+ * @property {string} [selectedBackgroundColor]
+ * @property {string} [selectedHoverBackgroundColor]
+ * @property {boolean} search
+ * @property {object} [styles]
+ * @property {object} [toggled]
+ * @property {Array<HayaSelectToggleOption>} [toggleOptions]
+ * @property {boolean} transparent
+ * @property {Array<string|number>} [values]
+ */
 
 /** @returns {string} */
 const nameForComponentWithMultiple = (component) => {
@@ -30,6 +98,62 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
+/**
+ * @typedef {object} PaginationPageButtonProps
+ * @property {boolean} active
+ * @property {number} page
+ * @property {function(number): void} onPageSelected
+ */
+
+/** @extends {ShapeComponent<PaginationPageButtonProps>} */
+const PaginationPageButton = memo(shapeComponent(class PaginationPageButton extends ShapeComponent {
+  static propTypes = propTypesExact({
+    active: PropTypes.bool.isRequired,
+    page: PropTypes.number.isRequired,
+    onPageSelected: PropTypes.func.isRequired
+  })
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPress = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    this.p.onPageSelected(this.p.page)
+  }
+
+  render() {
+    const {active, page} = this.p
+
+    return (
+      <Pressable
+        dataSet={paginationButtonDataSets[`paginationPage-${page}`] ||= {class: "pagination-page", page}}
+        disabled={active}
+        onPress={this.tt.onPress}
+        style={paginationButtonStyles[`paginationPageButton-${active}`] ||= {
+          alignItems: "center",
+          backgroundColor: active ? "#0f172a" : "#e2e8f0",
+          borderRadius: 999,
+          height: 28,
+          justifyContent: "center",
+          marginHorizontal: 4,
+          width: 28
+        }}
+      >
+        <Text
+          style={paginationButtonStyles[`paginationPageText-${active}`] ||= {
+            color: active ? "#f8fafc" : "#334155",
+            fontSize: 12,
+            fontWeight: 600
+          }}
+        >
+          {page}
+        </Text>
+      </Pressable>
+    )
+  }
+}))
+
+/** @extends {ShapeComponent<HayaSelectProps>} */
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   static defaultProps = {
     multiple: false,
@@ -60,11 +184,25 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
-    options: PropTypes.oneOfType([PropTypes.array, PropTypes.func]).isRequired,
+    optionContent: PropTypes.func,
+    options: PropTypes.oneOfType([
+      PropTypes.arrayOf(PropTypes.shape({
+        content: PropTypes.func,
+        currentContent: PropTypes.func,
+        disabled: PropTypes.bool,
+        html: PropTypes.string,
+        right: PropTypes.node,
+        text: PropTypes.node,
+        value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+      })),
+      PropTypes.func
+    ]).isRequired,
     optionsAbsolute: PropTypes.bool.isRequired,
     optionsPortal: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
+    selectedBackgroundColor: PropTypes.string,
+    selectedHoverBackgroundColor: PropTypes.string,
     search: PropTypes.bool.isRequired,
     styles: PropTypes.object,
     toggled: PropTypes.object,
@@ -78,6 +216,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  searchTextValue = ""
   t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
   windowHeight = Dimensions.get("window").height
@@ -87,7 +226,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     this.t = t
 
-    if (this.props.values) {
+    if (Array.isArray(this.props.values)) {
       for (const value of this.props.values) {
         if (typeof value == "undefined") {
           throw new Error("HayaSelect: Undefined given as value")
@@ -98,6 +237,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setInstance({
       endOfSelectRef: useRef(),
       optionsContainerRef: useRef(),
+      pageInputRef: useRef(),
       searchTextInputRef: useRef(),
       selectContainerRef: useRef()
     })
@@ -107,6 +247,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectLayout: null,
       height: null,
       loadedOptions: () => this.defaultLoadedOptions(),
+      page: 1,
+      pageInputActive: false,
+      pageInputValue: "",
+      pageSize: null,
       opened: false,
       optionsContainerLayout: null,
       optionsPlacement: undefined,
@@ -115,7 +259,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       optionsWidth: undefined,
       scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
       scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
-      searchText: "",
+      totalCount: null,
       toggled: () => this.defaultToggled()
     })
 
@@ -136,7 +280,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     useEffect(() => {
       const currentOptionIds = this.s.currentOptions?.map((currentOption) => currentOption.value)
 
-      if (this.props.values && anythingDifferent(currentOptionIds, this.props.values) && typeof this.props.options == "function") {
+      if (Array.isArray(this.props.values) && anythingDifferent(currentOptionIds, this.props.values) && typeof this.props.options == "function") {
         this.setCurrentFromGivenValues()
       }
     }, [this.props.values])
@@ -175,14 +319,60 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     throw new Error(`Unknown type of options: ${typeof options}`)
   }
 
+  /** @returns {number} */
+  getActivePage = () => this.s.page || 1
+
+  /**
+   * @param {Array<HayaSelectOption>|HayaSelectOptionsResult} result
+   * @returns {HayaSelectOptionsResult}
+   */
+  parseOptionsResult(result) {
+    if (Array.isArray(result)) return {options: result}
+
+    if (result && Array.isArray(result.options)) {
+      return {
+        options: result.options,
+        totalCount: result.totalCount,
+        page: result.page,
+        pageSize: result.pageSize
+      }
+    }
+
+    throw new Error(`Unknown options result: ${JSON.stringify(result)}`)
+  }
+
+  /**
+   * @param {object} params
+   * @param {Array<HayaSelectOption>} params.options
+   * @param {number} [params.page]
+   * @param {number} [params.pageSize]
+   * @param {number} [params.totalCount]
+   * @returns {number|null}
+   */
+  resolvePageSize({options, page, pageSize, totalCount}) {
+    if (Number.isFinite(pageSize) && pageSize > 0) return pageSize
+
+    if (Number.isFinite(this.s.pageSize) && this.s.pageSize > 0 && page != 1) {
+      return this.s.pageSize
+    }
+
+    if (Number.isFinite(totalCount) && Array.isArray(options) && options.length > 0) {
+      return options.length
+    }
+
+    return Number.isFinite(this.s.pageSize) && this.s.pageSize > 0 ? this.s.pageSize : null
+  }
+
   defaultToggled = () => ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
   getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
-      if (Array.isArray(this.props.options) && this.props.values) {
+      if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
+
+      if (Array.isArray(this.props.options) && Array.isArray(this.p.values)) {
         return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
-      } else if (this.s.loadedOptions && this.props.values) {
+      } else if (this.s.loadedOptions && Array.isArray(this.p.values)) {
         return this.p.values.map((value) => {
           let foundOption = this.s.loadedOptions.find((option) => option.value == value)
 
@@ -199,9 +389,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
           return foundOption
         })
-      } else if (typeof this.props.options == "function" && this.props.values) {
+      } else if (typeof this.props.options == "function") {
         // Options haven't been loaded yet.
-      } else if (this.props.values) {
+      } else if (Array.isArray(this.p.values)) {
         return this.p.values.map((value) => ({value}))
       }
     }
@@ -211,10 +401,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   getCurrentOptionValues() {
     if ("values" in this.props) {
-      return this.p.values
+      return Array.isArray(this.p.values) ? this.p.values : []
     }
 
-    return this.getCurrentOptions().map((option) => option.value)
+    const currentOptions = this.getCurrentOptions()
+
+    if (!currentOptions) return []
+
+    return currentOptions
+      .map((option) => option?.value)
+      .filter((value) => typeof value != "undefined")
   }
 
   componentDidMount() {
@@ -249,7 +445,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const currentOptions = this.getCurrentOptions()
     const id = idForComponent(this)
 
-    const selectContainerStyleActual = this.stylingFor("selectContainer", {
+    const selectContainerStyleActual = {...this.stylingFor("selectContainer", {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: transparent ? undefined : "#fff",
@@ -260,22 +456,24 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       paddingTop: 5,
       paddingBottom: 5,
       paddingLeft: 5
-    }, [transparent])
+    }, [transparent])}
 
     if (opened) {
       // Prevent select from changing size once the content is replaced with search text once opened
       selectContainerStyleActual.height = this.s.height
 
+      const baseBorderRadius = selectContainerStyleActual.borderRadius
+
       if (optionsPlacement == "above") {
         selectContainerStyleActual.borderTopLeftRadius = 0
         selectContainerStyleActual.borderTopRightRadius = 0
-        selectContainerStyleActual.borderBottomRightRadius = selectContainerStyleActual.borderRadius
-        selectContainerStyleActual.borderBottomLeftRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderBottomRightRadius = baseBorderRadius
+        selectContainerStyleActual.borderBottomLeftRadius = baseBorderRadius
 
         delete selectContainerStyleActual.borderRadius
       } else if (optionsPlacement == "below") {
-        selectContainerStyleActual.borderTopLeftRadius = selectContainerStyleActual.borderRadius
-        selectContainerStyleActual.borderTopRightRadius = selectContainerStyleActual.borderRadius
+        selectContainerStyleActual.borderTopLeftRadius = baseBorderRadius
+        selectContainerStyleActual.borderTopRightRadius = baseBorderRadius
         selectContainerStyleActual.borderBottomRightRadius = 0
         selectContainerStyleActual.borderBottomLeftRadius = 0
 
@@ -309,7 +507,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             {opened &&
               <TextInput
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
-                onChange={this.tt.onSearchTextInputChangedDebounced}
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.translate(".search_dot_dot_dot")}
                 ref={this.tt.searchTextInputRef}
@@ -319,7 +516,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                   outline: "none",
                   padding: 0
                 })}
-                value={this.state.searchText}
+                defaultValue={this.searchTextValue}
               />
             }
             {!opened &&
@@ -428,24 +625,37 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (!defaultValues) return
 
     const result = await this.props.options({
-      searchValue: this.s.searchText,
+      searchValue: this.getSearchText(),
+      page: this.getActivePage(),
       values: defaultValues
     })
 
-    this.setState({currentOptions: this.state.currentOptions.concat(result)})
+    const {options} = this.parseOptionsResult(result)
+
+    this.setState({currentOptions: this.state.currentOptions.concat(options)})
   }
 
   loadOptions = async () => {
     const {options} = this.p
-    const searchValue = this.s.searchText
+    const searchValue = this.getSearchText()
 
     if (Array.isArray(options)) {
       return this.loadOptionsFromArray(options, searchValue)
     }
 
-    const loadedOptions = await options({searchValue})
+    const result = await options({searchValue, page: this.getActivePage()})
+    const {options: loadedOptions, page, pageSize, totalCount} = this.parseOptionsResult(result)
+    const resolvedPage = Number.isFinite(page) ? page : this.getActivePage()
+    const resolvedPageSize = this.resolvePageSize({options: loadedOptions, page: resolvedPage, pageSize, totalCount})
 
-    this.setState({loadedOptions})
+    this.setState({
+      loadedOptions,
+      page: resolvedPage,
+      pageInputActive: false,
+      pageInputValue: "",
+      pageSize: Number.isFinite(totalCount) ? resolvedPageSize : null,
+      totalCount: Number.isFinite(totalCount) ? totalCount : null
+    })
   }
 
   hayaSelectOption({key, loadedOption}) {
@@ -461,6 +671,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         option={loadedOption}
         onOptionClicked={this.tt.onOptionClicked}
         presentOption={this.tt.presentOption}
+        selectedBackgroundColor={this.props.selectedBackgroundColor}
+        selectedHoverBackgroundColor={this.props.selectedHoverBackgroundColor}
       />
     )
   }
@@ -469,7 +681,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const lowerSearchValue = searchValue?.toLowerCase()
     const loadedOptions = options.filter(({text}) => !lowerSearchValue || text?.toLowerCase()?.includes(lowerSearchValue))
 
-    this.setState({loadedOptions})
+    this.setState({
+      loadedOptions,
+      page: 1,
+      pageInputActive: false,
+      pageInputValue: "",
+      pageSize: null,
+      totalCount: null
+    })
   }
 
   onDimensionsChange = ({window}) => {
@@ -478,7 +697,20 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
-  onEndOfSelectLayout = (e) => this.setState({endOfSelectLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onEndOfSelectLayout = (e) => {
+    const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    const newState = {endOfSelectLayout}
+
+    if (this.s.opened && endOfSelectLayout?.width) {
+      newState.optionsWidth = endOfSelectLayout.width
+    }
+
+    this.setState(newState, () => {
+      if (this.s.opened && this.s.optionsContainerLayout) {
+        this.setOptionsPositionAboveIfOutsideScreen()
+      }
+    })
+  }
   onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
 
   onSelectClicked = (e) => {
@@ -501,7 +733,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       height: null,
       loadedOptions: undefined,
       opened: false,
-      optionsContainerLayout: null
+      optionsContainerLayout: null,
+      page: 1,
+      pageInputActive: false,
+      pageInputValue: "",
+      pageSize: null,
+      totalCount: null
     })
 
     if (this.props.onOptionsClosed) {
@@ -511,9 +748,37 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (this.p.onBlur) this.p.onBlur()
   }
 
-  onChangeSearchText = (searchText) => this.setState({searchText})
+  getSearchText = () => this.searchTextValue || ""
+
+  resetSearchTextInput = () => {
+    this.searchTextValue = ""
+    const input = this.tt.searchTextInputRef.current
+
+    if (input?.clear) {
+      input.clear()
+    } else if (input?.setNativeProps) {
+      input.setNativeProps({text: ""})
+    } else if (input) {
+      try {
+        input.value = ""
+      } catch (error) {
+        // Ignore if the ref doesn't support direct value assignment.
+      }
+    }
+  }
+
+  onChangeSearchText = (searchText) => {
+    this.searchTextValue = searchText
+
+    if (this.s.page != 1) {
+      this.setState({page: 1, pageInputActive: false, pageInputValue: ""}, this.tt.onSearchTextInputChangedDebounced)
+    } else {
+      this.tt.onSearchTextInputChangedDebounced()
+    }
+  }
 
   openOptions() {
+    this.searchTextValue = ""
     this.setOptionsPositionBelow()
     this.loadOptions()
     this.callOptionsPositionAboveIfOutsideScreen = true
@@ -522,10 +787,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         height: this.s.selectContainerLayout.height,
         opened: true,
         scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
-        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
-        searchText: ""
+        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
       },
       () => {
+        this.resetSearchTextInput()
         this.focusTextInput()
       }
     )
@@ -547,7 +812,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   setOptionsPositionAboveIfOutsideScreen() {
     const {windowHeight} = this.tt
     const {optionsContainerLayout} = this.s
-    const optionsTop = this.s.endOfSelectLayout.top
+    const endOfSelectLayout = this.s.endOfSelectLayout
+
+    if (!endOfSelectLayout) {
+      this.setState({optionsVisibility: "visible"})
+      return
+    }
+
+    const optionsTop = endOfSelectLayout.top
     const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
     const windowHeightWithScroll = windowHeight + this.s.scrollTop
 
@@ -566,7 +838,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "above",
         optionsVisibility: "visible",
-        optionsWidth: endOfSelectLayout.width
+        optionsWidth: endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
@@ -578,7 +850,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         opened: true,
         optionsPlacement: "below",
         optionsVisibility: "hidden",
-        optionsWidth: this.s.endOfSelectLayout.width
+        optionsWidth: this.s.endOfSelectLayout?.width
       },
       () => this.focusTextInput()
     )
@@ -609,6 +881,302 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     if (this.s.opened) {
       this.closeOptions()
     }
+  }
+
+  /** @returns {number|null} */
+  paginationTotalPages() {
+    const {totalCount} = this.s
+
+    if (!Number.isFinite(totalCount) || totalCount <= 0) return null
+
+    const pageSize = this.resolvePageSize({
+      options: this.s.loadedOptions || [],
+      page: this.getActivePage(),
+      pageSize: this.s.pageSize,
+      totalCount
+    })
+
+    if (!Number.isFinite(pageSize) || pageSize <= 0) return null
+
+    return Math.ceil(totalCount / pageSize)
+  }
+
+  /**
+   * @param {number} totalPages
+   * @returns {Array<{key: string, type: "page"|"ellipsis", value?: number}>}
+   */
+  paginationPageItems(totalPages) {
+    const currentPage = this.getActivePage()
+    const items = []
+    const addPage = (page) => items.push({key: `page-${page}`, type: "page", value: page})
+    const addEllipsis = (key) => items.push({key, type: "ellipsis"})
+
+    if (totalPages <= 7) {
+      for (let page = 1; page <= totalPages; page += 1) {
+        addPage(page)
+      }
+
+      return items
+    }
+
+    addPage(1)
+
+    const windowSize = 2
+    let start = Math.max(2, currentPage - windowSize)
+    let end = Math.min(totalPages - 1, currentPage + windowSize)
+
+    if (currentPage <= 3) {
+      start = 2
+      end = Math.min(totalPages - 1, 5)
+    } else if (currentPage >= totalPages - 2) {
+      end = totalPages - 1
+      start = Math.max(2, totalPages - 4)
+    }
+
+    if (start > 2) addEllipsis("ellipsis-start")
+
+    for (let page = start; page <= end; page += 1) {
+      addPage(page)
+    }
+
+    if (end < totalPages - 1) addEllipsis("ellipsis-end")
+
+    addPage(totalPages)
+
+    return items
+  }
+
+  /** @param {number} page */
+  setPaginationPage = (page) => {
+    const totalPages = this.paginationTotalPages()
+
+    if (!totalPages) return
+
+    const nextPage = Math.min(Math.max(Math.floor(page), 1), totalPages)
+
+    if (nextPage == this.getActivePage()) {
+      this.setState({pageInputActive: false, pageInputValue: ""})
+      return
+    }
+
+    this.setState({page: nextPage, pageInputActive: false, pageInputValue: ""}, this.tt.loadOptions)
+  }
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPaginationPrevPressed = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    this.setPaginationPage(this.getActivePage() - 1)
+  }
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPaginationNextPressed = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    this.setPaginationPage(this.getActivePage() + 1)
+  }
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPaginationLabelPressed = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    if (this.s.pageInputActive) return
+
+    this.setState({pageInputActive: true, pageInputValue: String(this.getActivePage())}, () => {
+      this.tt.pageInputRef.current?.focus?.()
+    })
+  }
+
+  /** @param {string} value */
+  onPaginationInputChange = (value) => {
+    this.setState({pageInputValue: value})
+  }
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPaginationInputBlur = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    this.setState({pageInputActive: false, pageInputValue: ""})
+  }
+
+  /** @param {import("react").SyntheticEvent} event */
+  onPaginationInputSubmit = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
+
+    const totalPages = this.paginationTotalPages()
+
+    if (!totalPages) {
+      this.setState({pageInputActive: false, pageInputValue: ""})
+      return
+    }
+
+    const nextPage = Number(this.s.pageInputValue)
+
+    if (!Number.isFinite(nextPage)) {
+      this.setState({pageInputActive: false, pageInputValue: ""})
+      return
+    }
+
+    this.setPaginationPage(nextPage)
+  }
+
+  /** @returns {import("react").ReactNode|null} */
+  paginationControls() {
+    const totalPages = this.paginationTotalPages()
+
+    if (!totalPages || totalPages <= 1) return null
+
+    const currentPage = this.getActivePage()
+    const prevDisabled = currentPage <= 1
+    const nextDisabled = currentPage >= totalPages
+
+    return (
+      <View
+        dataSet={dataSets.paginationContainer ||= {class: "options-pagination"}}
+        style={styles.paginationContainer ||= {
+          borderTop: "1px solid #e2e8f0",
+          padding: 8
+        }}
+      >
+        <View
+          dataSet={dataSets.paginationHeader ||= {class: "pagination-header"}}
+          style={styles.paginationHeader ||= {flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}
+        >
+          <Pressable
+            dataSet={dataSets.paginationPrevButton ||= {class: "pagination-prev"}}
+            disabled={prevDisabled}
+            onPress={this.tt.onPaginationPrevPressed}
+            style={styles[`paginationNavButton-${prevDisabled}`] ||= {
+              alignItems: "center",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              height: 30,
+              justifyContent: "center",
+              opacity: prevDisabled ? 0.4 : 1,
+              width: 30
+            }}
+          >
+            <FontAwesomeIcon
+              name="chevron-left"
+              style={styles.paginationNavIcon ||= {color: "#334155", fontSize: 12}}
+            />
+          </Pressable>
+          <Pressable
+            dataSet={dataSets.paginationLabel ||= {class: "pagination-label"}}
+            onPress={this.tt.onPaginationLabelPressed}
+            style={styles.paginationLabelButton ||= {
+              alignItems: "center",
+              backgroundColor: "#f1f5f9",
+              border: "1px solid #cbd5e1",
+              borderRadius: 14,
+              justifyContent: "center",
+              minWidth: 140,
+              paddingHorizontal: 10,
+              paddingVertical: 6
+            }}
+          >
+            {!this.s.pageInputActive &&
+              <Text
+                style={styles.paginationLabelText ||= {
+                  color: "#0f172a",
+                  fontSize: 12,
+                  fontWeight: 600
+                }}
+              >
+                Page {currentPage} of {totalPages}
+              </Text>
+            }
+            {this.s.pageInputActive &&
+              <TextInput
+                dataSet={dataSets.paginationInput ||= {class: "pagination-input"}}
+                keyboardType="number-pad"
+                onBlur={this.tt.onPaginationInputBlur}
+                onChangeText={this.tt.onPaginationInputChange}
+                onSubmitEditing={this.tt.onPaginationInputSubmit}
+                ref={this.tt.pageInputRef}
+                selectTextOnFocus
+                style={styles.paginationInputStyle ||= {
+                  border: 0,
+                  color: "#0f172a",
+                  fontSize: 12,
+                  outline: "none",
+                  padding: 0,
+                  textAlign: "center",
+                  width: 80
+                }}
+                value={this.s.pageInputValue}
+              />
+            }
+          </Pressable>
+          <Pressable
+            dataSet={dataSets.paginationNextButton ||= {class: "pagination-next"}}
+            disabled={nextDisabled}
+            onPress={this.tt.onPaginationNextPressed}
+            style={styles[`paginationNavButton-${nextDisabled}`] ||= {
+              alignItems: "center",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              height: 30,
+              justifyContent: "center",
+              opacity: nextDisabled ? 0.4 : 1,
+              width: 30
+            }}
+          >
+            <FontAwesomeIcon
+              name="chevron-right"
+              style={styles.paginationNavIcon ||= {color: "#334155", fontSize: 12}}
+            />
+          </Pressable>
+        </View>
+        <View
+          dataSet={dataSets.paginationPages ||= {class: "pagination-pages"}}
+          style={styles.paginationPages ||= {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            marginTop: 8
+          }}
+        >
+          {this.paginationPageItems(totalPages).map((item) => {
+            if (item.type == "ellipsis") {
+              return (
+                <View
+                  dataSet={dataSets[`paginationEllipsis-${item.key}`] ||= {class: "pagination-ellipsis"}}
+                  key={item.key}
+                  style={styles.paginationEllipsis ||= {paddingHorizontal: 6}}
+                >
+                  <Text
+                    style={styles.paginationEllipsisText ||= {
+                      color: "#64748b",
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}
+                  >
+                    ...
+                  </Text>
+                </View>
+              )
+            }
+
+            return (
+              <PaginationPageButton
+                active={item.value == currentPage}
+                key={item.key}
+                onPageSelected={this.tt.setPaginationPage}
+                page={item.value}
+              />
+            )
+          })}
+        </View>
+      </View>
+    )
   }
 
   optionsContainer() {
@@ -687,6 +1255,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
             <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
           </View>
         }
+        {this.paginationControls()}
       </View>
     )
   }
@@ -802,12 +1371,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   presentOption = (option, mode) => {
-    const {toggleOptions} = this.props || {}
+    const {optionContent, toggleOptions} = this.props || {}
     const toggled = this.getToggled()
     const icon = this.iconForOption(option)
     const toggleValue = toggled[option.value]
     const toggleOption = toggleOptions?.find((toggleOptionI) => toggleOptionI.value == toggleValue)
+    const selected = this.getCurrentOptionValues().some((value) => value == option.value)
     let style
+    let contentNode
 
     if (mode == "current") {
       style = this.stylingFor("currentOptionPresentationText", {flex: 1, whiteSpace: "nowrap"})
@@ -823,7 +1394,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           toggleValue: toggleOption?.value,
           value: option.value
         }, [option.text, option.value, toggleOption?.icon, toggleOption?.value])}
-        style={this.cache("optionPresentationStyle", {flexDirection: "row"})}
+        style={this.cache("optionPresentationStyle", {flexDirection: "row", alignItems: "center"})}
         testID="option-presentation"
       >
         {toggleOptions && !(option.value in toggled) &&
@@ -841,16 +1412,18 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
           </View>
         }
         {(() => {
-          if (mode == "current" && option.currentContent) {
-            return option.currentContent()
+          if (optionContent) {
+            contentNode = optionContent({icon, mode, option, selected, toggleOption, toggleValue, toggled})
+          } else if (mode == "current" && option.currentContent) {
+            contentNode = option.currentContent()
           } else if (option.content) {
-            return option.content()
+            contentNode = option.content()
           } else if ("html" in option && Platform.OS != "web") {
-            return <RenderHtml source={{html: digg(option, "html")}} />
+            contentNode = <RenderHtml source={{html: digg(option, "html")}} />
           } else if ("html" in option && Platform.OS == "web") {
-            return <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
+            contentNode = <div dangerouslySetInnerHTML={{__html: digg(option, "html")}} />
           } else {
-            return (
+            contentNode = (
               <Text
                 style={style}
                 testID="option-presentation-text"
@@ -859,6 +1432,19 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
               </Text>
             )
           }
+
+          return (
+            <>
+              <View style={this.cache("optionPresentationContentStyle", {flex: 1})}>
+                {contentNode}
+              </View>
+              {option.right &&
+                <View style={this.cache("optionPresentationRightStyle", {alignItems: "center", justifyContent: "center", marginLeft: 8})}>
+                  {option.right}
+                </View>
+              }
+            </>
+          )
         })()}
       </View>
     )
@@ -866,7 +1452,17 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   async setCurrentFromGivenValues() {
     const {options, values} = this.p
-    const currentOptions = await options({values})
+
+    if (Array.isArray(values) && values.length === 0) {
+      if (this.s.currentOptions?.length) {
+        this.setState({currentOptions: []})
+      }
+
+      return
+    }
+
+    const result = await options({page: this.getActivePage(), values})
+    const {options: currentOptions} = this.parseOptionsResult(result)
     const currentValues = currentOptions?.map((currentOption) => currentOption.value)
     const stateValues = this.s.currentOptions?.map((currentOption) => currentOption.value)
 
