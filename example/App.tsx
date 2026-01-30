@@ -2,7 +2,7 @@ import Text from "@kaspernj/api-maker/build/utils/text"
 import {PortalHost,PortalProvider} from "conjointment"
 import {useEvent} from "expo"
 import OutsideEyeProvider from "outside-eye/build/provider.js"
-import React,{useEffect,useState} from "react"
+import React, {useEffect, useState} from "react"
 import {Button,Platform,SafeAreaView,ScrollView,View} from "react-native"
 import SystemTestBrowserHelper from "system-testing/build/system-test-browser-helper.js"
 
