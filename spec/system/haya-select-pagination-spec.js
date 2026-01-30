@@ -69,14 +69,12 @@ const openPaginatedSelect = async (systemTest) => {
 }
 
 const closePaginatedSelect = async (systemTest) => {
-  const scoundrel = await systemTest.getScoundrelClient()
-  const isOpen = await scoundrel.evalResult(`
-    (() => {
-      return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
-    })()
-  `)
+  const inputs = await systemTest.all(
+    "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+    {timeout: 0, visible: false}
+  )
 
-  if (isOpen) {
+  if (inputs.length > 0) {
     await systemTest.click("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
   }
 }
