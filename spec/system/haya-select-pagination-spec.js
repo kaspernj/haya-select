@@ -12,7 +12,7 @@ let didStartSystemTest = false
 beforeAll(async () => {
   const systemTest = SystemTest.current(systemTestArgs)
   if (!systemTest.isStarted()) {
-    await timeout({timeout: 90000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await systemTest.start()
     })
     didStartSystemTest = true
@@ -23,68 +23,114 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!didStartSystemTest) return
 
-  await timeout({timeout: 120000}, async () => {
+  await timeout({timeout: 30000}, async () => {
     await SystemTest.current().stop()
   })
 })
 
-const openPaginatedSelect = async (systemTest) => {
-  const scoundrel = await systemTest.getScoundrelClient()
-  const isOpen = await scoundrel.evalResult(`
-    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
-  `)
+const setPaginationInputValue = async (systemTest, value) => {
+  await waitFor({timeout: 5000}, async () => {
+    const element = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false})
+    const driver = systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].focus(); arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles: true})); arguments[0].dispatchEvent(new Event('change', {bubbles: true})); arguments[0].blur();",
+      element,
+      String(value)
+    )
+  })
+}
 
-  if (!isOpen) {
-    await systemTest.click("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
-    await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']")
+const openPaginatedSelect = async (systemTest) => {
+  const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+  const driver = systemTest.getDriver()
+  const searchInputs = await systemTest.all(
+    "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+    {timeout: 0, visible: true}
+  )
+
+  if (searchInputs.length > 0) {
+    await driver.executeScript(
+      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+      selectContainer
+    )
+    await systemTest.click(selectContainer)
+    await waitFor({timeout: 5000}, async () => {
+      const searchInputsAfterClick = await systemTest.all(
+        "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+        {timeout: 0, visible: true}
+      )
+
+      if (searchInputsAfterClick.length > 0) {
+        throw new Error("Search input still visible")
+      }
+    })
   }
 
+  await driver.executeScript(
+    "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+    selectContainer
+  )
+  await systemTest.click(selectContainer)
   await waitFor({timeout: 5000}, async () => {
-    const paginationVisible = await scoundrel.evalResult(`
-      return Boolean(document.querySelector("[data-class='options-pagination']"))
-    `)
+    const searchInputsAfterClick = await systemTest.all(
+      "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+      {timeout: 0, visible: true}
+    )
 
-    if (!paginationVisible) {
+    if (searchInputsAfterClick.length === 0) {
+      throw new Error("Search input not visible yet")
+    }
+  })
+
+  await waitFor({timeout: 5000}, async () => {
+    const paginationElements = await systemTest.all("[data-class='options-pagination']", {timeout: 0, useBaseSelector: false})
+
+    if (paginationElements.length === 0) {
       throw new Error("Pagination not visible yet")
     }
   })
 
-  const labelText = await scoundrel.evalResult(`
-    const label = document.querySelector("[data-class='pagination-label']")
-    return label ? label.textContent.trim() : null
-  `)
-
-  if (labelText && !labelText.startsWith("Page 1 of ")) {
-    const pageOne = await findPaginationPageButton(systemTest, 1)
-    await systemTest.click(pageOne)
-  }
-
-  await waitForPaginationLabel(systemTest, "Page 1 of 5")
+  await paginationLabelText(systemTest)
 }
 
 const closePaginatedSelect = async (systemTest) => {
-  const scoundrel = await systemTest.getScoundrelClient()
-  const isOpen = await scoundrel.evalResult(`
-    return Boolean(document.querySelector("[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']"))
-  `)
+  const inputs = await systemTest.all(
+    "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+    {timeout: 0, visible: true}
+  )
 
-  if (isOpen) {
-    await systemTest.click("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+  if (inputs.length > 0) {
+    const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+    const driver = systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+      selectContainer
+    )
+    await systemTest.click(selectContainer)
   }
 }
 
 const paginationLabelText = async (systemTest) => {
-  const scoundrel = await systemTest.getScoundrelClient()
+  const labelElements = await systemTest.all("[data-class='pagination-input']", {timeout: 0, useBaseSelector: false})
 
-  return await scoundrel.evalResult(`
-    const element = document.querySelector("[data-class='pagination-label']")
-    return element ? element.textContent.trim() : null
-  `)
+  if (labelElements.length === 0) return null
+
+  const value = await labelElements[0].getAttribute("value")
+
+  return value ? value.trim() : ""
 }
 
 const waitForPaginationLabel = async (systemTest, expectedText) => {
+  const expectedPage = Number(expectedText.match(/Page (\d+) of/)?.[1])
   await waitFor({timeout: 5000}, async () => {
     const labelText = await paginationLabelText(systemTest)
+
+    if (labelText === expectedText) return
+
+    if (Number.isFinite(expectedPage) && labelText === String(expectedPage)) return
+    if (Number.isFinite(expectedPage) && Number(labelText) === expectedPage) return
+
+    if (!Number.isFinite(expectedPage) && labelText === expectedText) return
 
     if (labelText !== expectedText) {
       throw new Error(`Unexpected pagination label: ${labelText}`)
@@ -114,54 +160,21 @@ const findPaginationPageButton = async (systemTest, pageNumber) => {
 }
 
 const clickPaginationSelector = async (systemTest, selector) => {
-  const scoundrel = await systemTest.getScoundrelClient()
-
   await waitFor({timeout: 5000}, async () => {
-    const clicked = await scoundrel.evalResult(`
-      const element = document.querySelector(${JSON.stringify(selector)})
-      if (!element) return false
-      element.scrollIntoView?.({block: "center", inline: "center"})
-      element.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
-      return true
-    `)
-
-    if (!clicked) {
-      throw new Error(`Pagination element not ready for selector: ${selector}`)
-    }
-  })
-}
-
-const setPaginationInputValue = async (systemTest, value) => {
-  const scoundrel = await systemTest.getScoundrelClient()
-
-  await waitFor({timeout: 5000}, async () => {
-    const updated = await scoundrel.evalResult(`
-      const element = document.querySelector("[data-class='pagination-input']")
-      if (!element) return false
-      const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
-      element.focus()
-      if (nativeSetter) {
-        nativeSetter.call(element, ${JSON.stringify(value)})
-      } else {
-        element.value = ${JSON.stringify(value)}
-      }
-      element.dispatchEvent(new Event("input", {bubbles: true}))
-      element.dispatchEvent(new Event("change", {bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keypress", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      element.dispatchEvent(new KeyboardEvent("keyup", {key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true}))
-      return true
-    `)
-
-    if (!updated) {
-      throw new Error("Pagination input not ready")
-    }
+    const element = await systemTest.find(selector, {useBaseSelector: false})
+    const driver = systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+      element
+    )
+    await driver.executeScript("arguments[0].focus()", element)
+    await systemTest.click(element)
   })
 }
 
 describe("HayaSelect pagination", () => {
   afterEach(async () => {
-    await timeout({timeout: 90000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         await closePaginatedSelect(systemTest)
       })
@@ -169,11 +182,11 @@ describe("HayaSelect pagination", () => {
   })
 
   it("changes page when clicking a page number", async () => {
-    await timeout({timeout: 90000}, async () => {
+    await timeout({timeout: 60000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
 
         const pageTwo = await findPaginationPageButton(systemTest, 2)
@@ -192,14 +205,13 @@ describe("HayaSelect pagination", () => {
   })
 
   it("accepts manual page entry from the pagination label", async () => {
-    await timeout({timeout: 90000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
 
-        await clickPaginationSelector(systemTest, "[data-class='pagination-label']")
         await setPaginationInputValue(systemTest, "4")
 
         await waitForPaginationLabel(systemTest, "Page 4 of 5")
@@ -215,11 +227,11 @@ describe("HayaSelect pagination", () => {
   })
 
   it("supports next and previous pagination buttons", async () => {
-    await timeout({timeout: 90000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 

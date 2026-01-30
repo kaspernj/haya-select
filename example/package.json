@@ -26,7 +26,8 @@
     "react-native-render-html": "^6.3.4",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
-    "set-state-compare": "^1.0.64"
+    "set-state-compare": "^1.0.64",
+    "ya-use-event-listener": "^0.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

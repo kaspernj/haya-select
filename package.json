@@ -1,6 +1,6 @@
 {
   "name": "haya-select",
-  "version": "1.0.94",
+  "version": "1.0.95",
   "description": "Just another select component for React Native + Web.",
   "files": [
     "build/**"
@@ -15,11 +15,10 @@
     "test": "node scripts/velocious-test.js",
     "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
     "prepare": "expo-module prepare",
-    "release:patch": "npm version patch && npm publish",
+    "release:patch": "npm version patch -m \"Bump version to %s\" && git push --follow-tags && npm whoami || npm login && npm publish",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
     "open:android": "open -a \"Android Studio\" example/android",
-    "release:patch": "npm version patch -m \"Bump version to %s\" && git push --follow-tags && npm whoami || npm login && npm publish",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
