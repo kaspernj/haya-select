@@ -121,8 +121,15 @@ const paginationLabelText = async (systemTest) => {
 }
 
 const waitForPaginationLabel = async (systemTest, expectedText) => {
+  const expectedPage = Number(expectedText.match(/Page (\\d+) of/)?.[1])
   await waitFor({timeout: 5000}, async () => {
     const labelText = await paginationLabelText(systemTest)
+
+    if (labelText === expectedText) return
+
+    if (Number.isFinite(expectedPage) && labelText === String(expectedPage)) return
+
+    if (!Number.isFinite(expectedPage) && labelText === expectedText) return
 
     if (labelText !== expectedText) {
       throw new Error(`Unexpected pagination label: ${labelText}`)

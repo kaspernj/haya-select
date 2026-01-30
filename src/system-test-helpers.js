@@ -34,16 +34,25 @@ export default class HayaSelectSystemTestHelper {
 
     const selectContainer = await this.systemTest.find(this.selectContainerSelector)
     const driver = this.systemTest.getDriver()
-    await driver.executeScript(
-      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
-      selectContainer
-    )
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
     await this.systemTest.click(selectContainer)
-    await waitFor({timeout: 10000}, async () => {
-      if (!(await this.isOpen())) {
-        throw new Error("Options not visible yet")
-      }
-    })
+    try {
+      await waitFor({timeout: 2000}, async () => {
+        if (!(await this.isOpen())) {
+          throw new Error("Options not visible yet")
+        }
+      })
+    } catch (error) {
+      await driver.executeScript(
+        "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
+        selectContainer
+      )
+      await waitFor({timeout: 10000}, async () => {
+        if (!(await this.isOpen())) {
+          throw new Error("Options not visible yet")
+        }
+      })
+    }
     this._optionsContainerSelector = null
   }
 
@@ -51,16 +60,25 @@ export default class HayaSelectSystemTestHelper {
   async close() {
     const selectContainer = await this.systemTest.find(this.selectContainerSelector)
     const driver = this.systemTest.getDriver()
-    await driver.executeScript(
-      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
-      selectContainer
-    )
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
     await this.systemTest.click(selectContainer)
-    await waitFor({timeout: 5000}, async () => {
-      if (await this.isOpen()) {
-        throw new Error("Options are still visible")
-      }
-    })
+    try {
+      await waitFor({timeout: 2000}, async () => {
+        if (await this.isOpen()) {
+          throw new Error("Options are still visible")
+        }
+      })
+    } catch (error) {
+      await driver.executeScript(
+        "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
+        selectContainer
+      )
+      await waitFor({timeout: 5000}, async () => {
+        if (await this.isOpen()) {
+          throw new Error("Options are still visible")
+        }
+      })
+    }
   }
 
   /** @returns {Promise<boolean>} */
@@ -87,9 +105,7 @@ export default class HayaSelectSystemTestHelper {
 
     const id = elements.length > 0 ? await elements[0].getAttribute("data-id") : null
 
-    this._optionsContainerSelector = id
-      ? `[data-class='options-container'][data-id='${id}']`
-      : this.optionsContainerSelectorFallback
+    this._optionsContainerSelector = id ? `[data-class='options-container'][data-id='${id}']` : this.optionsContainerSelectorFallback
 
     return this._optionsContainerSelector
   }
@@ -120,10 +136,7 @@ export default class HayaSelectSystemTestHelper {
     if (typeof value != "undefined") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const option = await this.systemTest.find(
-          `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
-          {useBaseSelector: false}
-        )
+        const option = await this.systemTest.find(`${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`, {useBaseSelector: false})
 
         await this.systemTest.click(option)
       })
