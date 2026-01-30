@@ -31,11 +31,12 @@ afterAll(async () => {
 const setPaginationInputValue = async (systemTest, value) => {
   await waitFor({timeout: 5000}, async () => {
     const element = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false})
-    await systemTest.interact(element, "click")
-    await systemTest.interact(element, "sendKeys", "\uE009", "a")
-    await systemTest.interact(element, "sendKeys", "\uE003")
-    await systemTest.interact(element, "sendKeys", String(value))
-    await systemTest.interact(element, "sendKeys", "\uE007")
+    const driver = systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles: true})); arguments[0].dispatchEvent(new Event('change', {bubbles: true})); arguments[0].blur();",
+      element,
+      String(value)
+    )
   })
 }
 

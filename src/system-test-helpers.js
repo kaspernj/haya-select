@@ -68,7 +68,11 @@ export default class HayaSelectSystemTestHelper {
     const optionsContainerSelector = await this.optionsContainerSelector()
     const options = await this.systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false})
 
-    return options.length > 0
+    for (const option of options) {
+      if (await option.isDisplayed()) return true
+    }
+
+    return false
   }
 
   /** @returns {Promise<string>} */
