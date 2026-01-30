@@ -1004,6 +1004,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     event.stopPropagation?.()
 
     const totalPages = this.paginationTotalPages()
+    const nextPage = Number(this.s.pageInputValue)
+
+    if (totalPages && Number.isFinite(nextPage)) {
+      this.setPaginationPage(nextPage)
+      return
+    }
+
     const pageValue = totalPages ? `Page ${this.getActivePage()} of ${totalPages}` : String(this.getActivePage())
 
     this.setState({pageInputValue: pageValue})

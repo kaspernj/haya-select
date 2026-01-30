@@ -25,13 +25,12 @@ export default class HayaSelectSystemTestHelper {
     this.componentSelector = `${this.rootSelector} [data-component='haya-select']`
     this.selectContainerSelector = `${this.rootSelector} [data-class='select-container']`
     this.searchInputSelector = `${this.rootSelector} [data-class='search-text-input']`
+    this.optionsContainerSelectorFallback = "[data-class='options-container']"
   }
 
   /** @returns {Promise<void>} */
   async open() {
-    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
-
-    if (searchInputs.length > 0) return
+    if (await this.isOpen()) return
 
     const selectContainer = await this.systemTest.find(this.selectContainerSelector)
     const driver = this.systemTest.getDriver()
@@ -41,10 +40,8 @@ export default class HayaSelectSystemTestHelper {
     )
     await this.systemTest.click(selectContainer)
     await waitFor({timeout: 10000}, async () => {
-      const searchInputsAfterClick = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
-
-      if (searchInputsAfterClick.length === 0) {
-        throw new Error("Search input not visible yet")
+      if (!(await this.isOpen())) {
+        throw new Error("Options not visible yet")
       }
     })
     this._optionsContainerSelector = null
@@ -60,19 +57,18 @@ export default class HayaSelectSystemTestHelper {
     )
     await this.systemTest.click(selectContainer)
     await waitFor({timeout: 5000}, async () => {
-      const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
-
-      if (searchInputs.length > 0) {
-        throw new Error("Search input is still visible")
+      if (await this.isOpen()) {
+        throw new Error("Options are still visible")
       }
     })
   }
 
   /** @returns {Promise<boolean>} */
   async isOpen() {
-    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
+    const optionsContainerSelector = await this.optionsContainerSelector()
+    const options = await this.systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false})
 
-    return searchInputs.length > 0
+    return options.length > 0
   }
 
   /** @returns {Promise<string>} */
@@ -89,7 +85,7 @@ export default class HayaSelectSystemTestHelper {
 
     this._optionsContainerSelector = id
       ? `[data-class='options-container'][data-id='${id}']`
-      : "[data-class='options-container']"
+      : this.optionsContainerSelectorFallback
 
     return this._optionsContainerSelector
   }
