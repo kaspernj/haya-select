@@ -42,11 +42,8 @@ export default class HayaSelectSystemTestHelper {
           throw new Error("Options not visible yet")
         }
       })
-    } catch (error) {
-      await driver.executeScript(
-        "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
-        selectContainer
-      )
+    } catch (_error) {
+      await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", selectContainer)
       await waitFor({timeout: 10000}, async () => {
         if (!(await this.isOpen())) {
           throw new Error("Options not visible yet")
@@ -68,11 +65,8 @@ export default class HayaSelectSystemTestHelper {
           throw new Error("Options are still visible")
         }
       })
-    } catch (error) {
-      await driver.executeScript(
-        "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
-        selectContainer
-      )
+    } catch (_error) {
+      await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", selectContainer)
       await waitFor({timeout: 5000}, async () => {
         if (await this.isOpen()) {
           throw new Error("Options are still visible")
@@ -88,9 +82,13 @@ export default class HayaSelectSystemTestHelper {
 
     for (const option of options) {
       if (await option.isDisplayed()) return true
+      const visibility = await option.getCssValue("visibility")
+      if (visibility && visibility !== "hidden") return true
     }
 
-    return false
+    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
+
+    return searchInputs.length > 0
   }
 
   /** @returns {Promise<string>} */

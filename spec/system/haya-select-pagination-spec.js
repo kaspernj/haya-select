@@ -128,6 +128,7 @@ const waitForPaginationLabel = async (systemTest, expectedText) => {
     if (labelText === expectedText) return
 
     if (Number.isFinite(expectedPage) && labelText === String(expectedPage)) return
+    if (Number.isFinite(expectedPage) && Number(labelText) === expectedPage) return
 
     if (!Number.isFinite(expectedPage) && labelText === expectedText) return
 
