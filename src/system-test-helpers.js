@@ -29,8 +29,27 @@ export default class HayaSelectSystemTestHelper {
 
   /** @returns {Promise<void>} */
   async open() {
-    await this.systemTest.click(this.selectContainerSelector)
-    await this.systemTest.find(this.searchInputSelector)
+    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
+
+    if (searchInputs.length > 0) return
+
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector)
+    const driver = this.systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+      selectContainer
+    )
+    await driver.executeScript(
+      "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
+      selectContainer
+    )
+    await waitFor({timeout: 10000}, async () => {
+      const searchInputsAfterClick = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
+
+      if (searchInputsAfterClick.length === 0) {
+        throw new Error("Search input not visible yet")
+      }
+    })
     this._optionsContainerSelector = null
   }
 
@@ -38,7 +57,7 @@ export default class HayaSelectSystemTestHelper {
   async close() {
     await this.systemTest.click(this.selectContainerSelector)
     await waitFor({timeout: 5000}, async () => {
-      const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: false})
+      const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
 
       if (searchInputs.length > 0) {
         throw new Error("Search input is still visible")
@@ -48,30 +67,26 @@ export default class HayaSelectSystemTestHelper {
 
   /** @returns {Promise<boolean>} */
   async isOpen() {
-    const scoundrel = await this.systemTest.getScoundrelClient()
+    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
 
-    return await scoundrel.evalResult(`
-      (() => {
-        return Boolean(document.querySelector(${JSON.stringify(this.searchInputSelector)}))
-      })()
-    `)
+    return searchInputs.length > 0
   }
 
   /** @returns {Promise<string>} */
   async optionsContainerSelector() {
     if (this._optionsContainerSelector) return this._optionsContainerSelector
 
-    const scoundrel = await this.systemTest.getScoundrelClient()
-    const selector = await scoundrel.evalResult(`
-      (() => {
-        const root = document.querySelector(${JSON.stringify(this.componentSelector)}) ||
-          document.querySelector(${JSON.stringify(this.rootSelector)})
-        const id = root?.dataset?.id
-        return id ? "[data-class='options-container'][data-id='" + id + "']" : null
-      })()
-    `)
+    let elements = await this.systemTest.all(this.componentSelector, {timeout: 0})
 
-    this._optionsContainerSelector = selector || "[data-class='options-container']"
+    if (elements.length === 0) {
+      elements = await this.systemTest.all(this.rootSelector, {timeout: 0})
+    }
+
+    const id = elements.length > 0 ? await elements[0].getAttribute("data-id") : null
+
+    this._optionsContainerSelector = id
+      ? `[data-class='options-container'][data-id='${id}']`
+      : "[data-class='options-container']"
 
     return this._optionsContainerSelector
   }
