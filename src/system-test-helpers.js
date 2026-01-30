@@ -39,10 +39,7 @@ export default class HayaSelectSystemTestHelper {
       "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
       selectContainer
     )
-    await driver.executeScript(
-      "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
-      selectContainer
-    )
+    await this.systemTest.click(selectContainer)
     await waitFor({timeout: 10000}, async () => {
       const searchInputsAfterClick = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
 
@@ -55,7 +52,13 @@ export default class HayaSelectSystemTestHelper {
 
   /** @returns {Promise<void>} */
   async close() {
-    await this.systemTest.click(this.selectContainerSelector)
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector)
+    const driver = this.systemTest.getDriver()
+    await driver.executeScript(
+      "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
+      selectContainer
+    )
+    await this.systemTest.click(selectContainer)
     await waitFor({timeout: 5000}, async () => {
       const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
 
