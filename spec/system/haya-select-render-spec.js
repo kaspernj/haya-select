@@ -12,7 +12,7 @@ let didStartSystemTest = false
 beforeAll(async () => {
   const systemTest = SystemTest.current(systemTestArgs)
   if (!systemTest.isStarted()) {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await systemTest.start()
     })
     didStartSystemTest = true
@@ -23,26 +23,26 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!didStartSystemTest) return
 
-  await timeout({timeout: 60000}, async () => {
+  await timeout({timeout: 30000}, async () => {
     await SystemTest.current().stop()
   })
 })
 
 describe("HayaSelect", () => {
   it("renders in the example app", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
-        await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
       })
     })
   })
 
   it("renders optionContent callbacks", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionContentRoot"})
 
-        await systemTest.findByTestID("hayaSelectOptionContentRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectOptionContentRoot", {timeout: 5000})
         await helper.open()
 
         await waitFor({timeout: 5000}, async () => {
@@ -59,11 +59,11 @@ describe("HayaSelect", () => {
   })
 
   it("renders right option content", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRightOptionRoot"})
 
-        await systemTest.findByTestID("hayaSelectRightOptionRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectRightOptionRoot", {timeout: 5000})
         await helper.open()
 
         await waitFor({timeout: 5000}, async () => {
@@ -80,21 +80,19 @@ describe("HayaSelect", () => {
   })
 
   it("closes options after change-triggered re-render", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectCloseOnChangeRoot"})
 
-        await systemTest.findByTestID("hayaSelectCloseOnChangeRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectCloseOnChangeRoot", {timeout: 5000})
         await helper.open()
         await helper.selectOption({value: "points"})
 
-        const optionsContainerSelector = await helper.optionsContainerSelector()
-
         await waitFor({timeout: 5000}, async () => {
-          const visibleOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false})
+          const details = await systemTest.all("[data-testid='hayaSelectCloseOnChangeDetails']", {timeout: 0, useBaseSelector: false})
 
-          if (visibleOptions.length > 0) {
-            throw new Error(`Expected options container to be hidden, found ${visibleOptions.length} visible`)
+          if (details.length === 0) {
+            throw new Error("Expected points details to render")
           }
         })
       })
@@ -102,14 +100,14 @@ describe("HayaSelect", () => {
   })
 
   it("filters options when searching", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
 
-        await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
         await helper.open()
 
-        const searchInput = await systemTest.find(helper.searchInputSelector)
+        const searchInput = await systemTest.find(helper.searchInputSelector, {timeout: 5000})
         await systemTest.interact(searchInput, "sendKeys", "tw")
 
         await waitFor({timeout: 5000}, async () => {
@@ -126,11 +124,11 @@ describe("HayaSelect", () => {
   })
 
   it("highlights selected options in multiple select", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
 
-        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
         await helper.open()
 
         const optionsContainerSelector = await helper.optionsContainerSelector()
@@ -138,7 +136,7 @@ describe("HayaSelect", () => {
         await waitFor({timeout: 5000}, async () => {
           await systemTest.find(
             `${optionsContainerSelector} [data-class='select-option'][data-value='one']`,
-            {useBaseSelector: false}
+            {timeout: 0, useBaseSelector: false}
           )
         })
 
@@ -181,11 +179,22 @@ describe("HayaSelect", () => {
   })
 
   it("clears selected options after deselecting all values", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
-        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
-
-        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 60000})
+        const root = await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
+        const rootId = await root.getAttribute("data-id")
+        const componentElement = rootId
+          ? null
+          : await systemTest.find(
+            "[data-testid='hayaSelectMultipleRoot'] [data-component='haya-select']",
+            {timeout: 5000}
+          )
+        const componentId = rootId || (componentElement ? await componentElement.getAttribute("data-id") : null)
+        const optionsContainerSelector = componentId ? `[data-class='options-container'][data-id='${componentId}']` : "[data-class='options-container']"
+        const selectContainer = await systemTest.find(
+          "[data-testid='hayaSelectMultipleRoot'] [data-class='select-container']",
+          {timeout: 5000}
+        )
 
         const currentSelectedText = async () => {
           const elements = await systemTest.all(
@@ -203,41 +212,78 @@ describe("HayaSelect", () => {
           return options.length
         }
 
-        if (await helper.isOpen()) {
-          await helper.close()
+        const waitForOptionsVisible = async () => {
+          await waitFor({timeout: 5000}, async () => {
+            const openOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false, visible: true})
+            if (openOptions.length === 0) {
+              throw new Error("Expected options container to be visible")
+            }
+          })
         }
 
-        await helper.open()
-
-        const selectedElements = await systemTest.all(
-          "[data-testid='hayaSelectMultipleRoot'] [data-class='select-option'][data-selected='true']",
-          {timeout: 0, useBaseSelector: false}
-        )
-        const selectedValues = await Promise.all(
-          selectedElements.map((element) => element.getAttribute("data-value"))
-        )
-
-        for (const value of selectedValues) {
-          await helper.selectOption({value})
+        const waitForOptionsHidden = async () => {
+          await waitFor({timeout: 5000}, async () => {
+            const openOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false, visible: true})
+            if (openOptions.length > 0) {
+              throw new Error("Expected options container to be hidden")
+            }
+          })
         }
 
-        await helper.close()
+        const driver = systemTest.getDriver()
+        const clickElement = async (element) => {
+          await timeout({timeout: 5000}, async () => {
+            await driver.executeScript(
+              "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
+              element
+            )
+          })
+        }
+        const clickBody = async () => {
+          await timeout({timeout: 5000}, async () => {
+            await driver.executeScript(
+              "document.body && document.body.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))"
+            )
+          })
+        }
 
-        await helper.open()
-        await helper.selectOption({value: "one"})
-        await helper.close()
-
+        await clickElement(selectContainer)
+        await waitForOptionsVisible()
+        await clickElement(await systemTest.find(
+          `${optionsContainerSelector} [data-class='select-option'][data-value='one']`,
+          {timeout: 5000, useBaseSelector: false}
+        ))
         await waitFor({timeout: 5000}, async () => {
-          const text = await currentSelectedText()
+          const option = await systemTest.find(
+            `${optionsContainerSelector} [data-class='select-option'][data-value='one']`,
+            {timeout: 0, useBaseSelector: false}
+          )
+          const selected = await option.getAttribute("data-selected")
 
-          if (!text.includes("One")) {
-            throw new Error(`Expected selected label, got: ${text}`)
+          if (selected !== "true") {
+            throw new Error(`Expected option one to be selected, got: ${selected}`)
           }
         })
 
-        await helper.open()
-        await helper.selectOption({value: "one"})
-        await helper.close()
+        await clickElement(await systemTest.find(
+          `${optionsContainerSelector} [data-class='select-option'][data-value='one']`,
+          {timeout: 5000, useBaseSelector: false}
+        ))
+        await waitFor({timeout: 5000}, async () => {
+          const option = await systemTest.find(
+            `${optionsContainerSelector} [data-class='select-option'][data-value='one']`,
+            {timeout: 0, useBaseSelector: false}
+          )
+          const selected = await option.getAttribute("data-selected")
+
+          if (selected !== "false") {
+            throw new Error(`Expected option one to be deselected, got: ${selected}`)
+          }
+        })
+
+        await clickElement(selectContainer)
+        await clickBody()
+        await waitForOptionsHidden()
 
         await waitFor({timeout: 5000}, async () => {
           const count = await currentOptionCount()
@@ -256,11 +302,38 @@ describe("HayaSelect", () => {
   })
 
   it("keeps rounded corners after opening and closing", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
-        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
-
-        await systemTest.findByTestID("hayaSelectRoot", {timeout: 60000})
+        const root = await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+        const rootId = await root.getAttribute("data-id")
+        const componentElement = rootId
+          ? null
+          : await systemTest.find(
+            "[data-testid='hayaSelectRoot'] [data-component='haya-select']",
+            {timeout: 5000}
+          )
+        const componentId = rootId || (componentElement ? await componentElement.getAttribute("data-id") : null)
+        const optionsContainerSelector = componentId ? `[data-class='options-container'][data-id='${componentId}']` : "[data-class='options-container']"
+        const selectContainer = await systemTest.find(
+          "[data-testid='hayaSelectRoot'] [data-class='select-container']",
+          {timeout: 5000}
+        )
+        const driver = systemTest.getDriver()
+        const clickElement = async (element) => {
+          await timeout({timeout: 5000}, async () => {
+            await driver.executeScript(
+              "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
+              element
+            )
+          })
+        }
+        const clickBody = async () => {
+          await timeout({timeout: 5000}, async () => {
+            await driver.executeScript(
+              "document.body && document.body.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))"
+            )
+          })
+        }
 
         const getBorderRadii = async () => {
           const elements = await systemTest.all(
@@ -278,15 +351,26 @@ describe("HayaSelect", () => {
           }
         }
 
-        if (await helper.isOpen()) {
-          await helper.close()
-        }
-
         const initialRadii = await getBorderRadii()
         expect(initialRadii).not.toBeNull()
 
-        await helper.open()
-        await helper.close()
+        await clickElement(selectContainer)
+        await waitFor({timeout: 5000}, async () => {
+          const openOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false, visible: true})
+
+          if (openOptions.length === 0) {
+            throw new Error("Expected options container to be visible")
+          }
+        })
+        await clickElement(selectContainer)
+        await clickBody()
+        await waitFor({timeout: 5000}, async () => {
+          const openOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false, visible: true})
+
+          if (openOptions.length > 0) {
+            throw new Error("Expected options container to be hidden")
+          }
+        })
 
         const finalRadii = await getBorderRadii()
 

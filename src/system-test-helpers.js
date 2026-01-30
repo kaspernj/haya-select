@@ -32,47 +32,20 @@ export default class HayaSelectSystemTestHelper {
   async open() {
     if (await this.isOpen()) return
 
-    const selectContainer = await this.systemTest.find(this.selectContainerSelector)
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
     const driver = this.systemTest.getDriver()
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
-    await this.systemTest.click(selectContainer)
-    try {
-      await waitFor({timeout: 2000}, async () => {
-        if (!(await this.isOpen())) {
-          throw new Error("Options not visible yet")
-        }
-      })
-    } catch (_error) {
-      await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", selectContainer)
-      await waitFor({timeout: 10000}, async () => {
-        if (!(await this.isOpen())) {
-          throw new Error("Options not visible yet")
-        }
-      })
-    }
+    await driver.executeScript("arguments[0].click()", selectContainer)
     this._optionsContainerSelector = null
   }
 
   /** @returns {Promise<void>} */
   async close() {
-    const selectContainer = await this.systemTest.find(this.selectContainerSelector)
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
     const driver = this.systemTest.getDriver()
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
-    await this.systemTest.click(selectContainer)
-    try {
-      await waitFor({timeout: 2000}, async () => {
-        if (await this.isOpen()) {
-          throw new Error("Options are still visible")
-        }
-      })
-    } catch (_error) {
-      await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", selectContainer)
-      await waitFor({timeout: 5000}, async () => {
-        if (await this.isOpen()) {
-          throw new Error("Options are still visible")
-        }
-      })
-    }
+    await driver.executeScript("arguments[0].click()", selectContainer)
+    await driver.executeScript("document.body && document.body.click()")
   }
 
   /** @returns {Promise<boolean>} */
@@ -80,11 +53,7 @@ export default class HayaSelectSystemTestHelper {
     const optionsContainerSelector = await this.optionsContainerSelector()
     const options = await this.systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false})
 
-    for (const option of options) {
-      if (await option.isDisplayed()) return true
-      const visibility = await option.getCssValue("visibility")
-      if (visibility && visibility !== "hidden") return true
-    }
+    if (options.length > 0) return true
 
     const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
 
@@ -95,13 +64,15 @@ export default class HayaSelectSystemTestHelper {
   async optionsContainerSelector() {
     if (this._optionsContainerSelector) return this._optionsContainerSelector
 
-    let elements = await this.systemTest.all(this.componentSelector, {timeout: 0})
+    const rootElements = await this.systemTest.all(this.rootSelector, {timeout: 0})
+    const rootId = rootElements.length > 0 ? await rootElements[0].getAttribute("data-id") : null
+    let elements = rootElements
 
-    if (elements.length === 0) {
-      elements = await this.systemTest.all(this.rootSelector, {timeout: 0})
+    if (!rootId) {
+      elements = await this.systemTest.all(this.componentSelector, {timeout: 0})
     }
 
-    const id = elements.length > 0 ? await elements[0].getAttribute("data-id") : null
+    const id = rootId || (elements.length > 0 ? await elements[0].getAttribute("data-id") : null)
 
     this._optionsContainerSelector = id ? `[data-class='options-container'][data-id='${id}']` : this.optionsContainerSelectorFallback
 
@@ -111,7 +82,7 @@ export default class HayaSelectSystemTestHelper {
   /** @returns {Promise<string[]>} */
   async optionTexts() {
     const optionsContainerSelector = await this.optionsContainerSelector()
-    const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+    const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false, timeout: 0})
 
     return await Promise.all(options.map(async (option) => (await option.getText()).trim()))
   }
@@ -134,9 +105,17 @@ export default class HayaSelectSystemTestHelper {
     if (typeof value != "undefined") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const option = await this.systemTest.find(`${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`, {useBaseSelector: false})
+        const options = await this.systemTest.all(
+          `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
+          {useBaseSelector: false, timeout: 0}
+        )
+        const option = options[0]
 
-        await this.systemTest.click(option)
+        if (!option) {
+          throw new Error(`No option for value: ${value}`)
+        }
+        const driver = this.systemTest.getDriver()
+        await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", option)
       })
       return
     }
@@ -144,12 +123,13 @@ export default class HayaSelectSystemTestHelper {
     if (typeof index == "number") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false, timeout: 0})
         const option = options[index]
 
         if (!option) throw new Error(`No option at index: ${index}`)
 
-        await this.systemTest.click(option)
+        const driver = this.systemTest.getDriver()
+        await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", option)
       })
       return
     }

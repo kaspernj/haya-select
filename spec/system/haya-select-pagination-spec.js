@@ -12,7 +12,7 @@ let didStartSystemTest = false
 beforeAll(async () => {
   const systemTest = SystemTest.current(systemTestArgs)
   if (!systemTest.isStarted()) {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await systemTest.start()
     })
     didStartSystemTest = true
@@ -23,7 +23,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!didStartSystemTest) return
 
-  await timeout({timeout: 60000}, async () => {
+  await timeout({timeout: 30000}, async () => {
     await SystemTest.current().stop()
   })
 })
@@ -33,7 +33,7 @@ const setPaginationInputValue = async (systemTest, value) => {
     const element = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false})
     const driver = systemTest.getDriver()
     await driver.executeScript(
-      "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles: true})); arguments[0].dispatchEvent(new Event('change', {bubbles: true})); arguments[0].blur();",
+      "arguments[0].focus(); arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles: true})); arguments[0].dispatchEvent(new Event('change', {bubbles: true})); arguments[0].blur();",
       element,
       String(value)
     )
@@ -54,7 +54,7 @@ const openPaginatedSelect = async (systemTest) => {
       selectContainer
     )
     await systemTest.click(selectContainer)
-    await waitFor({timeout: 10000}, async () => {
+    await waitFor({timeout: 5000}, async () => {
       const searchInputsAfterClick = await systemTest.all(
         "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
         {timeout: 0, visible: true}
@@ -71,7 +71,7 @@ const openPaginatedSelect = async (systemTest) => {
     selectContainer
   )
   await systemTest.click(selectContainer)
-  await waitFor({timeout: 10000}, async () => {
+  await waitFor({timeout: 5000}, async () => {
     const searchInputsAfterClick = await systemTest.all(
       "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
       {timeout: 0, visible: true}
@@ -121,7 +121,7 @@ const paginationLabelText = async (systemTest) => {
 }
 
 const waitForPaginationLabel = async (systemTest, expectedText) => {
-  const expectedPage = Number(expectedText.match(/Page (\\d+) of/)?.[1])
+  const expectedPage = Number(expectedText.match(/Page (\d+) of/)?.[1])
   await waitFor({timeout: 5000}, async () => {
     const labelText = await paginationLabelText(systemTest)
 
@@ -174,7 +174,7 @@ const clickPaginationSelector = async (systemTest, selector) => {
 
 describe("HayaSelect pagination", () => {
   afterEach(async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         await closePaginatedSelect(systemTest)
       })
@@ -186,7 +186,7 @@ describe("HayaSelect pagination", () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
 
         const pageTwo = await findPaginationPageButton(systemTest, 2)
@@ -205,11 +205,11 @@ describe("HayaSelect pagination", () => {
   })
 
   it("accepts manual page entry from the pagination label", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
 
         await setPaginationInputValue(systemTest, "4")
@@ -227,11 +227,11 @@ describe("HayaSelect pagination", () => {
   })
 
   it("supports next and previous pagination buttons", async () => {
-    await timeout({timeout: 60000}, async () => {
+    await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
-        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 60000})
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 

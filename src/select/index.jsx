@@ -68,7 +68,8 @@ const paginationButtonStyles = {}
  * @property {function(import("react").SyntheticEvent=): void} [onChange]
  * @property {function(Array<string|number>=): void} [onChangeValue]
  * @property {function(import("react").SyntheticEvent=): void} [onFocus]
- * @property {function(): void} [onOptionsClosed]
+ * @property {function({options: Array}): void} [onOptionsClosed]
+ * @property {function({options: Array}): void} [onOptionsLoaded]
  * @property {function(object): import("react").ReactNode} [optionContent]
  * @property {Array<HayaSelectOption>|function(): (Array<HayaSelectOption>|HayaSelectOptionsResult)} options
  * @property {boolean} optionsAbsolute
@@ -184,6 +185,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     onChangeValue: PropTypes.func,
     onFocus: PropTypes.func,
     onOptionsClosed: PropTypes.func,
+    onOptionsLoaded: PropTypes.func,
     optionContent: PropTypes.func,
     options: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.shape({
@@ -657,7 +659,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       pageInputValue: totalPages ? `Page ${resolvedPage} of ${totalPages}` : String(resolvedPage),
       pageSize: Number.isFinite(totalCount) ? resolvedPageSize : null,
       totalCount: Number.isFinite(totalCount) ? totalCount : null
-    })
+    }, () => this.props.onOptionsLoaded?.({options: loadedOptions}))
   }
 
   hayaSelectOption({key, loadedOption}) {
@@ -1004,7 +1006,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     event.stopPropagation?.()
 
     const totalPages = this.paginationTotalPages()
-    const nextPage = Number(this.s.pageInputValue)
+    const rawValue = event?.target?.value ?? this.s.pageInputValue
+    const parsedValue = rawValue ? Number(String(rawValue).match(/\d+/)?.[0]) : NaN
+    const nextPage = Number.isFinite(parsedValue) ? parsedValue : Number(this.s.pageInputValue)
 
     if (totalPages && Number.isFinite(nextPage)) {
       this.setPaginationPage(nextPage)
