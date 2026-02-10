@@ -272,7 +272,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       height: null,
       loadedOptions: () => this.defaultLoadedOptions(),
       page: 1,
-      pageInputValue: "",
+      pageInputFocused: false,
+      pageInputValue: "1",
       pageSize: null,
       opened: false,
       optionsContainerLayout: null,
@@ -316,11 +317,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     }, [this.props.values])
   }
 
-  translate(msgID) {
+  translate(msgID, options) {
     if (msgID.startsWith(".")) {
-      return this.t(`haya_select${msgID}`)
+      return this.t(`haya_select${msgID}`, options)
     } else {
-      return this.t(msgID)
+      return this.t(msgID, options)
     }
   }
 
@@ -700,7 +701,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState({
       loadedOptions,
       page: resolvedPage,
-      pageInputValue: totalPages ? `Page ${resolvedPage} of ${totalPages}` : String(resolvedPage),
+      pageInputValue: String(resolvedPage),
       pageSize: Number.isFinite(totalCount) ? resolvedPageSize : null,
       totalCount: Number.isFinite(totalCount) ? totalCount : null
     }, () => this.props.onOptionsLoaded?.({options: loadedOptions}))
@@ -744,7 +745,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.setState({
       loadedOptions,
       page: 1,
-      pageInputValue: "Page 1 of 1",
+      pageInputValue: "1",
       pageSize: null,
       totalCount: null
     })
@@ -800,7 +801,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         optionsContainerLayout: null,
         optionsVisibility: "hidden",
         page: 1,
-        pageInputValue: "Page 1",
+        pageInputFocused: false,
+        pageInputValue: "1",
         pageSize: null,
         totalCount: null
       },
@@ -840,7 +842,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.searchTextValue = searchText
 
     if (this.s.page != 1) {
-      this.setState({page: 1, pageInputValue: "Page 1"}, this.tt.onSearchTextInputChangedDebounced)
+      this.setState({page: 1, pageInputValue: "1"}, this.tt.onSearchTextInputChangedDebounced)
     } else {
       this.tt.onSearchTextInputChangedDebounced()
     }
@@ -861,7 +863,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         optionsVisibility: "hidden",
         optionsWidth: this.s.endOfSelectLayout?.width,
         page: 1,
-        pageInputValue: "Page 1",
+        pageInputFocused: false,
+        pageInputValue: "1",
         scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
         scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
       },
@@ -1032,6 +1035,23 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     return items
   }
 
+  paginationDisplayValue(totalPages) {
+    const activePage = this.getActivePage()
+    const fallbackText = `Page ${activePage} of ${totalPages}`
+
+    return this.translate(".pagination_page_of_pages", {
+      defaultValue: fallbackText,
+      page: activePage,
+      totalPages
+    })
+  }
+
+  paginationInputValue(totalPages) {
+    if (this.s.pageInputFocused) return this.s.pageInputValue
+
+    return this.paginationDisplayValue(totalPages)
+  }
+
   /** @param {number} page */
   setPaginationPage = (page) => {
     const totalPages = this.paginationTotalPages()
@@ -1042,8 +1062,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const nextPage = Math.min(Math.max(Math.floor(page), 1), totalPages)
 
     if (nextPage == this.getActivePage()) {
-      const pageValue = totalPages ? `Page ${this.getActivePage()} of ${totalPages}` : String(this.getActivePage())
-      this.setState({pageInputValue: pageValue})
+      this.setState({pageInputValue: String(this.getActivePage())})
       return
     }
 
@@ -1070,7 +1089,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   onPaginationInputFocus = () => {
-    this.setState({pageInputValue: String(this.getActivePage())})
+    this.setState({
+      pageInputFocused: true,
+      pageInputValue: String(this.getActivePage())
+    })
   }
 
   /** @param {string} value */
@@ -1089,13 +1111,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const nextPage = Number.isFinite(parsedValue) ? parsedValue : Number(this.s.pageInputValue)
 
     if (totalPages && Number.isFinite(nextPage)) {
-      this.setPaginationPage(nextPage)
+      this.setState({pageInputFocused: false}, () => this.setPaginationPage(nextPage))
       return
     }
 
-    const pageValue = totalPages ? `Page ${this.getActivePage()} of ${totalPages}` : String(this.getActivePage())
-
-    this.setState({pageInputValue: pageValue})
+    this.setState({
+      pageInputFocused: false,
+      pageInputValue: String(this.getActivePage())
+    })
   }
 
   /** @param {import("react").SyntheticEvent} event */
@@ -1106,19 +1129,24 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const totalPages = this.paginationTotalPages()
 
     if (!totalPages) {
-      this.setState({pageInputValue: String(this.getActivePage())})
+      this.setState({
+        pageInputFocused: false,
+        pageInputValue: String(this.getActivePage())
+      })
       return
     }
 
     const nextPage = Number(this.s.pageInputValue)
 
     if (!Number.isFinite(nextPage)) {
-      const pageValue = totalPages ? `Page ${this.getActivePage()} of ${totalPages}` : String(this.getActivePage())
-      this.setState({pageInputValue: pageValue})
+      this.setState({
+        pageInputFocused: false,
+        pageInputValue: String(this.getActivePage())
+      })
       return
     }
 
-    this.setPaginationPage(nextPage)
+    this.setState({pageInputFocused: false}, () => this.setPaginationPage(nextPage))
   }
 
   /** @param {import("react").SyntheticEvent} event */
@@ -1206,7 +1234,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                 textAlign: "center",
                 width: 120
               }}
-              value={this.s.pageInputValue}
+              value={this.paginationInputValue(totalPages)}
             />
           </View>
           <Pressable
