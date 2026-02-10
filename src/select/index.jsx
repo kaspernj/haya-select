@@ -177,7 +177,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     defaultValue: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     defaultValues: PropTypes.array,
     defaultValuesFromOptions: PropTypes.array,
-    debug: PropTypes.bool,
+    debug: PropTypes.bool.isRequired,
     id: PropTypes.node,
     model: PropTypes.object,
     multiple: PropTypes.bool.isRequired,
