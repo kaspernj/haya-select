@@ -1038,12 +1038,17 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   paginationDisplayValue(totalPages) {
     const activePage = this.getActivePage()
     const fallbackText = `Page ${activePage} of ${totalPages}`
-
-    return this.translate(".pagination_page_of_pages", {
+    const translated = this.translate(".pagination_page_of_pages", {
       defaultValue: fallbackText,
       page: activePage,
       totalPages
     })
+
+    if (translated == "haya_select.pagination_page_of_pages" || translated == ".pagination_page_of_pages") {
+      return fallbackText
+    }
+
+    return translated || fallbackText
   }
 
   paginationInputValue(totalPages) {
