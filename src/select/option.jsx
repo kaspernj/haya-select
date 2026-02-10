@@ -68,9 +68,6 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
           selected,
           value: this.props.option.value
         }, [disabled, selected, this.props.option.value])}
-        onClick={this.tt.onClick}
-        onMouseDown={this.tt.onMouseDown}
-        onPressIn={this.tt.onPressIn}
         onPress={this.tt.onPress}
         onPointerOver={this.tt.onPointerOver}
         onPointerOut={this.tt.onPointerOut}
@@ -83,36 +80,5 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
 
   onPointerOver = () => this.setState({hover: true})
   onPointerOut = () => this.setState({hover: false})
-  onMouseDown = (e) => {
-    if (this.didPressIn) {
-      return
-    }
-
-    this.didPressIn = true
-    this.p.onOptionClicked(e, this.props.option)
-  }
-  onClick = (e) => {
-    if (this.didPressIn) {
-      this.didPressIn = false
-      return
-    }
-
-    this.p.onOptionClicked(e, this.props.option)
-  }
-  onPressIn = (e) => {
-    if (this.didPressIn) {
-      return
-    }
-
-    this.didPressIn = true
-    this.p.onOptionClicked(e, this.props.option)
-  }
-  onPress = (e) => {
-    if (this.didPressIn) {
-      this.didPressIn = false
-      return
-    }
-
-    this.p.onOptionClicked(e, this.props.option)
-  }
+  onPress = (e) => this.p.onOptionClicked(e, this.props.option)
 }))
