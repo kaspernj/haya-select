@@ -1,19 +1,24 @@
 // @ts-check
 
 /**
- * @typedef {function(): {t: function(string) : string}} TranslateFunctionType
+ * @typedef {function(): {t: function(string, object=) : string}} TranslateFunctionType
  */
 
 const shared = {}
 
 /**
  * @param {string} msgID
+ * @param {object} [options]
  * @returns {string}
  */
-function t(msgID) {
+function t(msgID, options = {}) {
   if (!shared._translateWarning) {
     shared._translateWarning = true
     console.log("HayaSelect: Translate method not set")
+  }
+
+  if (typeof options.defaultValue == "string") {
+    return options.defaultValue
   }
 
   return msgID
@@ -61,5 +66,4 @@ export default class HayaSelectConfiguration {
     this._useTranslate = callback
   }
 }
-
 
