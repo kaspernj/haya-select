@@ -426,7 +426,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {endOfSelectRef} = this.tt
     const {transparent} = this.p
     const {className, placeholder, toggleOptions} = this.props
-    const values = Array.isArray(this.p.values) ? this.p.values : []
+    const values = Array.isArray(this.props.values) ? this.props.values : []
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
     const id = idForComponent(this)
