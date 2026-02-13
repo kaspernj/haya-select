@@ -91,8 +91,11 @@ const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
 
   const currentOptions = component.getCurrentOptions()
+  const values = component.getValues()
 
-  if (component.props.multiple && name && currentOptions.length > 0) {
+  const hasMultipleValues = Array.isArray(values) && values.length > 0
+
+  if (component.props.multiple && name && (currentOptions.length > 0 || hasMultipleValues)) {
     name += "[]"
   }
 

@@ -110,9 +110,14 @@ describe("HayaSelect", () => {
             {timeout: 0}
           )
           const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
+          const names = await Promise.all(inputs.map((input) => input.getAttribute("name")))
 
-          if (!values.includes("two")) {
-            throw new Error(`Expected hidden input to include value 'two', got: ${values.join(", ")}`)
+          if (!values.includes("one") || !values.includes("two")) {
+            throw new Error(`Expected hidden inputs to include values 'one' and 'two', got: ${values.join(", ")}`)
+          }
+
+          if (names.some((name) => name !== "controlled_values[]")) {
+            throw new Error(`Expected hidden input name to be 'controlled_values[]', got: ${names.join(", ")}`)
           }
         })
       })
