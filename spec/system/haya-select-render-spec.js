@@ -6,7 +6,7 @@ import SystemTest from "system-testing/build/system-test.js"
 import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
 
 SystemTest.rootPath = "/?systemTest=true"
-const systemTestArgs = {debug: false}
+const systemTestArgs = {debug: true}
 let didStartSystemTest = false
 
 beforeAll(async () => {
