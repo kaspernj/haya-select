@@ -105,10 +105,7 @@ export default class HayaSelectSystemTestHelper {
     if (typeof value != "undefined") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.systemTest.all(
-          `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
-          {useBaseSelector: false, timeout: 0}
-        )
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`, {useBaseSelector: false, timeout: 0})
         const option = options[0]
 
         if (!option) {
