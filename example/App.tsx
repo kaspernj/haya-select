@@ -22,6 +22,7 @@ export default function App() {
     ...option,
     right: <Text>Right {option.text}</Text>
   }))
+  const controlledValues = ["two"]
   const paginationPageSize = 5
   const paginationTotalCount = 24
   const [actionTypeValue, setActionTypeValue] = useState<string | null>(null)
@@ -60,6 +61,13 @@ export default function App() {
       page,
       pageSize: paginationPageSize
     }
+  }
+  const controlledOptions = async ({values}: {values?: Array<string>}) => {
+    if (Array.isArray(values)) {
+      return {options: []}
+    }
+
+    return {options: selectOptions}
   }
 
   return (
@@ -143,6 +151,16 @@ export default function App() {
                       Points selected
                     </Text>
                   }
+                </View>
+              </Group>
+              <Group name="Controlled Values Select">
+                <View testID="hayaSelectControlledValuesRoot">
+                  <HayaSelect
+                    name="controlled_values"
+                    options={controlledOptions}
+                    placeholder="Pick controlled"
+                    values={controlledValues}
+                  />
                 </View>
               </Group>
               <Group name="Paginated Select">

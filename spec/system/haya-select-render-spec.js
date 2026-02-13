@@ -99,6 +99,26 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("renders hidden input for controlled values without current options", async () => {
+    await timeout({timeout: 30000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectControlledValuesRoot", {timeout: 5000})
+
+        await waitFor({timeout: 5000}, async () => {
+          const inputs = await systemTest.all(
+            "[data-testid='hayaSelectControlledValuesRoot'] [data-class='current-selected'] input[type='hidden']",
+            {timeout: 0}
+          )
+          const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
+
+          if (!values.includes("two")) {
+            throw new Error(`Expected hidden input to include value 'two', got: ${values.join(", ")}`)
+          }
+        })
+      })
+    })
+  })
+
   it("filters options when searching", async () => {
     await timeout({timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
