@@ -11,6 +11,7 @@ import nameForComponent from "@kaspernj/api-maker/build/inputs/name-for-componen
 import Text from "@kaspernj/api-maker/build/utils/text"
 import Option from "./option"
 import OptionGroup from "./option-group"
+import PaginationPageButton from "./pagination-page-button"
 import PropTypes from "prop-types"
 import propTypesExact from "prop-types-exact"
 import RenderHtml from "react-native-render-html"
@@ -20,8 +21,6 @@ import usePressOutside from "outside-eye/build/use-press-outside"
 
 const styles = {}
 const dataSets = {}
-const paginationButtonDataSets = {}
-const paginationButtonStyles = {}
 
 /**
  * @typedef {object} HayaSelectToggleOption
@@ -99,61 +98,6 @@ const nameForComponentWithMultiple = (component) => {
 
   return name
 }
-
-/**
- * @typedef {object} PaginationPageButtonProps
- * @property {boolean} active
- * @property {number} page
- * @property {function(number): void} onPageSelected
- */
-
-/** @extends {ShapeComponent<PaginationPageButtonProps>} */
-const PaginationPageButton = memo(shapeComponent(class PaginationPageButton extends ShapeComponent {
-  static propTypes = propTypesExact({
-    active: PropTypes.bool.isRequired,
-    page: PropTypes.number.isRequired,
-    onPageSelected: PropTypes.func.isRequired
-  })
-
-  /** @param {import("react").SyntheticEvent} event */
-  onPress = (event) => {
-    event.preventDefault?.()
-    event.stopPropagation?.()
-
-    this.p.onPageSelected(this.p.page)
-  }
-
-  render() {
-    const {active, page} = this.p
-
-    return (
-      <Pressable
-        dataSet={paginationButtonDataSets[`paginationPage-${page}`] ||= {class: "pagination-page", page}}
-        disabled={active}
-        onPress={this.tt.onPress}
-        style={paginationButtonStyles[`paginationPageButton-${active}`] ||= {
-          alignItems: "center",
-          backgroundColor: active ? "#0f172a" : "#e2e8f0",
-          borderRadius: 999,
-          height: 28,
-          justifyContent: "center",
-          marginHorizontal: 4,
-          width: 28
-        }}
-      >
-        <Text
-          style={paginationButtonStyles[`paginationPageText-${active}`] ||= {
-            color: active ? "#f8fafc" : "#334155",
-            fontSize: 12,
-            fontWeight: 600
-          }}
-        >
-          {page}
-        </Text>
-      </Pressable>
-    )
-  }
-}))
 
 /** @extends {ShapeComponent<HayaSelectProps>} */
 export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
@@ -479,6 +423,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {endOfSelectRef} = this.tt
     const {transparent} = this.p
     const {className, placeholder, toggleOptions} = this.props
+    const values = Array.isArray(this.p.values) ? this.p.values : []
     const {opened, optionsPlacement} = this.s
     const currentOptions = this.getCurrentOptions()
     const id = idForComponent(this)
@@ -565,12 +510,27 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
                   </Text>
                 }
                 {currentOptions.length == 0 && Platform.OS == "web" &&
-                  <input
-                    id={idForComponent(this)}
-                    name={nameForComponentWithMultiple(this)}
-                    type="hidden"
-                    value=""
-                  />
+                  <>
+                    {values.length > 0 &&
+                      (this.p.multiple ? values : [values[0]]).map((value) => (
+                        <input
+                          id={idForComponent(this)}
+                          key={`current-value-${value}`}
+                          name={nameForComponentWithMultiple(this)}
+                          type="hidden"
+                          value={value}
+                        />
+                      ))
+                    }
+                    {values.length == 0 &&
+                      <input
+                        id={idForComponent(this)}
+                        name={nameForComponentWithMultiple(this)}
+                        type="hidden"
+                        value=""
+                      />
+                    }
+                  </>
                 }
                 {currentOptions.map((currentOption) =>
                   <View
