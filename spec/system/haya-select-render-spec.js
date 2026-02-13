@@ -86,7 +86,7 @@ describe("HayaSelect", () => {
       await waitFor({timeout: 5000}, async () => {
         const inputs = await systemTest.all(
           "[data-testid='hayaSelectControlledValuesRoot'] [data-class='current-selected'] input[type='hidden']",
-          {timeout: 0}
+          {timeout: 0, visible: null}
         )
         const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
         const names = await Promise.all(inputs.map((input) => input.getAttribute("name")))
