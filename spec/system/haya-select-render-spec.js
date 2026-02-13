@@ -100,26 +100,24 @@ describe("HayaSelect", () => {
   })
 
   it("renders hidden input for controlled values without current options", async () => {
-    await timeout({timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
-        await systemTest.findByTestID("hayaSelectControlledValuesRoot", {timeout: 5000})
+    await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await systemTest.findByTestID("hayaSelectControlledValuesRoot", {timeout: 5000})
 
-        await waitFor({timeout: 5000}, async () => {
-          const inputs = await systemTest.all(
-            "[data-testid='hayaSelectControlledValuesRoot'] [data-class='current-selected'] input[type='hidden']",
-            {timeout: 0}
-          )
-          const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
-          const names = await Promise.all(inputs.map((input) => input.getAttribute("name")))
+      await waitFor({timeout: 5000}, async () => {
+        const inputs = await systemTest.all(
+          "[data-testid='hayaSelectControlledValuesRoot'] [data-class='current-selected'] input[type='hidden']",
+          {timeout: 0}
+        )
+        const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
+        const names = await Promise.all(inputs.map((input) => input.getAttribute("name")))
 
-          if (!values.includes("one") || !values.includes("two")) {
-            throw new Error(`Expected hidden inputs to include values 'one' and 'two', got: ${values.join(", ")}`)
-          }
+        if (!values.includes("one") || !values.includes("two")) {
+          throw new Error(`Expected hidden inputs to include values 'one' and 'two', got: ${values.join(", ")}`)
+        }
 
-          if (names.some((name) => name !== "controlled_values[]")) {
-            throw new Error(`Expected hidden input name to be 'controlled_values[]', got: ${names.join(", ")}`)
-          }
-        })
+        if (names.some((name) => name !== "controlled_values[]")) {
+          throw new Error(`Expected hidden input name to be 'controlled_values[]', got: ${names.join(", ")}`)
+        }
       })
     })
   })
