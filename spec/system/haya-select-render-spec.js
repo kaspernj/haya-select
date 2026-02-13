@@ -6,7 +6,13 @@ import SystemTest from "system-testing/build/system-test.js"
 import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
 
 SystemTest.rootPath = "/?systemTest=true"
-const systemTestArgs = {debug: true}
+const systemTestHttpHost = process.env.SYSTEM_TEST_HTTP_HOST || "127.0.0.1"
+const systemTestHttpConnectHost = process.env.SYSTEM_TEST_HTTP_CONNECT_HOST || systemTestHttpHost
+const systemTestArgs = {
+  debug: true,
+  httpConnectHost: systemTestHttpConnectHost,
+  httpHost: systemTestHttpHost
+}
 let didStartSystemTest = false
 
 beforeAll(async () => {
