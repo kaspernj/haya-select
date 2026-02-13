@@ -18,7 +18,7 @@ let didStartSystemTest = false
 beforeAll(async () => {
   const systemTest = SystemTest.current(systemTestArgs)
   if (!systemTest.isStarted()) {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "beforeAll: timed out starting SystemTest", timeout: 30000}, async () => {
       await systemTest.start()
     })
     didStartSystemTest = true
@@ -29,14 +29,14 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!didStartSystemTest) return
 
-  await timeout({timeout: 30000}, async () => {
+  await timeout({errorMessage: "afterAll: timed out stopping SystemTest", timeout: 30000}, async () => {
     await SystemTest.current().stop()
   })
 })
 
 describe("HayaSelect", () => {
   it("renders in the example app", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: renders in the example app", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
       })
@@ -44,7 +44,7 @@ describe("HayaSelect", () => {
   })
 
   it("renders optionContent callbacks", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: renders optionContent callbacks", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionContentRoot"})
 
@@ -65,7 +65,7 @@ describe("HayaSelect", () => {
   })
 
   it("renders right option content", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: renders right option content", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRightOptionRoot"})
 
@@ -86,7 +86,7 @@ describe("HayaSelect", () => {
   })
 
   it("closes options after change-triggered re-render", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: closes options after change-triggered re-render", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectCloseOnChangeRoot"})
 
@@ -129,7 +129,7 @@ describe("HayaSelect", () => {
   })
 
   it("filters options when searching", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: filters options when searching", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
 
@@ -153,7 +153,7 @@ describe("HayaSelect", () => {
   })
 
   it("highlights selected options in multiple select", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: highlights selected options in multiple select", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
 
@@ -208,7 +208,7 @@ describe("HayaSelect", () => {
   })
 
   it("clears selected options after deselecting all values", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: clears selected options after deselecting all values", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const root = await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
         const rootId = await root.getAttribute("data-id")
@@ -261,7 +261,7 @@ describe("HayaSelect", () => {
 
         const driver = systemTest.getDriver()
         const clickElement = async (element) => {
-          await timeout({timeout: 5000}, async () => {
+          await timeout({errorMessage: "clear selected options test timed out: clickElement script", timeout: 5000}, async () => {
             await driver.executeScript(
               "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
               element
@@ -269,7 +269,7 @@ describe("HayaSelect", () => {
           })
         }
         const clickBody = async () => {
-          await timeout({timeout: 5000}, async () => {
+          await timeout({errorMessage: "clear selected options test timed out: clickBody script", timeout: 5000}, async () => {
             await driver.executeScript(
               "document.body && document.body.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))"
             )
@@ -331,7 +331,7 @@ describe("HayaSelect", () => {
   })
 
   it("keeps rounded corners after opening and closing", async () => {
-    await timeout({timeout: 30000}, async () => {
+    await timeout({errorMessage: "render test timed out: keeps rounded corners after opening and closing", timeout: 30000}, async () => {
       await SystemTest.run(systemTestArgs, async (systemTest) => {
         const root = await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
         const rootId = await root.getAttribute("data-id")
@@ -349,7 +349,7 @@ describe("HayaSelect", () => {
         )
         const driver = systemTest.getDriver()
         const clickElement = async (element) => {
-          await timeout({timeout: 5000}, async () => {
+          await timeout({errorMessage: "rounded corners test timed out: clickElement script", timeout: 5000}, async () => {
             await driver.executeScript(
               "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))",
               element
@@ -357,7 +357,7 @@ describe("HayaSelect", () => {
           })
         }
         const clickBody = async () => {
-          await timeout({timeout: 5000}, async () => {
+          await timeout({errorMessage: "rounded corners test timed out: clickBody script", timeout: 5000}, async () => {
             await driver.executeScript(
               "document.body && document.body.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))"
             )
