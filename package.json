@@ -1,6 +1,6 @@
 {
   "name": "haya-select",
-  "version": "1.0.98",
+  "version": "1.0.99",
   "description": "Just another select component for React Native + Web.",
   "files": [
     "build/**"
