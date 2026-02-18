@@ -168,6 +168,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  latestLoadOptionsRequestId = 0
   searchTextValue = ""
   t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
@@ -218,6 +219,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       endOfSelectLayout: null,
       height: null,
       loadedOptions: () => this.defaultLoadedOptions(),
+      loadOptionsAppliedRequestId: 0,
+      loadOptionsRequestId: 0,
       page: 1,
       pageInputFocused: false,
       pageInputValue: "1",
@@ -470,13 +473,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     return (
       <View
         dataSet={this.cache("rootViewDataSet", {
+          appliedRequestId: this.s.loadOptionsAppliedRequestId,
           class: className,
           component: "haya-select",
           id,
           opened,
           optionsPlacement,
+          requestId: this.s.loadOptionsRequestId,
           toggles: Boolean(toggleOptions)
-        }, [className, id, opened, optionsPlacement, Boolean(toggleOptions)])}
+        }, [this.s.loadOptionsAppliedRequestId, className, id, opened, optionsPlacement, this.s.loadOptionsRequestId, Boolean(toggleOptions)])}
         style={this.stylingFor("main")}
       >
         <Pressable
@@ -642,19 +647,34 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   loadOptions = async ({page} = {}) => {
     const {options} = this.p
     const searchValue = this.getSearchText()
+    const requestId = ++this.latestLoadOptionsRequestId
+    this.setState({loadOptionsRequestId: requestId})
     if (this.isDebugEnabled()) this.debugLog("loadOptions", {
       page,
+      requestId,
       searchValue,
       optionsType: Array.isArray(options) ? "array" : typeof options
     })
 
     if (Array.isArray(options)) {
-      return this.loadOptionsFromArray(options, searchValue)
+      return this.loadOptionsFromArray(options, searchValue, requestId)
     }
 
     const requestedPage = Number.isFinite(page) ? page : this.getActivePage()
     const result = await options({searchValue, page: requestedPage})
     const {options: loadedOptions, page: resultPage, pageSize, totalCount} = this.parseOptionsResult(result)
+
+    if (requestId != this.latestLoadOptionsRequestId) {
+      if (this.isDebugEnabled()) this.debugLog("loadOptions.ignored_stale_result", {
+        requestId,
+        latestLoadOptionsRequestId: this.latestLoadOptionsRequestId,
+        requestedPage,
+        searchValue
+      })
+
+      return
+    }
+
     const resolvedPage = Number.isFinite(resultPage) ? resultPage : requestedPage
     const resolvedPageSize = this.resolvePageSize({options: loadedOptions, page: resolvedPage, pageSize, totalCount})
     const totalPages = Number.isFinite(totalCount) && Number.isFinite(resolvedPageSize) && resolvedPageSize > 0
@@ -663,6 +683,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     this.setState({
       loadedOptions,
+      loadOptionsAppliedRequestId: requestId,
       page: resolvedPage,
       pageInputValue: String(resolvedPage),
       pageSize: Number.isFinite(totalCount) ? resolvedPageSize : null,
@@ -696,10 +717,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     )
   }
 
-  loadOptionsFromArray(options, searchValue) {
+  loadOptionsFromArray(options, searchValue, requestId = this.latestLoadOptionsRequestId) {
     const lowerSearchValue = searchValue?.toLowerCase()
     const loadedOptions = options.filter(({text}) => !lowerSearchValue || text?.toLowerCase()?.includes(lowerSearchValue))
     if (this.isDebugEnabled()) this.debugLog("loadOptionsFromArray", {
+      requestId,
       totalOptionsCount: options.length,
       searchValue,
       loadedOptionsCount: loadedOptions.length
@@ -707,6 +729,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     this.setState({
       loadedOptions,
+      loadOptionsAppliedRequestId: requestId,
       page: 1,
       pageInputValue: "1",
       pageSize: null,
