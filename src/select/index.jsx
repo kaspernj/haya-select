@@ -168,6 +168,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  latestLoadOptionsRequestId = 0
   searchTextValue = ""
   t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
@@ -642,6 +643,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   loadOptions = async ({page} = {}) => {
     const {options} = this.p
     const searchValue = this.getSearchText()
+    const requestId = ++this.latestLoadOptionsRequestId
     if (this.isDebugEnabled()) this.debugLog("loadOptions", {
       page,
       searchValue,
@@ -655,6 +657,18 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const requestedPage = Number.isFinite(page) ? page : this.getActivePage()
     const result = await options({searchValue, page: requestedPage})
     const {options: loadedOptions, page: resultPage, pageSize, totalCount} = this.parseOptionsResult(result)
+
+    if (requestId != this.latestLoadOptionsRequestId) {
+      if (this.isDebugEnabled()) this.debugLog("loadOptions.ignored_stale_result", {
+        requestId,
+        latestLoadOptionsRequestId: this.latestLoadOptionsRequestId,
+        requestedPage,
+        searchValue
+      })
+
+      return
+    }
+
     const resolvedPage = Number.isFinite(resultPage) ? resultPage : requestedPage
     const resolvedPageSize = this.resolvePageSize({options: loadedOptions, page: resolvedPage, pageSize, totalCount})
     const totalPages = Number.isFinite(totalCount) && Number.isFinite(resolvedPageSize) && resolvedPageSize > 0
