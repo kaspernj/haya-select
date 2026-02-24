@@ -18,12 +18,35 @@ export default function App() {
     {value: "two", text: "Two"},
     {value: "three", text: "Three"}
   ]
+  const placementAboveOptions = Array.from({length: 25}).map((_, index) => ({
+    value: `placement-above-${index + 1}`,
+    text: `Placement Option ${index + 1}`
+  }))
   const rightSelectOptions = selectOptions.map((option) => ({
     ...option,
     right: <Text>Right {option.text}</Text>
   }))
   const paginationPageSize = 5
   const paginationTotalCount = 24
+  const placementStyleCallback = {
+    optionsContainer: ({optionsPlacement}: {optionsPlacement?: "above" | "below"}) => {
+      if (optionsPlacement === "above") {
+        return {
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          borderTopLeftRadius: 14,
+          borderTopRightRadius: 14
+        }
+      }
+
+      return {
+        borderBottomLeftRadius: 14,
+        borderBottomRightRadius: 14,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0
+      }
+    }
+  }
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -134,6 +157,15 @@ export default function App() {
                   />
                 </View>
               </Group>
+              <Group name="Placement Callback Select Top">
+                <View testID="hayaSelectPlacementBelowRoot">
+                  <HayaSelect
+                    options={selectOptions}
+                    placeholder="Placement below"
+                    styles={placementStyleCallback}
+                  />
+                </View>
+              </Group>
               <Group name="Views">
                 <HayaSelectView
                   url="https://www.example.com"
@@ -142,6 +174,15 @@ export default function App() {
                 />
               </Group>
             </ScrollView>
+            <View style={styles.fixedBottomSelectContainer}>
+              <View testID="hayaSelectPlacementAboveRoot">
+                <HayaSelect
+                  options={placementAboveOptions}
+                  placeholder="Placement above"
+                  styles={placementStyleCallback}
+                />
+              </View>
+            </View>
           </SafeAreaView>
         </OutsideEyeProvider>
       </PortalHost>
@@ -186,4 +227,10 @@ const styles = {
     opacity: 0.01,
     width: 1,
   },
+  fixedBottomSelectContainer: {
+    bottom: 20,
+    left: 20,
+    position: "absolute",
+    right: 20
+  }
 }
