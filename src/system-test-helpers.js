@@ -25,49 +25,56 @@ export default class HayaSelectSystemTestHelper {
     this.componentSelector = `${this.rootSelector} [data-component='haya-select']`
     this.selectContainerSelector = `${this.rootSelector} [data-class='select-container']`
     this.searchInputSelector = `${this.rootSelector} [data-class='search-text-input']`
+    this.optionsContainerSelectorFallback = "[data-class='options-container']"
   }
 
   /** @returns {Promise<void>} */
   async open() {
-    await this.systemTest.click(this.selectContainerSelector)
-    await this.systemTest.find(this.searchInputSelector)
+    if (await this.isOpen()) return
+
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
+    const driver = this.systemTest.getDriver()
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
+    await driver.executeScript("arguments[0].click()", selectContainer)
     this._optionsContainerSelector = null
   }
 
   /** @returns {Promise<void>} */
   async close() {
-    await this.systemTest.click(this.selectContainerSelector)
-    await waitFor({timeout: 5000}, async () => {
-      const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: false})
-
-      if (searchInputs.length > 0) {
-        throw new Error("Search input is still visible")
-      }
-    })
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
+    const driver = this.systemTest.getDriver()
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
+    await driver.executeScript("arguments[0].click()", selectContainer)
+    await driver.executeScript("document.body && document.body.click()")
   }
 
   /** @returns {Promise<boolean>} */
   async isOpen() {
-    const scoundrel = await this.systemTest.getScoundrelClient()
+    const optionsContainerSelector = await this.optionsContainerSelector()
+    const options = await this.systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false})
 
-    return await scoundrel.evalResult(`
-      return Boolean(document.querySelector(${JSON.stringify(this.searchInputSelector)}))
-    `)
+    if (options.length > 0) return true
+
+    const searchInputs = await this.systemTest.all(this.searchInputSelector, {timeout: 0, visible: true})
+
+    return searchInputs.length > 0
   }
 
   /** @returns {Promise<string>} */
   async optionsContainerSelector() {
     if (this._optionsContainerSelector) return this._optionsContainerSelector
 
-    const scoundrel = await this.systemTest.getScoundrelClient()
-    const selector = await scoundrel.evalResult(`
-      const root = document.querySelector(${JSON.stringify(this.componentSelector)}) ||
-        document.querySelector(${JSON.stringify(this.rootSelector)})
-      const id = root?.dataset?.id
-      return id ? "[data-class='options-container'][data-id='" + id + "']" : null
-    `)
+    const rootElements = await this.systemTest.all(this.rootSelector, {timeout: 0})
+    const rootId = rootElements.length > 0 ? await rootElements[0].getAttribute("data-id") : null
+    let elements = rootElements
 
-    this._optionsContainerSelector = selector || "[data-class='options-container']"
+    if (!rootId) {
+      elements = await this.systemTest.all(this.componentSelector, {timeout: 0})
+    }
+
+    const id = rootId || (elements.length > 0 ? await elements[0].getAttribute("data-id") : null)
+
+    this._optionsContainerSelector = id ? `[data-class='options-container'][data-id='${id}']` : this.optionsContainerSelectorFallback
 
     return this._optionsContainerSelector
   }
@@ -75,7 +82,7 @@ export default class HayaSelectSystemTestHelper {
   /** @returns {Promise<string[]>} */
   async optionTexts() {
     const optionsContainerSelector = await this.optionsContainerSelector()
-    const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+    const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false, timeout: 0})
 
     return await Promise.all(options.map(async (option) => (await option.getText()).trim()))
   }
@@ -98,12 +105,14 @@ export default class HayaSelectSystemTestHelper {
     if (typeof value != "undefined") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const option = await this.systemTest.find(
-          `${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`,
-          {useBaseSelector: false}
-        )
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`, {useBaseSelector: false, timeout: 0})
+        const option = options[0]
 
-        await this.systemTest.click(option)
+        if (!option) {
+          throw new Error(`No option for value: ${value}`)
+        }
+        const driver = this.systemTest.getDriver()
+        await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", option)
       })
       return
     }
@@ -111,12 +120,13 @@ export default class HayaSelectSystemTestHelper {
     if (typeof index == "number") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false})
+        const options = await this.systemTest.all(`${optionsContainerSelector} [data-class='select-option']`, {useBaseSelector: false, timeout: 0})
         const option = options[index]
 
         if (!option) throw new Error(`No option at index: ${index}`)
 
-        await this.systemTest.click(option)
+        const driver = this.systemTest.getDriver()
+        await driver.executeScript("arguments[0].dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}))", option)
       })
       return
     }

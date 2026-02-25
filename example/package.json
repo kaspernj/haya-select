@@ -9,7 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@kaspernj/api-maker": "*",
+    "@kaspernj/api-maker": "1.0.2100",
     "@expo/metro-runtime": "~4.0.1",
     "classnames": "^2.3.1",
     "conjointment": "^0.1.9",
@@ -26,7 +26,8 @@
     "react-native-render-html": "^6.3.4",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
-    "set-state-compare": "^1.0.64"
+    "set-state-compare": "^1.0.72",
+    "ya-use-event-listener": "^0.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

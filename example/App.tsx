@@ -2,7 +2,7 @@ import Text from "@kaspernj/api-maker/build/utils/text"
 import {PortalHost,PortalProvider} from "conjointment"
 import {useEvent} from "expo"
 import OutsideEyeProvider from "outside-eye/build/provider.js"
-import React,{useEffect} from "react"
+import React, {useEffect, useState} from "react"
 import {Button,Platform,SafeAreaView,ScrollView,View} from "react-native"
 import SystemTestBrowserHelper from "system-testing/build/system-test-browser-helper.js"
 
@@ -26,6 +26,7 @@ export default function App() {
     ...option,
     right: <Text>Right {option.text}</Text>
   }))
+  const controlledValues = ["one", "two"]
   const paginationPageSize = 5
   const paginationTotalCount = 24
   const placementStyleCallback = {
@@ -47,6 +48,12 @@ export default function App() {
       }
     }
   }
+  const [actionTypeValue, setActionTypeValue] = useState<string | null>(null)
+  const actionTypeOptions = [
+    {value: "email", text: "Email"},
+    {value: "points", text: "Points"},
+    {value: "sms", text: "SMS"}
+  ]
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -77,6 +84,11 @@ export default function App() {
       page,
       pageSize: paginationPageSize
     }
+  }
+  const controlledOptions = async ({values}: {values?: Array<string>}) => {
+    if (Array.isArray(values)) return {options: []}
+
+    return {options: selectOptions}
   }
 
   return (
@@ -145,6 +157,31 @@ export default function App() {
                     multiple
                     options={selectOptions}
                     placeholder="Pick multiple"
+                  />
+                </View>
+              </Group>
+              <Group name="Close On Change Select">
+                <View testID="hayaSelectCloseOnChangeRoot">
+                  <HayaSelect
+                    onChangeValue={(value) => setActionTypeValue(value)}
+                    options={actionTypeOptions}
+                    placeholder="Pick action"
+                  />
+                  {actionTypeValue === "points" &&
+                    <Text testID="hayaSelectCloseOnChangeDetails">
+                      Points selected
+                    </Text>
+                  }
+                </View>
+              </Group>
+              <Group name="Controlled Values Select">
+                <View testID="hayaSelectControlledValuesRoot">
+                  <HayaSelect
+                    multiple
+                    name="controlled_values"
+                    options={controlledOptions}
+                    placeholder="Pick controlled"
+                    values={controlledValues}
                   />
                 </View>
               </Group>
