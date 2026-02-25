@@ -1,9 +1,28 @@
 import configuration from "../src/config/configuration.node.js";
 import TestFilesFinder from "velocious/build/src/testing/test-files-finder.js";
 import TestRunner from "velocious/build/src/testing/test-runner.js";
+import {spawnSync} from "child_process";
 
 const INCLUDE_TAG_FLAGS = new Set(["--tag", "--include-tag", "-t"]);
 const EXCLUDE_TAG_FLAGS = new Set(["--exclude-tag", "--skip-tag", "-x"]);
+
+/** @returns {Promise<void>} */
+const ensureDistForSystemTests = async () => {
+  if (process.env.SYSTEM_TEST_HOST !== "dist") return
+  if (process.env.SKIP_TEST_DIST_BUILD === "true") return
+
+  console.log("SYSTEM_TEST_HOST=dist detected, building example dist before tests")
+
+  const buildResult = spawnSync(
+    "npm",
+    ["run", "build:example:dist"],
+    {encoding: "utf8", shell: true, stdio: "inherit"}
+  )
+
+  if (buildResult.status !== 0) {
+    throw new Error(`Failed to build dist before system tests (exit status: ${buildResult.status})`)
+  }
+}
 
 const splitTags = (value) => {
   if (!value) return [];
@@ -85,6 +104,8 @@ const parseTagFilters = (processArgs) => {
 
 const main = async () => {
   const processArgs = process.argv.slice(2);
+
+  await ensureDistForSystemTests()
 
   configuration.setEnvironment("test");
   configuration.setCurrent();

@@ -12,6 +12,61 @@ export const systemTestArgs = {
   httpHost: systemTestHttpHost
 }
 
+let runQueue = Promise.resolve()
+
+/** @param {unknown} error */
+const dismissToListenerMissingError = (error) => error instanceof Error && error.message.includes("No listener registered for command event: dismissTo")
+
+/** @returns {Promise<void>} */
+const sleep = async () => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, 200)
+  })
+}
+
+/**
+ * @param {import("system-testing/build/system-test.js").default} systemTest
+ * @returns {Promise<void>}
+ */
+const initializeSystemTestRun = async (systemTest) => {
+  const rootPath = systemTest.getRootPath()
+
+  await systemTest.driverVisit(rootPath)
+  await systemTest.waitForClientWebSocket()
+  await systemTest.findByTestID("blankText", {useBaseSelector: false})
+}
+
+/**
+ * Runs system test callbacks sequentially to avoid overlapping WebSocket commands.
+ * @param {(systemTest: import("system-testing/build/system-test.js").default) => Promise<void>} callback
+ * @returns {Promise<void>}
+ */
+export const runSystemTest = async (callback) => {
+  const run = async () => {
+    const systemTest = SystemTest.current(systemTestArgs)
+
+    for (let attemptNumber = 1; attemptNumber <= 3; attemptNumber++) {
+      try {
+        await initializeSystemTestRun(systemTest)
+        await callback(systemTest)
+        return
+      } catch (error) {
+        if (!dismissToListenerMissingError(error) || attemptNumber === 3) {
+          await systemTest.takeScreenshot()
+          throw error
+        }
+
+        await sleep()
+      }
+    }
+  }
+  const queuedRun = runQueue.then(run, run)
+
+  runQueue = queuedRun.catch(() => {})
+
+  await queuedRun
+}
+
 export const setupSystemTestLifecycle = () => {
   let didStartSystemTest = false
 

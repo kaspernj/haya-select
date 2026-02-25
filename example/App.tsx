@@ -10,6 +10,7 @@ import HayaSelectModule,{HayaSelectView} from "./haya-select-module"
 // The example app needs the select component for system testing.
 // @ts-expect-error - the component is authored in JS.
 import HayaSelect from "../src/select/index.jsx"
+import HayaSelectConfiguration from "../src/config.js"
 
 export default function App() {
   const onChangePayload = useEvent(HayaSelectModule, "onChange")
@@ -56,6 +57,14 @@ export default function App() {
   ]
 
   useEffect(() => {
+    HayaSelectConfiguration.current().setUseTranslate(() => ({
+      t: (msgID, options = {}) => {
+        if (typeof options.defaultValue == "string") return options.defaultValue
+
+        return msgID
+      }
+    }))
+
     if (Platform.OS !== "web" || typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search)

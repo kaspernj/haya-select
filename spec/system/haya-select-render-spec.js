@@ -1,8 +1,7 @@
 import "velocious/build/src/testing/test.js"
 import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
-import SystemTest from "system-testing/build/system-test.js"
-import {setupSystemTestLifecycle, systemTestArgs} from "./system-test-lifecycle.js"
+import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
 import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
 
@@ -11,7 +10,7 @@ setupSystemTestLifecycle()
 describe("HayaSelect", () => {
   it("renders in the example app", async () => {
     await timeout({errorMessage: "render test timed out: renders in the example app", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
       })
     })
@@ -19,7 +18,7 @@ describe("HayaSelect", () => {
 
   it("renders optionContent callbacks", async () => {
     await timeout({errorMessage: "render test timed out: renders optionContent callbacks", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionContentRoot"})
 
         await systemTest.findByTestID("hayaSelectOptionContentRoot", {timeout: 5000})
@@ -40,7 +39,7 @@ describe("HayaSelect", () => {
 
   it("renders right option content", async () => {
     await timeout({errorMessage: "render test timed out: renders right option content", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRightOptionRoot"})
 
         await systemTest.findByTestID("hayaSelectRightOptionRoot", {timeout: 5000})
@@ -61,7 +60,7 @@ describe("HayaSelect", () => {
 
   it("closes options after change-triggered re-render", async () => {
     await timeout({errorMessage: "render test timed out: closes options after change-triggered re-render", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectCloseOnChangeRoot"})
 
         await systemTest.findByTestID("hayaSelectCloseOnChangeRoot", {timeout: 5000})
@@ -80,7 +79,7 @@ describe("HayaSelect", () => {
   })
 
   it("renders hidden input for controlled values without current options", async () => {
-    await SystemTest.run(systemTestArgs, async (systemTest) => {
+    await runSystemTest(async (systemTest) => {
       await systemTest.findByTestID("hayaSelectControlledValuesRoot", {timeout: 5000})
 
       await waitFor({timeout: 5000}, async () => {
@@ -104,7 +103,7 @@ describe("HayaSelect", () => {
 
   it("filters options when searching", async () => {
     await timeout({errorMessage: "render test timed out: filters options when searching", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
 
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
@@ -128,7 +127,7 @@ describe("HayaSelect", () => {
 
   it("highlights selected options in multiple select", async () => {
     await timeout({errorMessage: "render test timed out: highlights selected options in multiple select", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
 
         await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
@@ -183,7 +182,7 @@ describe("HayaSelect", () => {
 
   it("clears selected options after deselecting all values", async () => {
     await timeout({errorMessage: "render test timed out: clears selected options after deselecting all values", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const root = await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
         const rootId = await root.getAttribute("data-id")
         const componentElement = rootId
@@ -306,7 +305,7 @@ describe("HayaSelect", () => {
 
   it("keeps rounded corners after opening and closing", async () => {
     await timeout({errorMessage: "render test timed out: keeps rounded corners after opening and closing", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const root = await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
         const rootId = await root.getAttribute("data-id")
         const componentElement = rootId
@@ -388,7 +387,7 @@ describe("HayaSelect", () => {
 
   it("supports options container style callbacks with placement context", async () => {
     await timeout({timeout: 90000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const belowHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPlacementBelowRoot"})
         const aboveHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPlacementAboveRoot"})
         const scoundrel = await systemTest.getScoundrelClient()
@@ -433,6 +432,12 @@ describe("HayaSelect", () => {
 
           if (placementState.optionsPlacement !== "above") {
             throw new Error(`${placementState.optionsPlacement} wasn't expected be above`)
+          }
+
+          if (placementState.topLeft === "0px" || placementState.topRight === "0px") {
+            throw new Error(
+              `Expected non-zero top radii for above placement, got left=${placementState.topLeft} right=${placementState.topRight}`
+            )
           }
         })
         const abovePlacementAndRadii = await getPlacementAndRadii(aboveHelper)
