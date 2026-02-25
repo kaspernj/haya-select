@@ -1348,7 +1348,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={this.cache("optionsContainerDataSet", {class: "options-container", id, role: "dialog"}, [id])}
+        dataSet={this.cache(
+          "optionsContainerDataSet",
+          {class: "options-container", id, role: "dialog", optionsVisibility: optionsVisibility || "hidden"},
+          [id, optionsVisibility]
+        )}
         onLayout={this.tt.onOptionsContainerLayout}
         ref={this.tt.optionsContainerRef}
         style={style}
