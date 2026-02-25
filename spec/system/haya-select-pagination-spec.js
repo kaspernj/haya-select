@@ -1,7 +1,6 @@
 import "velocious/build/src/testing/test.js"
 import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
-import SystemTest from "system-testing/build/system-test.js"
 import {
   clickPaginationSelector,
   closePaginatedSelect,
@@ -10,7 +9,7 @@ import {
   setPaginationInputValue,
   waitForPaginationLabel
 } from "./pagination-system-test-helpers.js"
-import {setupSystemTestLifecycle, systemTestArgs} from "./system-test-lifecycle.js"
+import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
 import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
 
@@ -19,7 +18,7 @@ setupSystemTestLifecycle()
 describe("HayaSelect pagination", () => {
   afterEach(async () => {
     await timeout({errorMessage: "afterEach: timed out closing paginated select", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         await closePaginatedSelect(systemTest)
       })
     })
@@ -27,7 +26,7 @@ describe("HayaSelect pagination", () => {
 
   it("changes page when clicking a page number", async () => {
     await timeout({errorMessage: "pagination test timed out: changes page when clicking a page number", timeout: 60000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
@@ -50,7 +49,7 @@ describe("HayaSelect pagination", () => {
 
   it("accepts manual page entry from the pagination label", async () => {
     await timeout({errorMessage: "pagination test timed out: accepts manual page entry from the pagination label", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
@@ -72,7 +71,7 @@ describe("HayaSelect pagination", () => {
 
   it("supports next and previous pagination buttons", async () => {
     await timeout({errorMessage: "pagination test timed out: supports next and previous pagination buttons", timeout: 30000}, async () => {
-      await SystemTest.run(systemTestArgs, async (systemTest) => {
+      await runSystemTest(async (systemTest) => {
         const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
 
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})

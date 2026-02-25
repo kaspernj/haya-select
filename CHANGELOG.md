@@ -44,3 +44,7 @@
 - Deselect multi-select options after highlight spec to avoid leaking state across system tests.
 - Pass `optionsPlacement` and `opened` to style callbacks for placement-aware select styling.
 - Add system coverage for placement-aware options container corner radii via style callbacks.
+- Configure Dependabot to monitor npm updates in the `example` app directory.
+- Build `example/dist` automatically when running system tests with `SYSTEM_TEST_HOST=dist`.
+- Serialize shared SystemTest usage in system specs to avoid overlapping WebSocket command races.
+- Stabilize placement callback system assertions by waiting for both placement state and updated corner radii.
