@@ -1,4 +1,5 @@
 import timeout from "awaitery/build/timeout.js"
+import wait from "awaitery/build/wait.js"
 import SystemTest from "system-testing/build/system-test.js"
 
 SystemTest.rootPath = "/?systemTest=true"
@@ -16,13 +17,6 @@ let runQueue = Promise.resolve()
 
 /** @param {unknown} error */
 const dismissToListenerMissingError = (error) => error instanceof Error && error.message.includes("No listener registered for command event: dismissTo")
-
-/** @returns {Promise<void>} */
-const sleep = async () => {
-  await new Promise((resolve) => {
-    setTimeout(resolve, 200)
-  })
-}
 
 /**
  * @param {import("system-testing/build/system-test.js").default} systemTest
@@ -56,7 +50,7 @@ export const runSystemTest = async (callback) => {
           throw error
         }
 
-        await sleep()
+        await wait(200)
       }
     }
   }
