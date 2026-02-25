@@ -5,7 +5,14 @@ updates:
   schedule:
     interval: weekly
     time: "01:00"
-    timezone: Europe/Copenhagen
+    timezone: Europe/Berlin
+  open-pull-requests-limit: 99
+- package-ecosystem: npm
+  directory: "/example"
+  schedule:
+    interval: weekly
+    time: "01:00"
+    timezone: Europe/Berlin
   open-pull-requests-limit: 99
 - package-ecosystem: npm
   directory: "/example"
