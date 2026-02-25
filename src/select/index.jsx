@@ -1474,7 +1474,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   stylingFor(stylingName, style = {}, caches = []) {
     let customStyling = dig(this, "props", "styles", stylingName)
 
-    if (typeof customStyling == "function") customStyling = customStyling({state: this.state, style})
+    if (typeof customStyling == "function") {
+      customStyling = customStyling({
+        opened: this.s.opened,
+        optionsPlacement: this.s.optionsPlacement,
+        state: this.state,
+        style
+      })
+    }
 
     if (customStyling) {
       return Object.assign(style, customStyling)

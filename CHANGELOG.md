@@ -42,3 +42,5 @@
 - Guard current option value lookup when controlled values are null/undefined to avoid option rendering crashes.
 - Stabilize system test option selection by resetting cached option selectors on open and waiting for options.
 - Deselect multi-select options after highlight spec to avoid leaking state across system tests.
+- Pass `optionsPlacement` and `opened` to style callbacks for placement-aware select styling.
+- Add system coverage for placement-aware options container corner radii via style callbacks.

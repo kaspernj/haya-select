@@ -386,4 +386,65 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("supports options container style callbacks with placement context", async () => {
+    await timeout({timeout: 90000}, async () => {
+      await SystemTest.run(systemTestArgs, async (systemTest) => {
+        const belowHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPlacementBelowRoot"})
+        const aboveHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPlacementAboveRoot"})
+        const scoundrel = await systemTest.getScoundrelClient()
+        const getPlacementAndRadii = async (helper) => {
+          const optionsContainerSelector = await helper.optionsContainerSelector()
+
+          return await scoundrel.evalResult(`
+            const optionsContainer = document.querySelector(${JSON.stringify(optionsContainerSelector)})
+            if (!optionsContainer) {
+              throw new Error("Expected options container to exist for selector: " + ${JSON.stringify(optionsContainerSelector)})
+            }
+
+            const style = window.getComputedStyle(optionsContainer)
+            const root = document.querySelector(${JSON.stringify(helper.rootSelector)} + " [data-component='haya-select']")
+            const optionsPlacement = root ? root.getAttribute("data-options-placement") : null
+
+            return {
+              bottomLeft: style.borderBottomLeftRadius,
+              bottomRight: style.borderBottomRightRadius,
+              optionsPlacement,
+              topLeft: style.borderTopLeftRadius,
+              topRight: style.borderTopRightRadius
+            }
+          `)
+        }
+
+        await systemTest.findByTestID("hayaSelectPlacementBelowRoot", {timeout: 60000})
+        await belowHelper.open()
+        const belowPlacementAndRadii = await getPlacementAndRadii(belowHelper)
+
+        expect(belowPlacementAndRadii.optionsPlacement).toBe("below")
+        expect(belowPlacementAndRadii.topLeft).toBe("0px")
+        expect(belowPlacementAndRadii.topRight).toBe("0px")
+        expect(belowPlacementAndRadii.bottomLeft).not.toBe("0px")
+        expect(belowPlacementAndRadii.bottomRight).not.toBe("0px")
+        await belowHelper.close()
+
+        await systemTest.getDriver().manage().window().setRect({height: 320, width: 1280})
+        await aboveHelper.open()
+        await waitFor({timeout: 5000}, async () => {
+          const placementState = await getPlacementAndRadii(aboveHelper)
+
+          if (placementState.optionsPlacement !== "above") {
+            throw new Error(`${placementState.optionsPlacement} wasn't expected be above`)
+          }
+        })
+        const abovePlacementAndRadii = await getPlacementAndRadii(aboveHelper)
+
+        expect(abovePlacementAndRadii.optionsPlacement).toBe("above")
+        expect(abovePlacementAndRadii.topLeft).not.toBe("0px")
+        expect(abovePlacementAndRadii.topRight).not.toBe("0px")
+        expect(abovePlacementAndRadii.bottomLeft).toBe("0px")
+        expect(abovePlacementAndRadii.bottomRight).toBe("0px")
+        await aboveHelper.close()
+      })
+    })
+  })
+
 })
