@@ -15,7 +15,7 @@
     "test": "node scripts/velocious-test.js",
     "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
     "prepare": "expo-module prepare && npm run build",
-    "release:patch": "npm version patch -m \"Bump version to %s\" && git push --follow-tags && npm whoami || npm login && npm publish",
+    "release:patch": "git fetch origin && git checkout master && git merge --ff-only origin/master && npm version patch -m \"Bump version to %s\" && git push --follow-tags && (npm whoami || npm login) && npm publish",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
     "open:android": "open -a \"Android Studio\" example/android",
