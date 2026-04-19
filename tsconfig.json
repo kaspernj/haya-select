@@ -5,7 +5,8 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "jsx": "react",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "outDir": "./build",
     "rootDir": "./src",
     "sourceMap": false
