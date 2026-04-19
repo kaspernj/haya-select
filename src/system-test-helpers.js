@@ -23,6 +23,7 @@ export default class HayaSelectSystemTestHelper {
     this.testId = testId
     this.rootSelector = `[data-testid='${testId}']`
     this.componentSelector = `${this.rootSelector} [data-component='haya-select']`
+    this.chevronContainerSelector = `${this.rootSelector} [data-class='chevron-container']`
     this.selectContainerSelector = `${this.rootSelector} [data-class='select-container']`
     this.searchInputSelector = `${this.rootSelector} [data-class='search-text-input']`
     this.optionsContainerSelectorFallback = "[data-class='options-container']"
@@ -32,20 +33,31 @@ export default class HayaSelectSystemTestHelper {
   async open() {
     if (await this.isOpen()) return
 
-    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
-    const driver = this.systemTest.getDriver()
-    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
-    await driver.executeScript("arguments[0].click()", selectContainer)
-    this._optionsContainerSelector = null
+    await waitFor({timeout: 5000}, async () => {
+      await this.systemTest.click(this.chevronContainerSelector)
+      this._optionsContainerSelector = null
+
+      const openedElements = await this.systemTest.all(`${this.componentSelector}[data-opened='true']`, {timeout: 0})
+
+      if (openedElements.length === 0) {
+        throw new Error(`Expected HayaSelect to open: ${this.testId}`)
+      }
+    })
   }
 
   /** @returns {Promise<void>} */
   async close() {
-    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
-    const driver = this.systemTest.getDriver()
-    await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'})", selectContainer)
-    await driver.executeScript("arguments[0].click()", selectContainer)
-    await driver.executeScript("document.body && document.body.click()")
+    await waitFor({timeout: 5000}, async () => {
+      const openedElements = await this.systemTest.all(`${this.componentSelector}[data-opened='true']`, {timeout: 0})
+
+      if (openedElements.length > 0) {
+        await this.systemTest.click(this.chevronContainerSelector)
+      }
+
+      if ((await this.isOpen()) || openedElements.length > 0) {
+        throw new Error(`Expected HayaSelect to close: ${this.testId}`)
+      }
+    })
   }
 
   /** @returns {Promise<boolean>} */

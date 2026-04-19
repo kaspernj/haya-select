@@ -2,7 +2,7 @@ import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
 import {dig,digg} from "diggerize"
 import {Dimensions,Platform,Pressable,TextInput,View} from "react-native"
-import React,{memo,useEffect,useRef} from "react"
+import React,{createRef,memo,useEffect} from "react"
 import {shapeComponent,ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"
@@ -86,6 +86,31 @@ const dataSets = {}
  * @property {Array<string|number>} [values]
  */
 
+/**
+ * @typedef {object} HayaSelectState
+ * @property {Array<HayaSelectOption>} currentOptions
+ * @property {object|null} selectContainerLayout
+ * @property {object|null} endOfSelectLayout
+ * @property {number|null} height
+ * @property {Array<HayaSelectOption>|undefined} loadedOptions
+ * @property {number} loadOptionsAppliedRequestId
+ * @property {number} loadOptionsRequestId
+ * @property {number} page
+ * @property {boolean} pageInputFocused
+ * @property {string} pageInputValue
+ * @property {number|null} pageSize
+ * @property {boolean} opened
+ * @property {object|null} optionsContainerLayout
+ * @property {"above"|"below"|undefined} optionsPlacement
+ * @property {number|undefined} optionsTop
+ * @property {"hidden"|"visible"|undefined} optionsVisibility
+ * @property {number|undefined|null} optionsWidth
+ * @property {number|null} scrollLeft
+ * @property {number|null} scrollTop
+ * @property {number|null} totalCount
+ * @property {Record<string|number, string>} toggled
+ */
+
 /** @returns {string} */
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
@@ -102,8 +127,8 @@ const nameForComponentWithMultiple = (component) => {
   return name
 }
 
-/** @extends {ShapeComponent<HayaSelectProps>} */
-export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
+/** @augments {ShapeComponent<HayaSelectProps, HayaSelectState>} */
+class HayaSelect extends ShapeComponent {
   static defaultProps = {
     debug: false,
     multiple: false,
@@ -168,11 +193,40 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   })
 
   callOptionsPositionAboveIfOutsideScreen = false
+  endOfSelectRef = createRef()
   latestLoadOptionsRequestId = 0
+  optionsContainerRef = createRef()
+  pageInputRef = createRef()
   searchTextValue = ""
+  searchTextInputRef = createRef()
+  selectContainerRef = createRef()
   t = Config.current().getUseTranslate()().t
   windowWidth = Dimensions.get("window").width
   windowHeight = Dimensions.get("window").height
+  /** @type {HayaSelectState} */
+  state = {
+    currentOptions: this.defaultCurrentOptions(),
+    selectContainerLayout: null,
+    endOfSelectLayout: null,
+    height: null,
+    loadedOptions: this.defaultLoadedOptions(),
+    loadOptionsAppliedRequestId: 0,
+    loadOptionsRequestId: 0,
+    page: 1,
+    pageInputFocused: false,
+    pageInputValue: "1",
+    pageSize: null,
+    opened: false,
+    optionsContainerLayout: null,
+    optionsPlacement: undefined,
+    optionsTop: undefined,
+    optionsVisibility: undefined,
+    optionsWidth: undefined,
+    scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
+    scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
+    totalCount: null,
+    toggled: this.defaultToggled()
+  }
 
   isDebugEnabled = () => Boolean(this.p.debug)
 
@@ -205,37 +259,6 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
         }
       }
     }
-
-    this.setInstance({
-      endOfSelectRef: useRef(),
-      optionsContainerRef: useRef(),
-      pageInputRef: useRef(),
-      searchTextInputRef: useRef(),
-      selectContainerRef: useRef()
-    })
-    this.useStates({
-      currentOptions: () => this.defaultCurrentOptions(),
-      selectContainerLayout: null,
-      endOfSelectLayout: null,
-      height: null,
-      loadedOptions: () => this.defaultLoadedOptions(),
-      loadOptionsAppliedRequestId: 0,
-      loadOptionsRequestId: 0,
-      page: 1,
-      pageInputFocused: false,
-      pageInputValue: "1",
-      pageSize: null,
-      opened: false,
-      optionsContainerLayout: null,
-      optionsPlacement: undefined,
-      optionsTop: undefined,
-      optionsVisibility: undefined,
-      optionsWidth: undefined,
-      scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
-      scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
-      totalCount: null,
-      toggled: () => this.defaultToggled()
-    })
 
     const windowTarget = Platform.OS == "web" && typeof window != "undefined" ? window : null
 
@@ -345,7 +368,10 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     return Number.isFinite(this.s.pageSize) && this.s.pageSize > 0 ? this.s.pageSize : null
   }
 
-  defaultToggled = () => ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
+  defaultToggled() {
+    return ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
+  }
+
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
   getValues = () => ("values" in this.props)
     ? (Array.isArray(this.p.values) ? this.p.values : [])
@@ -424,7 +450,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     if (Object.keys(newState).length > 0) {
       if (this.isDebugEnabled()) this.debugLog("componentDidUpdate", {syncingKeys: Object.keys(newState)})
-      this.setState(newState)
+      this.s.toggled = newState.toggled
     }
   }
 
@@ -644,14 +670,14 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {options} = this.parseOptionsResult(result)
     if (this.isDebugEnabled()) this.debugLog("loadDefaultValuesFromOptionsCallback.result", {loadedOptionsCount: options?.length || 0})
 
-    this.setState({currentOptions: this.state.currentOptions.concat(options)})
+    this.s.currentOptions = this.state.currentOptions.concat(options)
   }
 
   loadOptions = async ({page} = {}) => {
     const {options} = this.p
     const searchValue = this.getSearchText()
     const requestId = ++this.latestLoadOptionsRequestId
-    this.setState({loadOptionsRequestId: requestId})
+    this.s.loadOptionsRequestId = requestId
     if (this.isDebugEnabled()) this.debugLog("loadOptions", {
       page,
       requestId,
@@ -730,14 +756,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       loadedOptionsCount: loadedOptions.length
     })
 
-    this.setState({
-      loadedOptions,
-      loadOptionsAppliedRequestId: requestId,
-      page: 1,
-      pageInputValue: "1",
-      pageSize: null,
-      totalCount: null
-    })
+    this.s.loadedOptions = loadedOptions
+    this.s.loadOptionsAppliedRequestId = requestId
+    this.s.page = 1
+    this.s.pageInputValue = "1"
+    this.s.pageSize = null
+    this.s.totalCount = null
   }
 
   onDimensionsChange = ({window}) => {
@@ -745,7 +769,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     this.windowHeight = window.height
   }
 
-  onSelectContainerLayout = (e) => this.setState({selectContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onSelectContainerLayout = (e) => {
+    this.s.selectContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+  }
   onEndOfSelectLayout = (e) => {
     const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
     const newState = {endOfSelectLayout}
@@ -760,7 +786,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       }
     })
   }
-  onOptionsContainerLayout = (e) => this.setState({optionsContainerLayout: Object.assign({}, digg(e, "nativeEvent", "layout"))})
+  onOptionsContainerLayout = (e) => {
+    this.s.optionsContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+  }
 
   onSelectClicked = (e) => {
     e.preventDefault()
@@ -781,6 +809,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   closeOptions({options} = {}) {
     const closedOptions = options || this.getCurrentOptions()
     if (this.isDebugEnabled()) this.debugLog("closeOptions", {closedOptionsCount: closedOptions?.length || 0})
+    this.callOptionsPositionAboveIfOutsideScreen = false
 
     this.setState(
       {
@@ -880,13 +909,15 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionAboveIfOutsideScreen() {
+    if (!this.s.opened) return
+
     const {windowHeight} = this.tt
     const {optionsContainerLayout} = this.s
     const endOfSelectLayout = this.s.endOfSelectLayout
 
     if (!endOfSelectLayout) {
       if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "below", reason: "missing-end-of-select-layout"})
-      this.setState({optionsVisibility: "visible"})
+      this.s.optionsVisibility = "visible"
       return
     }
 
@@ -899,11 +930,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       this.setOptionsPositionAbove()
     } else {
       if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "below"})
-      this.setState({optionsVisibility: "visible"})
+      this.s.optionsVisibility = "visible"
     }
   }
 
   setOptionsPositionAbove() {
+    if (!this.s.opened) return
+
     const {endOfSelectLayout} = this.s
     if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAbove")
 
@@ -919,6 +952,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   setOptionsPositionBelow() {
+    if (!this.s.opened) return
+
     if (this.isDebugEnabled()) this.debugLog("setOptionsPositionBelow")
     this.setState(
       {
@@ -943,10 +978,8 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   onAnythingScrolled = () => {
     if (this.isDebugEnabled()) this.debugLog("onAnythingScrolled", {opened: this.s.opened})
     if (this.s.opened) {
-      this.setState({
-        scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
-        scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
-      })
+      this.s.scrollLeft = Platform.OS == "web" ? document.documentElement.scrollLeft : null
+      this.s.scrollTop = Platform.OS == "web" ? document.documentElement.scrollTop : null
       this.setOptionsPosition()
     }
   }
@@ -1051,7 +1084,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const nextPage = Math.min(Math.max(Math.floor(page), 1), totalPages)
 
     if (nextPage == this.getActivePage()) {
-      this.setState({pageInputValue: String(this.getActivePage())})
+      this.s.pageInputValue = String(this.getActivePage())
       return
     }
 
@@ -1078,15 +1111,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
   }
 
   onPaginationInputFocus = () => {
-    this.setState({
-      pageInputFocused: true,
-      pageInputValue: String(this.getActivePage())
-    })
+    this.s.pageInputFocused = true
+    this.s.pageInputValue = String(this.getActivePage())
   }
 
   /** @param {string} value */
   onPaginationInputChange = (value) => {
-    this.setState({pageInputValue: value})
+    this.s.pageInputValue = value
   }
 
   /** @param {import("react").SyntheticEvent} event */
@@ -1118,20 +1149,16 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const totalPages = this.paginationTotalPages()
 
     if (!totalPages) {
-      this.setState({
-        pageInputFocused: false,
-        pageInputValue: String(this.getActivePage())
-      })
+      this.s.pageInputFocused = false
+      this.s.pageInputValue = String(this.getActivePage())
       return
     }
 
     const nextPage = Number(this.s.pageInputValue)
 
     if (!Number.isFinite(nextPage)) {
-      this.setState({
-        pageInputFocused: false,
-        pageInputValue: String(this.getActivePage())
-      })
+      this.s.pageInputFocused = false
+      this.s.pageInputValue = String(this.getActivePage())
       return
     }
 
@@ -1475,7 +1502,13 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       this.p.onChangeValue(optionValue)
     }
 
-    this.setState(newState)
+    if ("toggled" in newState) {
+      this.s.toggled = newState.toggled
+    }
+
+    if ("currentOptions" in newState) {
+      this.s.currentOptions = newState.currentOptions
+    }
   }
 
   stylingFor(stylingName, style = {}, caches = []) {
@@ -1598,7 +1631,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
     if (Array.isArray(values) && values.length === 0) {
       if (this.s.currentOptions?.length) {
-        this.setState({currentOptions: []})
+        this.s.currentOptions = []
       }
 
       return
@@ -1610,7 +1643,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const stateValues = this.s.currentOptions?.map((currentOption) => currentOption.value)
 
     if (anythingDifferent(currentValues, stateValues)) {
-      this.setState({currentOptions})
+      this.s.currentOptions = currentOptions
     }
   }
-}))
+}
+
+const HayaSelectShapeComponent = shapeComponent(HayaSelect)
+
+export default memo(HayaSelectShapeComponent)

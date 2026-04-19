@@ -1,9 +1,28 @@
+// @ts-check
+
 import PropTypes from "prop-types"
 import {Pressable} from "react-native"
 import React, {memo, useMemo} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 
-export default memo(shapeComponent(class Option extends ShapeComponent {
+const PressableComponent = /** @type {any} */ (Pressable)
+
+/**
+ * @typedef {object} OptionProps
+ * @property {Array<string|number>} [currentOptionValues]
+ * @property {boolean} disabled
+ * @property {string} [icon]
+ * @property {(event: import("react").SyntheticEvent, option: Record<string, any>) => void} onOptionClicked
+ * @property {Record<string, any>} option
+ * @property {(option: Record<string, any>, mode: string) => import("react").ReactNode} presentOption
+ * @property {string} [selectedBackgroundColor]
+ * @property {string} [selectedHoverBackgroundColor]
+ */
+
+/** @typedef {{hover: boolean}} OptionState */
+
+/** @augments {ShapeComponent<OptionProps, OptionState>} */
+class Option extends ShapeComponent {
   static defaultProps = {
     disabled: false
   }
@@ -19,10 +38,9 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     selectedHoverBackgroundColor: PropTypes.string
   }
 
-  setup() {
-    this.useStates({
-      hover: false
-    })
+  /** @type {OptionState} */
+  state = {
+    hover: false
   }
 
   render() {
@@ -61,7 +79,7 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
     }, [disabled, hover, selected, this.props.selectedBackgroundColor, this.props.selectedHoverBackgroundColor])
 
     return (
-      <Pressable
+      <PressableComponent
         dataSet={this.cache("pressableDataSet", {
           class: "select-option",
           disabled,
@@ -74,11 +92,21 @@ export default memo(shapeComponent(class Option extends ShapeComponent {
         style={style}
       >
         {this.p.presentOption(option, "option")}
-      </Pressable>
+      </PressableComponent>
     )
   }
 
-  onPointerOver = () => this.setState({hover: true})
-  onPointerOut = () => this.setState({hover: false})
+  onPointerOver = () => {
+    this.s.hover = true
+  }
+
+  onPointerOut = () => {
+    this.s.hover = false
+  }
+
   onPress = (e) => this.p.onOptionClicked(e, this.props.option)
-}))
+}
+
+const OptionShapeComponent = shapeComponent(Option)
+
+export default memo(OptionShapeComponent)
