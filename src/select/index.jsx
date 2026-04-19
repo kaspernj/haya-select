@@ -214,11 +214,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       selectContainerRef: useRef()
     })
     this.useStates({
-      currentOptions: () => this.defaultCurrentOptions(),
+      currentOptions: this.defaultCurrentOptions(),
       selectContainerLayout: null,
       endOfSelectLayout: null,
       height: null,
-      loadedOptions: () => this.defaultLoadedOptions(),
+      loadedOptions: this.defaultLoadedOptions(),
       loadOptionsAppliedRequestId: 0,
       loadOptionsRequestId: 0,
       page: 1,
@@ -234,7 +234,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
       scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
       totalCount: null,
-      toggled: () => this.defaultToggled()
+      toggled: this.defaultToggled()
     })
 
     const windowTarget = Platform.OS == "web" && typeof window != "undefined" ? window : null
@@ -280,11 +280,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {options} = this.p
 
     if (!Array.isArray(options)) return []
+    const controlledValues = Array.isArray(values) ? values : []
 
     return options.filter(({value}) =>
       (defaultValue && value == defaultValue) ||
         (defaultValues && defaultValues.includes(value)) ||
-        (values && values.includes(value))
+        controlledValues.includes(value)
     )
   }
 
@@ -346,7 +347,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   defaultToggled = () => ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
-  getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
+  getValues = () => ("values" in this.props)
+    ? (Array.isArray(this.p.values) ? this.p.values : [])
+    : (Array.isArray(this.s.currentOptions) ? this.s.currentOptions : []).map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
