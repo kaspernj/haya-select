@@ -1,6 +1,7 @@
 import "velocious/build/src/testing/test.js"
 import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
+import {Key} from "selenium-webdriver"
 import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
 import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
@@ -109,8 +110,26 @@ describe("HayaSelect", () => {
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
         await helper.open()
 
-        const searchInput = await systemTest.find(helper.searchInputSelector, {timeout: 5000})
-        await systemTest.interact(searchInput, "sendKeys", "tw")
+        await systemTest.find(
+          "[data-testid='hayaSelectRoot'] [data-component='haya-select'][data-applied-request-id='1']",
+          {timeout: 5000}
+        )
+
+        await systemTest.interact(
+          {selector: helper.searchInputSelector},
+          "sendKeys",
+          Key.chord(Key.CONTROL, "a"),
+          Key.BACK_SPACE,
+          "tw"
+        )
+
+        await waitFor({timeout: 5000}, async () => {
+          const value = await systemTest.interact({selector: helper.searchInputSelector}, "getAttribute", "value")
+
+          if (value !== "tw") {
+            throw new Error(`Unexpected search value: ${value}`)
+          }
+        })
 
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -426,6 +445,13 @@ describe("HayaSelect", () => {
         await belowHelper.close()
 
         await systemTest.getDriver().manage().window().setRect({height: 320, width: 1280})
+        await waitFor({timeout: 5000}, async () => {
+          const windowHeight = await systemTest.getDriver().executeScript("return window.innerHeight")
+
+          if (windowHeight > 320) {
+            throw new Error(`Expected resized window height to be at most 320, got: ${windowHeight}`)
+          }
+        })
         await aboveHelper.open()
         await waitFor({timeout: 5000}, async () => {
           const placementState = await getPlacementAndRadii(aboveHelper)

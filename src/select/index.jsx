@@ -280,11 +280,12 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
     const {options} = this.p
 
     if (!Array.isArray(options)) return []
+    const controlledValues = Array.isArray(values) ? values : []
 
     return options.filter(({value}) =>
       (defaultValue && value == defaultValue) ||
         (defaultValues && defaultValues.includes(value)) ||
-        (values && values.includes(value))
+        controlledValues.includes(value)
     )
   }
 
@@ -346,7 +347,9 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
 
   defaultToggled = () => ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
-  getValues = () => ("values" in this.props) ? this.p.values : this.s.currentOptions.map((currentOption) => currentOption.value)
+  getValues = () => ("values" in this.props)
+    ? (Array.isArray(this.p.values) ? this.p.values : [])
+    : (Array.isArray(this.s.currentOptions) ? this.s.currentOptions : []).map((currentOption) => currentOption.value)
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
