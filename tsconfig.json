@@ -5,7 +5,10 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "jsx": "react",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "outDir": "./build",
+    "rootDir": "./src",
     "sourceMap": false
   },
   "include": ["./src"],

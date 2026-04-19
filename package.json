@@ -9,12 +9,12 @@
   "types": "build/index.d.ts",
   "scripts": {
     "build": "expo-module build",
-    "build:example:dist": "EXPO_NONINTERACTIVE=1 cd example && npx expo export --platform web --output-dir ../dist",
+    "build:example:dist": "npm run build && EXPO_NONINTERACTIVE=1 cd example && npx expo export --platform web --output-dir ../dist",
     "clean": "expo-module clean",
     "lint": "expo-module lint",
     "test": "node scripts/velocious-test.js",
     "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
-    "prepare": "expo-module prepare",
+    "prepare": "expo-module prepare && npm run build",
     "release:patch": "npm version patch -m \"Bump version to %s\" && git push --follow-tags && npm whoami || npm login && npm publish",
     "prepublishOnly": "expo-module prepublishOnly",
     "open:ios": "xed example/ios",
@@ -58,13 +58,13 @@
   },
   "peerDependencies": {
     "@kaspernj/api-maker": ">= 1.0.2100",
-    "conjointment": "^0.1.9",
+    "conjointment": "^0.1.11",
     "expo": "*",
     "outside-eye": "*",
     "prop-types": "*",
     "react": "*",
     "react-native": "*",
-    "set-state-compare": ">= 1.0.72"
+    "set-state-compare": ">= 1.0.83"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
