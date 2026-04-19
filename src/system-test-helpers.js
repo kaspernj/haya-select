@@ -33,9 +33,16 @@ export default class HayaSelectSystemTestHelper {
   async open() {
     if (await this.isOpen()) return
 
+    let clickSent = false
+
     await waitFor({timeout: 5000}, async () => {
-      await this.systemTest.click(this.chevronContainerSelector)
-      this._optionsContainerSelector = null
+      if (await this.isOpen()) return
+
+      if (!clickSent) {
+        await this.systemTest.click(this.chevronContainerSelector)
+        this._optionsContainerSelector = null
+        clickSent = true
+      }
 
       const openedElements = await this.systemTest.all(`${this.componentSelector}[data-opened='true']`, {timeout: 0})
 
@@ -48,13 +55,11 @@ export default class HayaSelectSystemTestHelper {
   /** @returns {Promise<void>} */
   async close() {
     await waitFor({timeout: 5000}, async () => {
-      const openedElements = await this.systemTest.all(`${this.componentSelector}[data-opened='true']`, {timeout: 0})
-
-      if (openedElements.length > 0) {
+      if (await this.isOpen()) {
         await this.systemTest.click(this.chevronContainerSelector)
       }
 
-      if ((await this.isOpen()) || openedElements.length > 0) {
+      if (await this.isOpen()) {
         throw new Error(`Expected HayaSelect to close: ${this.testId}`)
       }
     })
