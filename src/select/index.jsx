@@ -111,7 +111,44 @@ const dataSets = {}
  * @property {Record<string|number, string>} toggled
  */
 
-/** @returns {string} */
+/**
+ * @typedef {object} HayaSelectLayout
+ * @property {number} [top]
+ * @property {number} [left]
+ * @property {number} [width]
+ * @property {number} [height]
+ */
+
+/**
+ * @typedef {object} HayaSelectOptionRenderContext
+ * @property {string|undefined} icon
+ * @property {"current"|"option"} mode
+ * @property {HayaSelectOption} option
+ * @property {boolean} selected
+ * @property {HayaSelectToggleOption|undefined} toggleOption
+ * @property {string|undefined} toggleValue
+ * @property {Record<string|number, string>} toggled
+ */
+
+/**
+ * @typedef {object} HayaSelectOnChangePayload
+ * @property {import("react").SyntheticEvent} event
+ * @property {Array<HayaSelectOption>} options
+ * @property {Record<string|number, string>} toggles
+ */
+
+/**
+ * @typedef {object} HayaSelectStylingContext
+ * @property {boolean} opened
+ * @property {"above"|"below"|undefined} optionsPlacement
+ * @property {HayaSelectState} state
+ * @property {Record<string, any>} style
+ */
+
+/**
+ * @param {ShapeComponent<HayaSelectProps, HayaSelectState>} component
+ * @returns {string}
+ */
 const nameForComponentWithMultiple = (component) => {
   let name = nameForComponent(component)
 
@@ -228,8 +265,14 @@ class HayaSelect extends ShapeComponent {
     toggled: this.defaultToggled()
   }
 
+  /** @returns {boolean} */
   isDebugEnabled = () => Boolean(this.p.debug)
 
+  /**
+   * @param {string} functionName
+   * @param {Record<string, any>} [details]
+   * @returns {void}
+   */
   debugLog = (functionName, details = undefined) => {
     if (!this.isDebugEnabled()) return
 
@@ -298,6 +341,7 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /** @returns {Array<HayaSelectOption>} */
   defaultCurrentOptions() {
     const {defaultValue, defaultValues, values} = this.props
     const {options} = this.p
@@ -312,6 +356,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {Array<HayaSelectOption>|undefined} */
   defaultLoadedOptions() {
     const {options} = this.p
 
@@ -368,18 +413,25 @@ class HayaSelect extends ShapeComponent {
     return Number.isFinite(this.s.pageSize) && this.s.pageSize > 0 ? this.s.pageSize : null
   }
 
+  /** @returns {Record<string|number, string>} */
   defaultToggled() {
     return ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
   }
 
+  /** @returns {string} */
   portalName() {
     return nameForComponentWithMultiple(this) || `haya-select-${String(idForComponent(this))}`
   }
 
+  /** @returns {Record<string|number, string>} */
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
+
+  /** @returns {Array<string|number>} */
   getValues = () => ("values" in this.props)
     ? (Array.isArray(this.p.values) ? this.p.values : [])
     : (Array.isArray(this.s.currentOptions) ? this.s.currentOptions : []).map((currentOption) => currentOption.value)
+
+  /** @returns {Array<HayaSelectOption|{value: string|number}|undefined>} */
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
@@ -413,6 +465,7 @@ class HayaSelect extends ShapeComponent {
     return this.s.currentOptions
   }
 
+  /** @returns {Array<string|number>} */
   getCurrentOptionValues() {
     if ("values" in this.props) {
       return Array.isArray(this.p.values) ? this.p.values : []
@@ -458,6 +511,7 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /** @returns {import("react").ReactNode} */
   render() {
     const {endOfSelectRef} = this.tt
     const {transparent} = this.p
@@ -636,6 +690,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {Array<string|number>|string|number|undefined} */
   defaultValues () {
     const {attribute, defaultValue, defaultValues, defaultValuesFromOptions, model} = this.props
 
@@ -650,6 +705,7 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /** @returns {boolean} */
   isActive() {
     if (this.tt.endOfSelectRef.current) {
       return true
@@ -658,6 +714,7 @@ class HayaSelect extends ShapeComponent {
     return false
   }
 
+  /** @returns {Promise<void>} */
   async loadDefaultValuesFromOptionsCallback() {
     const defaultValues = this.defaultValues()
 
@@ -677,6 +734,10 @@ class HayaSelect extends ShapeComponent {
     this.s.currentOptions = this.state.currentOptions.concat(options)
   }
 
+  /**
+   * @param {{page?: number}} [params]
+   * @returns {Promise<void>}
+   */
   loadOptions = async ({page} = {}) => {
     const {options} = this.p
     const searchValue = this.getSearchText()
@@ -731,6 +792,10 @@ class HayaSelect extends ShapeComponent {
     })
   }
 
+  /**
+   * @param {{key: string, loadedOption: HayaSelectOption}}
+   * @returns {import("react").ReactNode}
+   */
   hayaSelectOption({key, loadedOption}) {
     if (loadedOption.type == "group") {
       return <OptionGroup key={key} option={loadedOption} />
@@ -750,6 +815,12 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /**
+   * @param {Array<HayaSelectOption>} options
+   * @param {string} [searchValue]
+   * @param {number} [requestId]
+   * @returns {void}
+   */
   loadOptionsFromArray(options, searchValue, requestId = this.latestLoadOptionsRequestId) {
     const lowerSearchValue = searchValue?.toLowerCase()
     const loadedOptions = options.filter(({text}) => !lowerSearchValue || text?.toLowerCase()?.includes(lowerSearchValue))
@@ -768,14 +839,27 @@ class HayaSelect extends ShapeComponent {
     this.s.totalCount = null
   }
 
+  /**
+   * @param {{window: {width: number, height: number}}} event
+   * @returns {void}
+   */
   onDimensionsChange = ({window}) => {
     this.windowWidth = window.width
     this.windowHeight = window.height
   }
 
+  /**
+   * @param {{nativeEvent?: {layout?: HayaSelectLayout}}} e
+   * @returns {void}
+   */
   onSelectContainerLayout = (e) => {
     this.s.selectContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
   }
+
+  /**
+   * @param {{nativeEvent?: {layout?: HayaSelectLayout}}} e
+   * @returns {void}
+   */
   onEndOfSelectLayout = (e) => {
     const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
     const newState = {endOfSelectLayout}
@@ -790,10 +874,19 @@ class HayaSelect extends ShapeComponent {
       }
     })
   }
+
+  /**
+   * @param {{nativeEvent?: {layout?: HayaSelectLayout}}} e
+   * @returns {void}
+   */
   onOptionsContainerLayout = (e) => {
     this.s.optionsContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
   }
 
+  /**
+   * @param {import("react").SyntheticEvent} e
+   * @returns {void}
+   */
   onSelectClicked = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -810,6 +903,10 @@ class HayaSelect extends ShapeComponent {
 
   onSearchTextInputChangedDebounced = debounce(this.tt.loadOptions, 200)
 
+  /**
+   * @param {{options?: Array<HayaSelectOption>}} [params]
+   * @returns {void}
+   */
   closeOptions({options} = {}) {
     const closedOptions = options || this.getCurrentOptions()
     if (this.isDebugEnabled()) this.debugLog("closeOptions", {closedOptionsCount: closedOptions?.length || 0})
@@ -840,8 +937,10 @@ class HayaSelect extends ShapeComponent {
     if (this.p.onBlur) this.p.onBlur()
   }
 
+  /** @returns {string} */
   getSearchText = () => this.searchTextValue || ""
 
+  /** @returns {void} */
   resetSearchTextInput = () => {
     this.searchTextValue = ""
     const input = this.tt.searchTextInputRef.current
@@ -859,6 +958,10 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /**
+   * @param {string} searchText
+   * @returns {void}
+   */
   onChangeSearchText = (searchText) => {
     if (this.isDebugEnabled()) this.debugLog("onChangeSearchText", {searchText, currentPage: this.s.page})
     this.searchTextValue = searchText
@@ -870,6 +973,7 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /** @returns {void} */
   openOptions() {
     if (this.isDebugEnabled()) this.debugLog("openOptions", {
       currentOptionsCount: this.getCurrentOptions()?.length || 0,
@@ -900,8 +1004,10 @@ class HayaSelect extends ShapeComponent {
     if (this.p.onFocus) this.p.onFocus()
   }
 
+  /** @returns {void} */
   focusTextInput = () => digg(this.tt.searchTextInputRef, "current")?.focus()
 
+  /** @returns {void} */
   setOptionsPosition() {
     if (!this.isActive()) {
       return // Debounce after un-mount handeling.
@@ -912,6 +1018,7 @@ class HayaSelect extends ShapeComponent {
     this.setOptionsPositionBelow()
   }
 
+  /** @returns {void} */
   setOptionsPositionAboveIfOutsideScreen() {
     if (!this.s.opened) return
 
@@ -938,6 +1045,7 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /** @returns {void} */
   setOptionsPositionAbove() {
     if (!this.s.opened) return
 
@@ -955,6 +1063,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {void} */
   setOptionsPositionBelow() {
     if (!this.s.opened) return
 
@@ -970,6 +1079,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {void} */
   onAnythingResized = () => {
     if (this.isDebugEnabled()) this.debugLog("onAnythingResized", {opened: this.s.opened})
     if (this.s.opened) {
@@ -979,6 +1089,7 @@ class HayaSelect extends ShapeComponent {
 
   onAnythingResizedDebounced = debounce(this.tt.onAnythingResized, 25)
 
+  /** @returns {void} */
   onAnythingScrolled = () => {
     if (this.isDebugEnabled()) this.debugLog("onAnythingScrolled", {opened: this.s.opened})
     if (this.s.opened) {
@@ -990,6 +1101,7 @@ class HayaSelect extends ShapeComponent {
 
   onAnythingScrolledDebounced = debounce(this.tt.onAnythingScrolled, 25)
 
+  /** @returns {void} */
   onPressOutsideOptions = () => {
     if (this.isDebugEnabled()) this.debugLog("onPressOutsideOptions", {opened: this.s.opened})
     // If options are open and a click is made outside of the options container
@@ -1061,6 +1173,10 @@ class HayaSelect extends ShapeComponent {
     return items
   }
 
+  /**
+   * @param {number} totalPages
+   * @returns {string}
+   */
   paginationDisplayValue(totalPages) {
     const activePage = this.getActivePage()
     const fallbackText = `Page ${activePage} of ${totalPages}`
@@ -1072,6 +1188,10 @@ class HayaSelect extends ShapeComponent {
     }) || fallbackText
   }
 
+  /**
+   * @param {number} totalPages
+   * @returns {string}
+   */
   paginationInputValue(totalPages) {
     if (this.s.pageInputFocused) return this.s.pageInputValue
 
@@ -1114,6 +1234,7 @@ class HayaSelect extends ShapeComponent {
     this.setPaginationPage(this.getActivePage() + 1)
   }
 
+  /** @returns {void} */
   onPaginationInputFocus = () => {
     this.s.pageInputFocused = true
     this.s.pageInputValue = String(this.getActivePage())
@@ -1322,6 +1443,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {import("react").ReactNode|null} */
   optionsContainer() {
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
     let left, top
@@ -1407,6 +1529,11 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /**
+   * @param {import("react").SyntheticEvent} event
+   * @param {HayaSelectOption} loadedOption
+   * @returns {void}
+   */
   onOptionClicked = (event, loadedOption) => {
     event.preventDefault()
     event.stopPropagation()
@@ -1487,6 +1614,7 @@ class HayaSelect extends ShapeComponent {
     if (!multiple) this.closeOptions({options})
 
     if (onChange) {
+      /** @type {HayaSelectOnChangePayload} */
       onChange({
         event,
         options,
@@ -1515,10 +1643,17 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /**
+   * @param {string} stylingName
+   * @param {Record<string, any>} [style]
+   * @param {Array<any>} [caches]
+   * @returns {Record<string, any>}
+   */
   stylingFor(stylingName, style = {}, caches = []) {
     let customStyling = dig(this, "props", "styles", stylingName)
 
     if (typeof customStyling == "function") {
+      /** @type {HayaSelectStylingContext} */
       customStyling = customStyling({
         opened: this.s.opened,
         optionsPlacement: this.s.optionsPlacement,
@@ -1534,6 +1669,10 @@ class HayaSelect extends ShapeComponent {
     return this.cache(`stylingFor-${stylingName}`, style, caches)
   }
 
+  /**
+   * @param {HayaSelectOption} option
+   * @returns {string|undefined}
+   */
   iconForOption(option) {
     const {toggleOptions} = this.props || {}
     const toggled = this.getToggled()
@@ -1550,6 +1689,11 @@ class HayaSelect extends ShapeComponent {
     }
   }
 
+  /**
+   * @param {HayaSelectOption} option
+   * @param {"current"|"option"} mode
+   * @returns {import("react").ReactNode}
+   */
   presentOption = (option, mode) => {
     const {optionContent, toggleOptions} = this.props || {}
     const toggled = this.getToggled()
@@ -1593,6 +1737,7 @@ class HayaSelect extends ShapeComponent {
         }
         {(() => {
           if (optionContent) {
+            /** @type {HayaSelectOptionRenderContext} */
             contentNode = optionContent({icon, mode, option, selected, toggleOption, toggleValue, toggled})
           } else if (mode == "current" && option.currentContent) {
             contentNode = option.currentContent()
@@ -1630,6 +1775,7 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
+  /** @returns {Promise<void>} */
   async setCurrentFromGivenValues() {
     const {options, values} = this.p
 
