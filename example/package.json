@@ -12,7 +12,7 @@
     "@kaspernj/api-maker": "1.0.2100",
     "@expo/metro-runtime": "~4.0.1",
     "classnames": "^2.3.1",
-    "conjointment": "^0.1.9",
+    "conjointment": "^0.1.11",
     "debounce": "^2.1.0",
     "diggerize": "^1.0.4",
     "expo": "~52.0.49",

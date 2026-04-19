@@ -372,6 +372,10 @@ class HayaSelect extends ShapeComponent {
     return ("toggled" in this.props) ? this.p.toggled : this.props.defaultToggled || {}
   }
 
+  portalName() {
+    return nameForComponentWithMultiple(this) || `haya-select-${String(idForComponent(this))}`
+  }
+
   getToggled = () => ("toggled" in this.props) ? this.p.toggled : this.s.toggled
   getValues = () => ("values" in this.props)
     ? (Array.isArray(this.p.values) ? this.p.values : [])
@@ -619,7 +623,7 @@ class HayaSelect extends ShapeComponent {
           ref={endOfSelectRef}
         />
         {opened && this.p.optionsPortal &&
-          <Portal>
+          <Portal name={this.portalName()}>
             {this.optionsContainer()}
           </Portal>
         }
