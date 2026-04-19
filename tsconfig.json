@@ -5,7 +5,9 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "jsx": "react",
+    "moduleResolution": "node",
     "outDir": "./build",
+    "rootDir": "./src",
     "sourceMap": false
   },
   "include": ["./src"],
