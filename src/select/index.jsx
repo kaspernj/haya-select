@@ -214,11 +214,11 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       selectContainerRef: useRef()
     })
     this.useStates({
-      currentOptions: this.defaultCurrentOptions(),
+      currentOptions: () => this.defaultCurrentOptions(),
       selectContainerLayout: null,
       endOfSelectLayout: null,
       height: null,
-      loadedOptions: this.defaultLoadedOptions(),
+      loadedOptions: () => this.defaultLoadedOptions(),
       loadOptionsAppliedRequestId: 0,
       loadOptionsRequestId: 0,
       page: 1,
@@ -234,7 +234,7 @@ export default memo(shapeComponent(class HayaSelect extends ShapeComponent {
       scrollLeft: Platform.OS == "web" ? document.documentElement.scrollLeft : null,
       scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null,
       totalCount: null,
-      toggled: this.defaultToggled()
+      toggled: () => this.defaultToggled()
     })
 
     const windowTarget = Platform.OS == "web" && typeof window != "undefined" ? window : null
