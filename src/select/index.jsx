@@ -186,10 +186,10 @@ class HayaSelect extends ShapeComponent {
     defaultValue: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     defaultValues: PropTypes.array,
     defaultValuesFromOptions: PropTypes.array,
-    debug: PropTypes.bool,
+    debug: PropTypes.bool.isRequired,
     id: PropTypes.node,
     model: PropTypes.object,
-    multiple: PropTypes.bool,
+    multiple: PropTypes.bool.isRequired,
     name: PropTypes.string,
     noOptionsText: PropTypes.func,
     onBlur: PropTypes.func,
@@ -211,13 +211,13 @@ class HayaSelect extends ShapeComponent {
       })),
       PropTypes.func
     ]).isRequired,
-    optionsAbsolute: PropTypes.bool,
-    optionsPortal: PropTypes.bool,
+    optionsAbsolute: PropTypes.bool.isRequired,
+    optionsPortal: PropTypes.bool.isRequired,
     optionsWidth: PropTypes.number,
     placeholder: PropTypes.node,
     selectedBackgroundColor: PropTypes.string,
     selectedHoverBackgroundColor: PropTypes.string,
-    search: PropTypes.bool,
+    search: PropTypes.bool.isRequired,
     styles: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
@@ -225,7 +225,7 @@ class HayaSelect extends ShapeComponent {
       label: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired
     })),
-    transparent: PropTypes.bool,
+    transparent: PropTypes.bool.isRequired,
     values: PropTypes.array
   })
 
