@@ -61,7 +61,7 @@ const dataSets = {}
  * @property {boolean} [debug]
  * @property {import("react").ReactNode} [id]
  * @property {object} [model]
- * @property {boolean} multiple
+ * @property {boolean} [multiple]
  * @property {string} [name]
  * @property {function(): import("react").ReactNode} [noOptionsText]
  * @property {function(import("react").SyntheticEvent=): void} [onBlur]
@@ -72,17 +72,17 @@ const dataSets = {}
  * @property {function({options: Array}): void} [onOptionsLoaded]
  * @property {function(object): import("react").ReactNode} [optionContent]
  * @property {Array<HayaSelectOption>|function(): (Array<HayaSelectOption>|HayaSelectOptionsResult)} options
- * @property {boolean} optionsAbsolute
- * @property {boolean} optionsPortal
+ * @property {boolean} [optionsAbsolute]
+ * @property {boolean} [optionsPortal]
  * @property {number} [optionsWidth]
  * @property {import("react").ReactNode} [placeholder]
  * @property {string} [selectedBackgroundColor]
  * @property {string} [selectedHoverBackgroundColor]
- * @property {boolean} search
+ * @property {boolean} [search]
  * @property {object} [styles]
  * @property {object} [toggled]
  * @property {Array<HayaSelectToggleOption>} [toggleOptions]
- * @property {boolean} transparent
+ * @property {boolean} [transparent]
  * @property {Array<string|number>} [values]
  */
 
