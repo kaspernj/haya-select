@@ -437,16 +437,29 @@ class HayaSelect extends ShapeComponent {
       if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
 
       if (Array.isArray(this.props.options) && Array.isArray(this.p.values)) {
-        return this.p.values
-          .map((value) => this.p.options.find((option) => option.value == value))
-          .filter((option) => typeof option != "undefined")
+        /** @type {Array<HayaSelectOption>} */
+        const result = []
+
+        for (const value of this.p.values) {
+          const option = this.p.options.find((option) => option.value == value)
+
+          if (option) result.push(option)
+        }
+
+        return result
       } else if (this.s.loadedOptions && Array.isArray(this.p.values)) {
-        return this.p.values
-          .map((value) => (
+        /** @type {Array<HayaSelectOption>} */
+        const result = []
+
+        for (const value of this.p.values) {
+          const option =
             this.s.loadedOptions.find((option) => option.value == value) ||
             this.s.currentOptions.find((option) => option.value == value)
-          ))
-          .filter((option) => typeof option != "undefined")
+
+          if (option) result.push(option)
+        }
+
+        return result
       } else if (typeof this.props.options == "function") {
         // Options haven't been loaded yet.
       } else if (Array.isArray(this.p.values)) {
