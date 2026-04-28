@@ -79,6 +79,29 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("renders without crashing when values include ids missing from options", async () => {
+    await runSystemTest(async (systemTest) => {
+      await systemTest.findByTestID("hayaSelectStaleValuesRoot", {timeout: 5000})
+
+      await waitFor({timeout: 5000}, async () => {
+        const chips = await systemTest.all(
+          "[data-testid='hayaSelectStaleValuesRoot'] [data-class='current-option']",
+          {timeout: 0, useBaseSelector: false}
+        )
+
+        if (chips.length !== 1) {
+          throw new Error(`Expected exactly one chip for the matching value, got: ${chips.length}`)
+        }
+
+        const text = (await chips[0].getText()).trim()
+
+        if (!text.includes("One")) {
+          throw new Error(`Expected chip text to include 'One', got: ${text}`)
+        }
+      })
+    })
+  })
+
   it("renders hidden input for controlled values without current options", async () => {
     await runSystemTest(async (systemTest) => {
       await systemTest.findByTestID("hayaSelectControlledValuesRoot", {timeout: 5000})

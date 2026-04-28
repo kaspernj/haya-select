@@ -28,6 +28,11 @@ export default function App() {
     right: <Text>Right {option.text}</Text>
   }))
   const controlledValues = ["one", "two"]
+  const staleValueOptions = [
+    {value: "one", text: "One"},
+    {value: "two", text: "Two"}
+  ]
+  const staleValues = ["one", "missing"]
   const paginationPageSize = 5
   const paginationTotalCount = 24
   const placementStyleCallback = {
@@ -191,6 +196,17 @@ export default function App() {
                     options={controlledOptions}
                     placeholder="Pick controlled"
                     values={controlledValues}
+                  />
+                </View>
+              </Group>
+              <Group name="Stale Values Select">
+                <View testID="hayaSelectStaleValuesRoot">
+                  <HayaSelect
+                    multiple
+                    name="stale_values"
+                    options={staleValueOptions}
+                    placeholder="Pick stale"
+                    values={staleValues}
                   />
                 </View>
               </Group>
