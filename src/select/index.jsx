@@ -431,30 +431,35 @@ class HayaSelect extends ShapeComponent {
     ? (Array.isArray(this.p.values) ? this.p.values : [])
     : (Array.isArray(this.s.currentOptions) ? this.s.currentOptions : []).map((currentOption) => currentOption.value)
 
-  /** @returns {Array<HayaSelectOption|{value: string|number}|undefined>} */
+  /** @returns {Array<HayaSelectOption|{value: string|number}>} */
   getCurrentOptions = () => {
     if ("values" in this.props && typeof this.props.values != "undefined") {
       if (Array.isArray(this.p.values) && this.p.values.length === 0) return []
 
       if (Array.isArray(this.props.options) && Array.isArray(this.p.values)) {
-        return this.p.values.map((value) => this.p.options.find((option) => option.value == value))
+        /** @type {Array<HayaSelectOption>} */
+        const result = []
+
+        for (const value of this.p.values) {
+          const option = this.p.options.find((option) => option.value == value)
+
+          if (option) result.push(option)
+        }
+
+        return result
       } else if (this.s.loadedOptions && Array.isArray(this.p.values)) {
-        return this.p.values.map((value) => {
-          let foundOption = this.s.loadedOptions.find((option) => option.value == value)
+        /** @type {Array<HayaSelectOption>} */
+        const result = []
 
-          if (!foundOption) {
-            foundOption = this.s.currentOptions.find((option) => option.value == value)
+        for (const value of this.p.values) {
+          const option =
+            this.s.loadedOptions.find((option) => option.value == value) ||
+            this.s.currentOptions.find((option) => option.value == value)
 
-            if (!foundOption) {
-              console.error(
-                `Couldn't find option: ${value} in loadedOptions or state currentOptions`,
-                {stateLoadedOptions: this.s.loadedOptions, stateCurrentOptions: this.s.currentOptions, propsOptions: this.props.options}
-              )
-            }
-          }
+          if (option) result.push(option)
+        }
 
-          return foundOption
-        })
+        return result
       } else if (typeof this.props.options == "function") {
         // Options haven't been loaded yet.
       } else if (Array.isArray(this.p.values)) {

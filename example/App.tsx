@@ -28,6 +28,11 @@ export default function App() {
     right: <Text>Right {option.text}</Text>
   }))
   const controlledValues = ["one", "two"]
+  const staleValueOptions = [
+    {value: "one", text: "One"},
+    {value: "two", text: "Two"}
+  ]
+  const staleValues = ["one", "missing"]
   const paginationPageSize = 5
   const paginationTotalCount = 24
   const placementStyleCallback = {
@@ -114,6 +119,24 @@ export default function App() {
                 {" "}
               </Text>
               <Text style={styles.header}>Module API Example</Text>
+              {/*
+                Keep the placement-below select at the top of the ScrollView
+                so its trigger lives near the top of the viewport in CI,
+                regardless of default window height. The placement decision
+                in HayaSelect uses `document.documentElement.scrollTop` and
+                does not track scroll inside this RN ScrollView, so a
+                trigger far down the list otherwise flips to "above" when
+                there isn't enough room below it.
+              */}
+              <Group name="Placement Callback Select Top">
+                <View testID="hayaSelectPlacementBelowRoot">
+                  <HayaSelect
+                    options={selectOptions}
+                    placeholder="Placement below"
+                    styles={placementStyleCallback}
+                  />
+                </View>
+              </Group>
               <Group name="Constants">
                 <Text>{HayaSelectModule.PI}</Text>
               </Group>
@@ -194,21 +217,23 @@ export default function App() {
                   />
                 </View>
               </Group>
+              <Group name="Stale Values Select">
+                <View testID="hayaSelectStaleValuesRoot">
+                  <HayaSelect
+                    multiple
+                    name="stale_values"
+                    options={staleValueOptions}
+                    placeholder="Pick stale"
+                    values={staleValues}
+                  />
+                </View>
+              </Group>
               <Group name="Paginated Select">
                 <View testID="hayaSelectPaginationRoot">
                   <HayaSelect
                     options={paginatedOptions}
                     placeholder="Pick a page"
                     search
-                  />
-                </View>
-              </Group>
-              <Group name="Placement Callback Select Top">
-                <View testID="hayaSelectPlacementBelowRoot">
-                  <HayaSelect
-                    options={selectOptions}
-                    placeholder="Placement below"
-                    styles={placementStyleCallback}
                   />
                 </View>
               </Group>
