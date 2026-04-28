@@ -119,6 +119,24 @@ export default function App() {
                 {" "}
               </Text>
               <Text style={styles.header}>Module API Example</Text>
+              {/*
+                Keep the placement-below select at the top of the ScrollView
+                so its trigger lives near the top of the viewport in CI,
+                regardless of default window height. The placement decision
+                in HayaSelect uses `document.documentElement.scrollTop` and
+                does not track scroll inside this RN ScrollView, so a
+                trigger far down the list otherwise flips to "above" when
+                there isn't enough room below it.
+              */}
+              <Group name="Placement Callback Select Top">
+                <View testID="hayaSelectPlacementBelowRoot">
+                  <HayaSelect
+                    options={selectOptions}
+                    placeholder="Placement below"
+                    styles={placementStyleCallback}
+                  />
+                </View>
+              </Group>
               <Group name="Constants">
                 <Text>{HayaSelectModule.PI}</Text>
               </Group>
@@ -216,15 +234,6 @@ export default function App() {
                     options={paginatedOptions}
                     placeholder="Pick a page"
                     search
-                  />
-                </View>
-              </Group>
-              <Group name="Placement Callback Select Top">
-                <View testID="hayaSelectPlacementBelowRoot">
-                  <HayaSelect
-                    options={selectOptions}
-                    placeholder="Placement below"
-                    styles={placementStyleCallback}
                   />
                 </View>
               </Group>
