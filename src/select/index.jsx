@@ -89,8 +89,8 @@ const dataSets = {}
 /**
  * @typedef {object} HayaSelectState
  * @property {Array<HayaSelectOption>} currentOptions
- * @property {object|null} selectContainerLayout
- * @property {object|null} endOfSelectLayout
+ * @property {HayaSelectLayout|null} selectContainerLayout
+ * @property {HayaSelectLayout|null} endOfSelectLayout
  * @property {number|null} height
  * @property {Array<HayaSelectOption>|undefined} loadedOptions
  * @property {number} loadOptionsAppliedRequestId
@@ -100,7 +100,7 @@ const dataSets = {}
  * @property {string} pageInputValue
  * @property {number|null} pageSize
  * @property {boolean} opened
- * @property {object|null} optionsContainerLayout
+ * @property {HayaSelectLayout|null} optionsContainerLayout
  * @property {"above"|"below"|undefined} optionsPlacement
  * @property {number|undefined} optionsTop
  * @property {"hidden"|"visible"|undefined} optionsVisibility
@@ -115,9 +115,39 @@ const dataSets = {}
  * @typedef {object} HayaSelectLayout
  * @property {number} [top]
  * @property {number} [left]
+ * @property {number} [x]
+ * @property {number} [y]
  * @property {number} [width]
  * @property {number} [height]
  */
+
+/**
+ * Normalizes React Native and React Native Web layout keys.
+ * @param {HayaSelectLayout|null|undefined} layout Native layout.
+ * @returns {HayaSelectLayout} Normalized layout.
+ */
+function normalizeLayout(layout) {
+  const normalizedLayout = Object.assign({}, layout)
+
+  if (typeof normalizedLayout.left != "number" && typeof normalizedLayout.x == "number") {
+    normalizedLayout.left = normalizedLayout.x
+  }
+
+  if (typeof normalizedLayout.top != "number" && typeof normalizedLayout.y == "number") {
+    normalizedLayout.top = normalizedLayout.y
+  }
+
+  return normalizedLayout
+}
+
+/**
+ * Checks whether a layout has usable absolute-ish position.
+ * @param {HayaSelectLayout|null|undefined} layout Layout to inspect.
+ * @returns {boolean} True when top and left can be used.
+ */
+function layoutHasPosition(layout) {
+  return Number.isFinite(layout?.left) && Number.isFinite(layout?.top)
+}
 
 /**
  * @typedef {object} HayaSelectOptionRenderContext
@@ -852,6 +882,10 @@ class HayaSelect extends ShapeComponent {
   onDimensionsChange = ({window}) => {
     this.windowWidth = window.width
     this.windowHeight = window.height
+
+    if (this.s.opened) {
+      this.measureNativeSelectLayouts()
+    }
   }
 
   /**
@@ -859,7 +893,8 @@ class HayaSelect extends ShapeComponent {
    * @returns {void}
    */
   onSelectContainerLayout = (e) => {
-    this.s.selectContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    this.s.selectContainerLayout = normalizeLayout(digg(e, "nativeEvent", "layout"))
+    this.measureNativeLayout(this.tt.selectContainerRef, "selectContainerLayout")
   }
 
   /**
@@ -867,7 +902,7 @@ class HayaSelect extends ShapeComponent {
    * @returns {void}
    */
   onEndOfSelectLayout = (e) => {
-    const endOfSelectLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    const endOfSelectLayout = normalizeLayout(digg(e, "nativeEvent", "layout"))
     const newState = {endOfSelectLayout}
 
     if (this.s.opened && endOfSelectLayout?.width) {
@@ -875,6 +910,8 @@ class HayaSelect extends ShapeComponent {
     }
 
     this.setState(newState, () => {
+      this.measureNativeLayout(this.tt.endOfSelectRef, "endOfSelectLayout")
+
       if (this.s.opened && this.s.optionsContainerLayout) {
         this.setOptionsPositionAboveIfOutsideScreen()
       }
@@ -886,7 +923,51 @@ class HayaSelect extends ShapeComponent {
    * @returns {void}
    */
   onOptionsContainerLayout = (e) => {
-    this.s.optionsContainerLayout = Object.assign({}, digg(e, "nativeEvent", "layout"))
+    this.s.optionsContainerLayout = normalizeLayout(digg(e, "nativeEvent", "layout"))
+  }
+
+  /** @returns {void} */
+  measureNativeSelectLayouts() {
+    this.measureNativeLayout(this.tt.selectContainerRef, "selectContainerLayout")
+    this.measureNativeLayout(this.tt.endOfSelectRef, "endOfSelectLayout")
+  }
+
+  /**
+   * Measures a native view in window coordinates for portal positioning.
+   * @param {import("react").RefObject<object>} ref View ref.
+   * @param {"selectContainerLayout"|"endOfSelectLayout"} stateKey State layout key.
+   * @returns {void}
+   */
+  measureNativeLayout(ref, stateKey) {
+    if (Platform.OS == "web") return
+
+    const element = ref.current
+    if (!element || typeof element.measureInWindow != "function") return
+
+    element.measureInWindow((left, top, width, height) => {
+      const measuredLayout = {height, left, top, width}
+
+      if (!layoutHasPosition(measuredLayout)) return
+
+      /** @type {Partial<HayaSelectState>} */
+      const newState = {
+        [stateKey]: measuredLayout
+      }
+
+      if (stateKey == "endOfSelectLayout" && this.s.opened && width) {
+        newState.optionsWidth = width
+      }
+
+      if (!anythingDifferent(this.s[stateKey], measuredLayout)) {
+        return
+      }
+
+      this.setState(newState, () => {
+        if (this.s.opened && this.s.optionsContainerLayout) {
+          this.setOptionsPositionAboveIfOutsideScreen()
+        }
+      })
+    })
   }
 
   /**
@@ -1001,6 +1082,7 @@ class HayaSelect extends ShapeComponent {
         scrollTop: Platform.OS == "web" ? document.documentElement.scrollTop : null
       },
       () => {
+        this.measureNativeSelectLayouts()
         this.resetSearchTextInput()
         this.focusTextInput()
         this.loadOptions({page: 1})
@@ -1032,9 +1114,9 @@ class HayaSelect extends ShapeComponent {
     const {optionsContainerLayout} = this.s
     const endOfSelectLayout = this.s.endOfSelectLayout
 
-    if (!endOfSelectLayout) {
+    if (!layoutHasPosition(endOfSelectLayout)) {
       if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "below", reason: "missing-end-of-select-layout"})
-      this.s.optionsVisibility = "visible"
+      this.measureNativeSelectLayouts()
       return
     }
 
@@ -1485,12 +1567,18 @@ class HayaSelect extends ShapeComponent {
         // onLayout left values doesn't always update when changed
         left = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft
       } else {
-        left = this.s.endOfSelectLayout.left
-        top = selectContainerLayout.top
+        left = endOfSelectLayout?.left
+        top = endOfSelectLayout?.top
       }
 
-      style.left = left
-      style.top = top - 2
+      if (Number.isFinite(left) && Number.isFinite(top)) {
+        style.left = left
+        style.top = top - 2
+      } else {
+        style.left = 0
+        style.top = 0
+        style.visibility = "hidden"
+      }
     } else if (optionsPlacement == "above") {
       if (Platform.OS == "web") {
         // onLayout top value is sometimes negative so use browser JS to get it instead
@@ -1499,12 +1587,18 @@ class HayaSelect extends ShapeComponent {
         // onLayout left values doesn't always update when changed
         left = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft
       } else {
-        left = endOfSelectLayout.left
-        top = selectContainerLayout.top
+        left = selectContainerLayout?.left
+        top = selectContainerLayout?.top
       }
 
-      style.left = left
-      style.top = top - optionsContainerLayout.height + 1
+      if (Number.isFinite(left) && Number.isFinite(top)) {
+        style.left = left
+        style.top = top - optionsContainerLayout.height + 1
+      } else {
+        style.left = 0
+        style.top = 0
+        style.visibility = "hidden"
+      }
     } else {
       throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
     }
