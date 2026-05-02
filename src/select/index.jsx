@@ -1111,18 +1111,23 @@ class HayaSelect extends ShapeComponent {
     if (!this.s.opened) return
 
     const {windowHeight} = this.tt
-    const {optionsContainerLayout} = this.s
+    const {optionsContainerLayout, selectContainerLayout} = this.s
     const endOfSelectLayout = this.s.endOfSelectLayout
 
-    if (!layoutHasPosition(endOfSelectLayout)) {
-      if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "below", reason: "missing-end-of-select-layout"})
+    const optionsTop = Platform.OS == "web"
+      ? endOfSelectLayout?.top
+      : typeof selectContainerLayout?.top == "number" && typeof selectContainerLayout?.height == "number"
+        ? selectContainerLayout.top + selectContainerLayout.height + 1
+        : undefined
+
+    if (!Number.isFinite(optionsTop)) {
+      if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "below", reason: "missing-options-top"})
       this.measureNativeSelectLayouts()
       return
     }
 
-    const optionsTop = endOfSelectLayout.top
     const optionsTotalBottomPosition = optionsContainerLayout.height + optionsTop
-    const windowHeightWithScroll = windowHeight + this.s.scrollTop
+    const windowHeightWithScroll = windowHeight + (this.s.scrollTop || 0)
 
     if (windowHeightWithScroll < optionsTotalBottomPosition) {
       if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAboveIfOutsideScreen", {placement: "above"})
@@ -1646,6 +1651,7 @@ class HayaSelect extends ShapeComponent {
         }
         {Platform.OS != "web" &&
           <ScrollView
+            keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             style={styles[`nativeOptionsScrollView-${style.maxHeight || 300}`] ||= {
               maxHeight: style.maxHeight || 300
