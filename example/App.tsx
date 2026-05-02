@@ -36,7 +36,9 @@ export default function App() {
   const paginationPageSize = 5
   const paginationTotalCount = 24
   const placementStyleCallback = {
-    optionsContainer: ({optionsPlacement}: {optionsPlacement?: "above" | "below"}) => {
+    optionsContainer: ({optionsPlacement, style}: {optionsPlacement?: "above" | "below"; style: Record<string, unknown>}) => {
+      Object.freeze(style)
+
       if (optionsPlacement === "above") {
         return {
           borderBottomLeftRadius: 0,
