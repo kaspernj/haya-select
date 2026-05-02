@@ -1,7 +1,7 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
 import {dig,digg} from "diggerize"
-import {Dimensions,Platform,Pressable,TextInput,View} from "react-native"
+import {Dimensions,Platform,Pressable,ScrollView,TextInput,View} from "react-native"
 import React,{createRef,memo,useEffect} from "react"
 import {shapeComponent,ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
@@ -1539,6 +1539,22 @@ class HayaSelect extends ShapeComponent {
   optionsContainer() {
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
     let left, top
+    const optionsContent = (
+      <>
+        {loadedOptions?.map((loadedOption) =>
+          this.hayaSelectOption({
+            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
+            loadedOption
+          })
+        )}
+        {loadedOptions?.length === 0 &&
+          <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
+            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
+          </View>
+        }
+        {this.paginationControls()}
+      </>
+    )
 
     let style = {
       position: "absolute",
@@ -1567,13 +1583,15 @@ class HayaSelect extends ShapeComponent {
         // onLayout left values doesn't always update when changed
         left = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "left") + document.documentElement.scrollLeft
       } else {
-        left = endOfSelectLayout?.left
-        top = endOfSelectLayout?.top
+        left = selectContainerLayout?.left
+        top = typeof selectContainerLayout?.top == "number" && typeof selectContainerLayout?.height == "number"
+          ? selectContainerLayout.top + selectContainerLayout.height + 1
+          : undefined
       }
 
       if (Number.isFinite(left) && Number.isFinite(top)) {
         style.left = left
-        style.top = top - 2
+        style.top = Platform.OS == "web" ? top - 2 : top
       } else {
         style.left = 0
         style.top = 0
@@ -1603,6 +1621,11 @@ class HayaSelect extends ShapeComponent {
       throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
     }
 
+    if (Platform.OS != "web") {
+      style.opacity = optionsVisibility == "hidden" ? 0 : 1
+      style.overflow = "hidden"
+    }
+
     style = this.stylingFor("optionsContainer", style, [left, top, style.visibility, style.width])
 
     const id = idForComponent(this)
@@ -1618,18 +1641,19 @@ class HayaSelect extends ShapeComponent {
         ref={this.tt.optionsContainerRef}
         style={style}
       >
-        {loadedOptions?.map((loadedOption) =>
-          this.hayaSelectOption({
-            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
-            loadedOption
-          })
-        )}
-        {loadedOptions?.length === 0 &&
-          <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
-          </View>
+        {Platform.OS == "web" &&
+          optionsContent
         }
-        {this.paginationControls()}
+        {Platform.OS != "web" &&
+          <ScrollView
+            nestedScrollEnabled
+            style={styles[`nativeOptionsScrollView-${style.maxHeight || 300}`] ||= {
+              maxHeight: style.maxHeight || 300
+            }}
+          >
+            {optionsContent}
+          </ScrollView>
+        }
       </View>
     )
   }
