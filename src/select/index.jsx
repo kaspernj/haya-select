@@ -534,14 +534,11 @@ class HayaSelect extends ShapeComponent {
       borderRadius: transparent ? undefined : 4,
       borderWidth: transparent ? undefined : 1,
       color: "#000",
+      cursor: Platform.OS == "web" ? "pointer" : undefined,
       paddingTop: 5,
       paddingBottom: 5,
       paddingLeft: 5
     }, [transparent])}
-
-    if (Platform.OS == "web") {
-      selectContainerStyleActual.cursor = "pointer"
-    }
 
     if (opened) {
       // Prevent select from changing size once the content is replaced with search text once opened
