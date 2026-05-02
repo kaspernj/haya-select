@@ -530,10 +530,11 @@ class HayaSelect extends ShapeComponent {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: transparent ? undefined : "#fff",
-      border: transparent ? undefined : "1px solid #999",
+      borderColor: transparent ? undefined : "#999",
       borderRadius: transparent ? undefined : 4,
+      borderWidth: transparent ? undefined : 1,
       color: "#000",
-      cursor: "pointer",
+      cursor: Platform.OS == "web" ? "pointer" : undefined,
       paddingTop: 5,
       paddingBottom: 5,
       paddingLeft: 5
@@ -585,7 +586,7 @@ class HayaSelect extends ShapeComponent {
         >
           <View
             dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
-            style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {width: "calc(100% - 25px)", flexWrap: "wrap", overflow: "hidden"})}
+            style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {flex: 1, flexWrap: "wrap", overflow: "hidden"})}
           >
             {opened &&
               <TextInput
@@ -595,8 +596,8 @@ class HayaSelect extends ShapeComponent {
                 ref={this.tt.searchTextInputRef}
                 style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
                   width: "100%",
-                  border: 0,
-                  outline: "none",
+                  borderWidth: 0,
+                  outline: Platform.OS == "web" ? "none" : undefined,
                   padding: 0
                 })}
                 defaultValue={this.searchTextValue}
@@ -1316,7 +1317,8 @@ class HayaSelect extends ShapeComponent {
       <View
         dataSet={dataSets.paginationContainer ||= {class: "options-pagination"}}
         style={styles.paginationContainer ||= {
-          borderTop: "1px solid #e2e8f0",
+          borderTopColor: "#e2e8f0",
+          borderTopWidth: 1,
           padding: 8
         }}
       >
@@ -1331,8 +1333,9 @@ class HayaSelect extends ShapeComponent {
             style={styles[`paginationNavButton-${prevDisabled}`] ||= {
               alignItems: "center",
               backgroundColor: "#f8fafc",
-              border: "1px solid #cbd5e1",
+              borderColor: "#cbd5e1",
               borderRadius: 8,
+              borderWidth: 1,
               height: 30,
               justifyContent: "center",
               opacity: prevDisabled ? 0.4 : 1,
@@ -1352,8 +1355,9 @@ class HayaSelect extends ShapeComponent {
             style={styles.paginationLabelButton ||= {
               alignItems: "center",
               backgroundColor: "#f1f5f9",
-              border: "1px solid #cbd5e1",
+              borderColor: "#cbd5e1",
               borderRadius: 14,
+              borderWidth: 1,
               justifyContent: "center",
               minWidth: 140,
               paddingHorizontal: 10,
@@ -1372,10 +1376,10 @@ class HayaSelect extends ShapeComponent {
               ref={this.tt.pageInputRef}
               selectTextOnFocus
               style={styles.paginationInputStyle ||= {
-                border: 0,
+                borderWidth: 0,
                 color: "#0f172a",
                 fontSize: 12,
-                outline: "none",
+                outline: Platform.OS == "web" ? "none" : undefined,
                 padding: 0,
                 textAlign: "center",
                 width: 120
@@ -1390,8 +1394,9 @@ class HayaSelect extends ShapeComponent {
             style={styles[`paginationNavButton-${nextDisabled}`] ||= {
               alignItems: "center",
               backgroundColor: "#f8fafc",
-              border: "1px solid #cbd5e1",
+              borderColor: "#cbd5e1",
               borderRadius: 8,
+              borderWidth: 1,
               height: 30,
               justifyContent: "center",
               opacity: nextDisabled ? 0.4 : 1,
@@ -1460,9 +1465,10 @@ class HayaSelect extends ShapeComponent {
       visibility: optionsVisibility,
       width: this.p.optionsWidth || this.s.optionsWidth,
       backgroundColor: "#fff",
-      border: "1px solid #999",
+      borderColor: "#999",
+      borderWidth: 1,
       maxHeight: 300,
-      overflowY: "auto"
+      overflowY: Platform.OS == "web" ? "auto" : undefined
     }
 
     if (!this.p.optionsPortal) {
@@ -1656,6 +1662,7 @@ class HayaSelect extends ShapeComponent {
    */
   stylingFor(stylingName, style = {}, caches = []) {
     let customStyling = dig(this, "props", "styles", stylingName)
+    const baseStyle = {...style}
 
     if (typeof customStyling == "function") {
       /** @type {HayaSelectStylingContext} */
@@ -1663,12 +1670,12 @@ class HayaSelect extends ShapeComponent {
         opened: this.s.opened,
         optionsPlacement: this.s.optionsPlacement,
         state: this.state,
-        style
+        style: baseStyle
       })
     }
 
     if (customStyling) {
-      return Object.assign(style, customStyling)
+      return Object.assign({}, baseStyle, customStyling)
     }
 
     return this.cache(`stylingFor-${stylingName}`, style, caches)
