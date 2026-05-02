@@ -4,13 +4,38 @@ import SystemTest from "system-testing/build/system-test.js"
 
 SystemTest.rootPath = "/?systemTest=true"
 
+/**
+ * @param {string} name Environment variable name.
+ * @param {number} defaultValue Default port.
+ * @returns {number} Resolved port.
+ */
+const systemTestPort = (name, defaultValue) => {
+  const rawValue = process.env[name]
+  if (!rawValue) return defaultValue
+
+  const port = Number(rawValue)
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(`${name} must be a positive integer port`)
+  }
+
+  return port
+}
+
 const systemTestHttpHost = process.env.SYSTEM_TEST_HTTP_HOST || "127.0.0.1"
 const systemTestHttpConnectHost = process.env.SYSTEM_TEST_HTTP_CONNECT_HOST || systemTestHttpHost
+const systemTestAppPort = systemTestPort("SYSTEM_TEST_APP_PORT", 3711)
+const systemTestClientWsPort = systemTestPort("SYSTEM_TEST_CLIENT_WS_PORT", 3713)
+const systemTestHttpPort = systemTestPort("SYSTEM_TEST_HTTP_PORT", 3712)
+const systemTestScoundrelPort = systemTestPort("SYSTEM_TEST_SCOUNDREL_PORT", 3714)
 
 export const systemTestArgs = {
+  clientWsPort: systemTestClientWsPort,
   debug: true,
   httpConnectHost: systemTestHttpConnectHost,
-  httpHost: systemTestHttpHost
+  httpHost: systemTestHttpHost,
+  httpPort: systemTestHttpPort,
+  port: systemTestAppPort,
+  scoundrelPort: systemTestScoundrelPort
 }
 
 let runQueue = Promise.resolve()

@@ -23,6 +23,8 @@ module.exports = {
         "prettier/prettier": "off",
         "import/order": "off",
         "react-hooks/rules-of-hooks": "off",
+        "comma-spacing": ["error", {"before": false, "after": true}],
+        "object-curly-spacing": ["error", "never"],
         eqeqeq: "off",
         "no-return-assign": "off",
         "import/no-duplicates": "off",
