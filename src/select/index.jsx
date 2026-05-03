@@ -79,6 +79,7 @@ const dataSets = {}
  * @property {string} [selectedBackgroundColor]
  * @property {string} [selectedHoverBackgroundColor]
  * @property {boolean} [search]
+ * @property {string} [searchPlaceholderTextColor]
  * @property {object} [styles]
  * @property {object} [toggled]
  * @property {Array<HayaSelectToggleOption>} [toggleOptions]
@@ -206,6 +207,7 @@ class HayaSelect extends ShapeComponent {
     optionsPortal: true,
     optionsWidth: null,
     search: false,
+    searchPlaceholderTextColor: undefined,
     transparent: false
   }
 
@@ -248,6 +250,7 @@ class HayaSelect extends ShapeComponent {
     selectedBackgroundColor: PropTypes.string,
     selectedHoverBackgroundColor: PropTypes.string,
     search: PropTypes.bool.isRequired,
+    searchPlaceholderTextColor: PropTypes.string,
     styles: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
@@ -623,6 +626,7 @@ class HayaSelect extends ShapeComponent {
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.translate(".search_dot_dot_dot")}
+                placeholderTextColor={this.p.searchPlaceholderTextColor}
                 ref={this.tt.searchTextInputRef}
                 style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
                   width: "100%",
