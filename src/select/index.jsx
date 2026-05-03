@@ -79,6 +79,7 @@ const dataSets = {}
  * @property {string} [selectedBackgroundColor]
  * @property {string} [selectedHoverBackgroundColor]
  * @property {boolean} [search]
+ * @property {import("react-native").TextInputProps} [searchTextInputProps]
  * @property {object} [styles]
  * @property {object} [toggled]
  * @property {Array<HayaSelectToggleOption>} [toggleOptions]
@@ -206,6 +207,7 @@ class HayaSelect extends ShapeComponent {
     optionsPortal: true,
     optionsWidth: null,
     search: false,
+    searchTextInputProps: undefined,
     transparent: false
   }
 
@@ -248,6 +250,7 @@ class HayaSelect extends ShapeComponent {
     selectedBackgroundColor: PropTypes.string,
     selectedHoverBackgroundColor: PropTypes.string,
     search: PropTypes.bool.isRequired,
+    searchTextInputProps: PropTypes.object,
     styles: PropTypes.object,
     toggled: PropTypes.object,
     toggleOptions: PropTypes.arrayOf(PropTypes.shape({
@@ -631,6 +634,7 @@ class HayaSelect extends ShapeComponent {
                   padding: 0
                 })}
                 defaultValue={this.searchTextValue}
+                {...this.p.searchTextInputProps}
               />
             }
             {!opened &&
@@ -1553,8 +1557,18 @@ class HayaSelect extends ShapeComponent {
           })
         )}
         {loadedOptions?.length === 0 &&
-          <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
+          <View
+            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
+            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
+              paddingBottom: 10,
+              paddingLeft: 8,
+              paddingRight: 8,
+              paddingTop: 10
+            })}
+          >
+            <Text>
+              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
+            </Text>
           </View>
         }
         {this.paginationControls()}

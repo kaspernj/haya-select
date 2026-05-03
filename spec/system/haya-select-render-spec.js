@@ -167,6 +167,47 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("keeps no-options content readable after filtering", async () => {
+    await timeout({errorMessage: "render test timed out: keeps no-options content readable after filtering", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectRoot"})
+
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+        await helper.open()
+
+        await systemTest.find(
+          "[data-testid='hayaSelectRoot'] [data-component='haya-select'][data-applied-request-id='1']",
+          {timeout: 5000}
+        )
+
+        await systemTest.interact(
+          {selector: helper.searchInputSelector},
+          "sendKeys",
+          Key.chord(Key.CONTROL, "a"),
+          Key.BACK_SPACE,
+          "not-a-real-option"
+        )
+
+        const optionsContainerSelector = await helper.optionsContainerSelector()
+
+        await waitFor({timeout: 5000}, async () => {
+          const noOptionsContainer = await systemTest.find(
+            `${optionsContainerSelector} [data-class='no-options-container']`,
+            {timeout: 0, useBaseSelector: false}
+          )
+          const paddingBottom = parseFloat(await noOptionsContainer.getCssValue("padding-bottom"))
+          const paddingTop = parseFloat(await noOptionsContainer.getCssValue("padding-top"))
+
+          if (paddingBottom < 10 || paddingTop < 10) {
+            throw new Error(`Expected no-options container vertical padding, got: top=${paddingTop}, bottom=${paddingBottom}`)
+          }
+        })
+
+        await helper.close()
+      })
+    })
+  })
+
   it("highlights selected options in multiple select", async () => {
     await timeout({errorMessage: "render test timed out: highlights selected options in multiple select", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
