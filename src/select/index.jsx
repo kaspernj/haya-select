@@ -623,7 +623,6 @@ class HayaSelect extends ShapeComponent {
           >
             {opened &&
               <TextInput
-                {...this.p.searchTextInputProps}
                 dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
                 onChangeText={this.tt.onChangeSearchText}
                 placeholder={this.translate(".search_dot_dot_dot")}
@@ -635,6 +634,7 @@ class HayaSelect extends ShapeComponent {
                   padding: 0
                 })}
                 defaultValue={this.searchTextValue}
+                {...this.p.searchTextInputProps}
               />
             }
             {!opened &&
