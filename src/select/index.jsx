@@ -1557,8 +1557,18 @@ class HayaSelect extends ShapeComponent {
           })
         )}
         {loadedOptions?.length === 0 &&
-          <View dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}>
-            <Text>{this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}</Text>
+          <View
+            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
+            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
+              paddingBottom: 10,
+              paddingLeft: 8,
+              paddingRight: 8,
+              paddingTop: 10
+            })}
+          >
+            <Text>
+              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
+            </Text>
           </View>
         }
         {this.paginationControls()}
