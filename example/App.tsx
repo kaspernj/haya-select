@@ -34,7 +34,7 @@ export default function App() {
   ]
   const staleValues = ["one", "missing"]
   const paginationPageSize = 5
-  const paginationTotalCount = 24
+  const paginationTotalCount = 54
   const placementStyleCallback = {
     optionsContainer: ({optionsPlacement, style}: {optionsPlacement?: "above" | "below"; style: Record<string, unknown>}) => {
       Object.freeze(style)

@@ -31,11 +31,12 @@ describe("HayaSelect pagination", () => {
 
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
+        await systemTest.find("[data-class='pagination-ellipsis']", {useBaseSelector: false})
 
         const pageTwo = await findPaginationPageButton(systemTest, 2)
         await systemTest.click(pageTwo)
 
-        await waitForPaginationLabel(systemTest, "Page 2 of 5")
+        await waitForPaginationLabel(systemTest, "Page 2 of 11")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
 
@@ -57,7 +58,7 @@ describe("HayaSelect pagination", () => {
 
         await setPaginationInputValue(systemTest, "4")
 
-        await waitForPaginationLabel(systemTest, "Page 4 of 5")
+        await waitForPaginationLabel(systemTest, "Page 4 of 11")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
 
@@ -76,10 +77,10 @@ describe("HayaSelect pagination", () => {
 
         await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
         await openPaginatedSelect(systemTest)
-        await waitForPaginationLabel(systemTest, "Page 1 of 5")
+        await waitForPaginationLabel(systemTest, "Page 1 of 11")
 
         await clickPaginationSelector(systemTest, "[data-class='pagination-next']")
-        await waitForPaginationLabel(systemTest, "Page 2 of 5")
+        await waitForPaginationLabel(systemTest, "Page 2 of 11")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
 
@@ -89,7 +90,7 @@ describe("HayaSelect pagination", () => {
         })
 
         await clickPaginationSelector(systemTest, "[data-class='pagination-prev']")
-        await waitForPaginationLabel(systemTest, "Page 1 of 5")
+        await waitForPaginationLabel(systemTest, "Page 1 of 11")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
 

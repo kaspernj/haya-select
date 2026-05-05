@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Render pagination ellipses without literal text nodes to avoid React Native Web `View` text-child warnings.
 - Fix crash rendering chips when `values` include ids that have no matching entry in `options` (e.g. URL deep-link with options still loading).
 - Fix crash when opening the select before layout measurements are available.
 - Update options width when layout data arrives after opening.

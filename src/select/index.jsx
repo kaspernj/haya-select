@@ -1515,17 +1515,35 @@ class HayaSelect extends ShapeComponent {
                 <View
                   dataSet={dataSets[`paginationEllipsis-${item.key}`] ||= {class: "pagination-ellipsis"}}
                   key={item.key}
-                  style={styles.paginationEllipsis ||= {paddingHorizontal: 6}}
+                  style={styles.paginationEllipsis ||= {
+                    alignItems: "center",
+                    flexDirection: "row",
+                    height: 28,
+                    justifyContent: "center",
+                    paddingHorizontal: 6
+                  }}
                 >
-                  <Text
-                    style={styles.paginationEllipsisText ||= {
-                      color: "#64748b",
-                      fontSize: 12,
-                      fontWeight: 600
-                    }}
-                  >
-                    ...
-                  </Text>
+                  <View style={styles.paginationEllipsisDot ||= {
+                    backgroundColor: "#64748b",
+                    borderRadius: 2,
+                    height: 4,
+                    marginHorizontal: 1,
+                    width: 4
+                  }} />
+                  <View style={styles.paginationEllipsisDot ||= {
+                    backgroundColor: "#64748b",
+                    borderRadius: 2,
+                    height: 4,
+                    marginHorizontal: 1,
+                    width: 4
+                  }} />
+                  <View style={styles.paginationEllipsisDot ||= {
+                    backgroundColor: "#64748b",
+                    borderRadius: 2,
+                    height: 4,
+                    marginHorizontal: 1,
+                    width: 4
+                  }} />
                 </View>
               )
             }
