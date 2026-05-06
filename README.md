@@ -76,6 +76,21 @@ The callback receives the current `searchValue`, `page`, and optional `values` w
 
 If `totalCount` and `page` are provided, the options list shows pagination controls with previous/next buttons, a page range around the current page, and a "Page X of Y" label that can be clicked to enter a page number manually.
 
+## Mobile options sheet
+
+HayaSelect opens options in a bottom sheet on mobile-sized screens by default. The sheet is used when the window width is 768px or less on web, iOS, and Android. It keeps the options list scrollable inside the sheet and places the search input at the bottom.
+
+Use `mobileOptionsMode` to override the automatic behavior:
+
+```jsx
+<HayaSelect
+  mobileOptionsMode="never"
+  options={options}
+/>
+```
+
+`mobileOptionsMode` accepts `"auto"` (default), `"always"`, or `"never"`.
+
 # Contributing
 
 Contributions are very welcome! Please refer to guidelines described in the [contributing guide]( https://github.com/expo/expo#contributing).
