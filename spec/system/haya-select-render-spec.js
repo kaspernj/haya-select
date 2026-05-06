@@ -310,6 +310,54 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("repositions an open sheet after resizing out of mobile width", async () => {
+    await timeout({errorMessage: "render test timed out: repositions an open sheet after resizing out of mobile width", timeout: 60000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const driver = systemTest.getDriver()
+        const originalWindowRect = await driver.manage().window().getRect()
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMobileSheetRoot"})
+
+        try {
+          await driver.manage().window().setRect({height: 844, width: 390})
+          await systemTest.findByTestID("hayaSelectMobileSheetRoot", {timeout: 5000})
+          await helper.open()
+
+          await systemTest.find(
+            "[data-testid='hayaSelectMobileSheetRoot'] [data-component='haya-select'][data-options-placement='sheet']",
+            {timeout: 5000}
+          )
+
+          await driver.manage().window().setRect({height: 844, width: 1280})
+          await waitFor({timeout: 5000}, async () => {
+            const state = await driver.executeScript(`
+              const root = document.querySelector("[data-testid='hayaSelectMobileSheetRoot'] [data-component='haya-select']")
+              const bodyOverflow = document.body.style.overflow
+              const documentOverflow = document.documentElement.style.overflow
+
+              return {
+                bodyOverflow,
+                documentOverflow,
+                optionsPlacement: root && root.getAttribute("data-options-placement")
+              }
+            `)
+
+            if (!["above", "below"].includes(state.optionsPlacement)) {
+              throw new Error(`Expected desktop placement after resize, got: ${state.optionsPlacement}`)
+            }
+
+            if (state.bodyOverflow || state.documentOverflow) {
+              throw new Error(`Expected unlocked document scroll, got body=${state.bodyOverflow} document=${state.documentOverflow}`)
+            }
+          })
+
+          await helper.close()
+        } finally {
+          await driver.manage().window().setRect(originalWindowRect)
+        }
+      })
+    })
+  })
+
   it("highlights selected options in multiple select", async () => {
     await timeout({errorMessage: "render test timed out: highlights selected options in multiple select", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {

@@ -562,6 +562,8 @@ class HayaSelect extends ShapeComponent {
       if (this.isDebugEnabled()) this.debugLog("componentDidUpdate", {syncingKeys: Object.keys(newState)})
       this.s.toggled = newState.toggled
     }
+
+    this.syncOptionsPlacementWithMode()
   }
 
   /** @returns {void} */
@@ -917,11 +919,7 @@ class HayaSelect extends ShapeComponent {
     this.windowHeight = window.height
 
     if (this.s.opened) {
-      if (this.isMobileOptionsSheet()) {
-        this.setOptionsPositionSheet()
-      } else {
-        this.measureNativeSelectLayouts()
-      }
+      this.syncOptionsPlacementWithMode()
     }
   }
 
@@ -1185,6 +1183,24 @@ class HayaSelect extends ShapeComponent {
   }
 
   /** @returns {void} */
+  syncOptionsPlacementWithMode() {
+    if (!this.s.opened) return
+
+    if (this.isMobileOptionsSheet()) {
+      if (this.s.optionsPlacement != "sheet") this.setOptionsPositionSheet()
+      return
+    }
+
+    if (this.s.optionsPlacement == "sheet") {
+      this.setOptionsPositionBelow()
+      return
+    }
+
+    this.unlockBodyScroll()
+    this.measureNativeSelectLayouts()
+  }
+
+  /** @returns {void} */
   setOptionsPositionAboveIfOutsideScreen() {
     if (!this.s.opened) return
     if (this.isMobileOptionsSheet()) {
@@ -1241,6 +1257,7 @@ class HayaSelect extends ShapeComponent {
 
     const {endOfSelectLayout} = this.s
     if (this.isDebugEnabled()) this.debugLog("setOptionsPositionAbove")
+    this.unlockBodyScroll()
 
     this.setState(
       {
@@ -1258,6 +1275,7 @@ class HayaSelect extends ShapeComponent {
     if (!this.s.opened) return
 
     if (this.isDebugEnabled()) this.debugLog("setOptionsPositionBelow")
+    this.unlockBodyScroll()
     this.setState(
       {
         opened: true,
@@ -1745,6 +1763,7 @@ class HayaSelect extends ShapeComponent {
     const {selectContainerLayout, loadedOptions, endOfSelectLayout, optionsContainerLayout, optionsPlacement, optionsVisibility} = this.s
     let left, top
     const id = idForComponent(this)
+    const desktopOptionsPlacement = optionsPlacement == "sheet" ? "below" : optionsPlacement
     const optionsContent = (
       <>
         {loadedOptions?.map((loadedOption) =>
@@ -1795,7 +1814,7 @@ class HayaSelect extends ShapeComponent {
     } else if (!this.p.optionsAbsolute) {
       style.left = 0
       style.bottom = 0
-    } else if (optionsPlacement == "below") {
+    } else if (desktopOptionsPlacement == "below") {
       if (Platform.OS == "web") {
         // onLayout top value is sometimes negative so use browser JS to get it instead
         top = digg(this.tt.endOfSelectRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop + 1
@@ -1817,7 +1836,7 @@ class HayaSelect extends ShapeComponent {
         style.top = 0
         style.visibility = "hidden"
       }
-    } else if (optionsPlacement == "above") {
+    } else if (desktopOptionsPlacement == "above") {
       if (Platform.OS == "web") {
         // onLayout top value is sometimes negative so use browser JS to get it instead
         top = digg(this.tt.selectContainerRef.current.getBoundingClientRect(), "top") + document.documentElement.scrollTop
@@ -1838,7 +1857,7 @@ class HayaSelect extends ShapeComponent {
         style.visibility = "hidden"
       }
     } else {
-      throw new Error(`Unkonwn options placement: ${optionsPlacement}`)
+      throw new Error(`Unkonwn options placement: ${desktopOptionsPlacement}`)
     }
 
     if (Platform.OS != "web") {
