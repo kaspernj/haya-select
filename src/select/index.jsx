@@ -1684,10 +1684,8 @@ class HayaSelect extends ShapeComponent {
       height: sheetHeight,
       maxHeight: sheetHeight,
       backgroundColor: "#fff",
-      borderTopColor: "#cbd5e1",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
-      borderTopWidth: 1,
       overflow: "hidden",
       visibility: this.s.optionsVisibility
     }, [sheetHeight, this.s.optionsVisibility])
@@ -1731,6 +1729,10 @@ class HayaSelect extends ShapeComponent {
           testID="haya-select-mobile-options-container"
         >
           <ScrollView
+            contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
+              flexGrow: 1,
+              justifyContent: "flex-end"
+            })}
             dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled

@@ -1,0 +1,1 @@
+- Align mobile sheet options to the bottom of the options area and remove the sheet's top border.

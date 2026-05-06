@@ -290,6 +290,32 @@ describe("HayaSelect", () => {
             }
           })
 
+          await waitFor({timeout: 5000}, async () => {
+            const layout = await driver.executeScript(`
+              const container = document.querySelector(${JSON.stringify(optionsContainerSelector)})
+              const option = container && container.querySelector("[data-class='select-option']")
+              const scrollView = container && container.querySelector("[data-class='mobile-options-scroll-view']")
+              if (!container || !option || !scrollView) throw new Error("Missing mobile sheet layout elements")
+
+              const containerStyle = window.getComputedStyle(container)
+              const optionRect = option.getBoundingClientRect()
+              const scrollViewRect = scrollView.getBoundingClientRect()
+
+              return {
+                borderTopWidth: containerStyle.borderTopWidth,
+                distanceToScrollBottom: Math.round(scrollViewRect.bottom - optionRect.bottom)
+              }
+            `)
+
+            if (layout.borderTopWidth !== "0px") {
+              throw new Error(`Expected no top border on mobile sheet, got: ${layout.borderTopWidth}`)
+            }
+
+            if (Math.abs(layout.distanceToScrollBottom) > 4) {
+              throw new Error(`Expected filtered option to align to scroll bottom, got gap: ${layout.distanceToScrollBottom}`)
+            }
+          })
+
           await helper.selectOption({value: "mobile-sheet-40"})
 
           await waitFor({timeout: 5000}, async () => {
