@@ -247,10 +247,10 @@ describe("HayaSelect", () => {
                 windowHeight: window.innerHeight
               }
             `)
-            const expectedHeight = metrics.windowHeight * 0.8
+            const maxHeight = metrics.windowHeight * 0.8
 
-            if (Math.abs(metrics.height - expectedHeight) > 8) {
-              throw new Error(`Expected sheet height near 80vh, got: ${metrics.height} of ${metrics.windowHeight}`)
+            if (metrics.height > maxHeight + 8) {
+              throw new Error(`Expected sheet height at most 80vh, got: ${metrics.height} of ${metrics.windowHeight}`)
             }
 
             if (Math.abs(metrics.bottom) > 2) {
@@ -303,9 +303,16 @@ describe("HayaSelect", () => {
 
               return {
                 borderTopWidth: containerStyle.borderTopWidth,
-                distanceToScrollBottom: Math.round(scrollViewRect.bottom - optionRect.bottom)
+                containerHeight: container.getBoundingClientRect().height,
+                distanceToScrollBottom: Math.round(scrollViewRect.bottom - optionRect.bottom),
+                windowHeight: window.innerHeight
               }
             `)
+            const maxHeight = layout.windowHeight * 0.8
+
+            if (layout.containerHeight >= maxHeight - 8) {
+              throw new Error(`Expected filtered sheet to shrink below max height, got: ${layout.containerHeight}`)
+            }
 
             if (layout.borderTopWidth !== "0px") {
               throw new Error(`Expected no top border on mobile sheet, got: ${layout.borderTopWidth}`)

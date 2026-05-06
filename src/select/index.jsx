@@ -1673,7 +1673,7 @@ class HayaSelect extends ShapeComponent {
    * @returns {import("react").ReactNode}
    */
   mobileOptionsContainer({id, optionsContent}) {
-    const sheetHeight = Math.max(Math.round(Dimensions.get("window").height * 0.8), 240)
+    const sheetMaxHeight = Math.round(Dimensions.get("window").height * 0.8)
     const sheetStyle = this.stylingFor("optionsContainer", {
       position: "absolute",
       zIndex: 100000,
@@ -1681,14 +1681,13 @@ class HayaSelect extends ShapeComponent {
       left: 0,
       right: 0,
       bottom: 0,
-      height: sheetHeight,
-      maxHeight: sheetHeight,
+      maxHeight: sheetMaxHeight,
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
       overflow: "hidden",
       visibility: this.s.optionsVisibility
-    }, [sheetHeight, this.s.optionsVisibility])
+    }, [sheetMaxHeight, this.s.optionsVisibility])
 
     return (
       <View
@@ -1736,7 +1735,7 @@ class HayaSelect extends ShapeComponent {
             dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
-            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flex: 1})}
+            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexShrink: 1})}
             testID="haya-select-mobile-options-scroll-view"
           >
             {optionsContent}
