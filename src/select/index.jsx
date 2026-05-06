@@ -879,6 +879,7 @@ class HayaSelect extends ShapeComponent {
         key={key}
         option={loadedOption}
         onOptionClicked={this.tt.onOptionClicked}
+        optionsPlacement={this.s.optionsPlacement}
         presentOption={this.tt.presentOption}
         selectedBackgroundColor={this.props.selectedBackgroundColor}
         selectedHoverBackgroundColor={this.props.selectedHoverBackgroundColor}

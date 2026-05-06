@@ -238,12 +238,20 @@ describe("HayaSelect", () => {
           await waitFor({timeout: 5000}, async () => {
             const metrics = await driver.executeScript(`
               const container = document.querySelector(${JSON.stringify(optionsContainerSelector)})
+              const option = container && container.querySelector("[data-class='select-option']")
               if (!container) throw new Error("Missing mobile options container")
+              if (!option) throw new Error("Missing mobile option")
 
               const rect = container.getBoundingClientRect()
+              const optionStyle = window.getComputedStyle(option)
+
               return {
                 bottom: Math.round(window.innerHeight - rect.bottom),
                 height: rect.height,
+                optionPaddingBottom: parseFloat(optionStyle.paddingBottom),
+                optionPaddingLeft: parseFloat(optionStyle.paddingLeft),
+                optionPaddingRight: parseFloat(optionStyle.paddingRight),
+                optionPaddingTop: parseFloat(optionStyle.paddingTop),
                 windowHeight: window.innerHeight
               }
             `)
@@ -255,6 +263,14 @@ describe("HayaSelect", () => {
 
             if (Math.abs(metrics.bottom) > 2) {
               throw new Error(`Expected sheet to be anchored to bottom, got bottom offset: ${metrics.bottom}`)
+            }
+
+            if (metrics.optionPaddingBottom < 14 || metrics.optionPaddingTop < 14) {
+              throw new Error(`Expected mobile option vertical padding, got top=${metrics.optionPaddingTop} bottom=${metrics.optionPaddingBottom}`)
+            }
+
+            if (metrics.optionPaddingLeft < 16 || metrics.optionPaddingRight < 16) {
+              throw new Error(`Expected mobile option horizontal padding, got left=${metrics.optionPaddingLeft} right=${metrics.optionPaddingRight}`)
             }
           })
 
