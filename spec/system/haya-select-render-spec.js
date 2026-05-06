@@ -426,6 +426,43 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("uses an iOS-safe search input font size in the mobile sheet", async () => {
+    await timeout({errorMessage: "render test timed out: uses an iOS-safe search input font size in the mobile sheet", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const driver = systemTest.getDriver()
+        const originalWindowRect = await driver.manage().window().getRect()
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMobileSheetRoot"})
+
+        try {
+          await driver.manage().window().setRect({height: 844, width: 390})
+          await driver.executeScript(`
+            Object.defineProperty(window.navigator, "platform", {configurable: true, value: "iPhone"})
+            Object.defineProperty(window.navigator, "userAgent", {
+              configurable: true,
+              value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+            })
+            Object.defineProperty(window.navigator, "maxTouchPoints", {configurable: true, value: 5})
+          `)
+
+          await systemTest.findByTestID("hayaSelectMobileSheetRoot", {timeout: 5000})
+          await helper.open()
+
+          const searchInput = await systemTest.find(
+            "[data-testid='haya-select-options-container'] [data-testid='haya-select-search-input']",
+            {timeout: 5000, useBaseSelector: false}
+          )
+          const fontSize = parseFloat(await searchInput.getCssValue("font-size"))
+
+          if (fontSize < 16) {
+            throw new Error(`Expected iOS mobile search font size to prevent zoom, got: ${fontSize}`)
+          }
+        } finally {
+          await driver.manage().window().setRect(originalWindowRect)
+        }
+      }, {screen: "mobile-sheet-select"})
+    })
+  })
+
   it("repositions an open sheet after resizing out of mobile width", async () => {
     await timeout({errorMessage: "render test timed out: repositions an open sheet after resizing out of mobile width", timeout: 60000}, async () => {
       await runSystemTest(async (systemTest) => {

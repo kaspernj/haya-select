@@ -152,6 +152,19 @@ function layoutHasPosition(layout) {
   return Number.isFinite(layout?.left) && Number.isFinite(layout?.top)
 }
 
+/** @returns {boolean} True for native iOS and iOS/iPadOS Safari on web. */
+function isIOSLikePlatform() {
+  if (Platform.OS == "ios") return true
+  if (Platform.OS != "web" || typeof navigator == "undefined") return false
+
+  const platform = navigator.platform || ""
+  const userAgent = navigator.userAgent || ""
+
+  return /iPad|iPhone|iPod/.test(platform) ||
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform == "MacIntel" && navigator.maxTouchPoints > 1)
+}
+
 /**
  * @typedef {object} HayaSelectOptionRenderContext
  * @property {string|undefined} icon
@@ -746,8 +759,13 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
-  /** @returns {import("react").ReactNode} */
-  searchTextInput() {
+  /**
+   * @param {{mobileOptionsSheet?: boolean}} [params]
+   * @returns {import("react").ReactNode}
+   */
+  searchTextInput({mobileOptionsSheet = false} = {}) {
+    const iosLikeMobileSheet = mobileOptionsSheet && isIOSLikePlatform()
+
     return (
       <TextInput
         dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
@@ -755,12 +773,13 @@ class HayaSelect extends ShapeComponent {
         onChangeText={this.tt.onChangeSearchText}
         placeholder={this.translate(".search_dot_dot_dot")}
         ref={this.tt.searchTextInputRef}
-        style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
+        style={this.stylingFor("searchTextInput", styles[`searchTextInput-${iosLikeMobileSheet}`] ||= {
           width: "100%",
           borderWidth: 0,
+          fontSize: iosLikeMobileSheet ? 16 : undefined,
           outline: Platform.OS == "web" ? "none" : undefined,
           padding: 0
-        })}
+        }, [iosLikeMobileSheet])}
         testID="haya-select-search-input"
         {...this.p.searchTextInputProps}
       />
@@ -1691,10 +1710,43 @@ class HayaSelect extends ShapeComponent {
   }
 
   /**
-   * @param {{id: string|number, optionsContent: import("react").ReactNode}} args Mobile sheet content.
+   * @param {{loadedOptions: Array<HayaSelectOption>|undefined}} args Options to render.
    * @returns {import("react").ReactNode}
    */
-  mobileOptionsContainer({id, optionsContent}) {
+  optionsListContent({loadedOptions}) {
+    return (
+      <>
+        {loadedOptions?.map((loadedOption) =>
+          this.hayaSelectOption({
+            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
+            loadedOption
+          })
+        )}
+        {loadedOptions?.length === 0 &&
+          <View
+            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
+            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
+              paddingBottom: 10,
+              paddingLeft: 8,
+              paddingRight: 8,
+              paddingTop: 10
+            })}
+            testID="haya-select-no-options-container"
+          >
+            <Text>
+              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
+            </Text>
+          </View>
+        }
+      </>
+    )
+  }
+
+  /**
+   * @param {{id: string|number, optionsListContent: import("react").ReactNode, paginationControls: import("react").ReactNode|null}} args Mobile sheet content.
+   * @returns {import("react").ReactNode}
+   */
+  mobileOptionsContainer({id, optionsListContent, paginationControls}) {
     const sheetMaxHeight = Math.round(Dimensions.get("window").height * 0.8)
     let sheetStyle = this.stylingFor("optionsContainer", {
       position: "absolute",
@@ -1765,8 +1817,9 @@ class HayaSelect extends ShapeComponent {
             style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
             testID="haya-select-mobile-options-scroll-view"
           >
-            {optionsContent}
+            {optionsListContent}
           </ScrollView>
+          {paginationControls}
           <View
             dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
             style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
@@ -1779,7 +1832,7 @@ class HayaSelect extends ShapeComponent {
             })}
             testID="haya-select-mobile-options-search-container"
           >
-            {this.searchTextInput()}
+            {this.searchTextInput({mobileOptionsSheet: true})}
           </View>
         </View>
       </View>
@@ -1792,36 +1845,11 @@ class HayaSelect extends ShapeComponent {
     let left, top
     const id = idForComponent(this)
     const desktopOptionsPlacement = optionsPlacement == "sheet" ? "below" : optionsPlacement
-    const optionsContent = (
-      <>
-        {loadedOptions?.map((loadedOption) =>
-          this.hayaSelectOption({
-            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
-            loadedOption
-          })
-        )}
-        {loadedOptions?.length === 0 &&
-          <View
-            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
-            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
-              paddingBottom: 10,
-              paddingLeft: 8,
-              paddingRight: 8,
-              paddingTop: 10
-            })}
-            testID="haya-select-no-options-container"
-          >
-            <Text>
-              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
-            </Text>
-          </View>
-        }
-        {this.paginationControls()}
-      </>
-    )
+    const optionsListContent = this.optionsListContent({loadedOptions})
+    const paginationControls = this.paginationControls()
 
     if (this.isMobileOptionsSheet()) {
-      return this.mobileOptionsContainer({id, optionsContent})
+      return this.mobileOptionsContainer({id, optionsListContent, paginationControls})
     }
 
     let style = {
@@ -1834,7 +1862,7 @@ class HayaSelect extends ShapeComponent {
       borderColor: "#999",
       borderWidth: 1,
       maxHeight: 300,
-      overflowY: Platform.OS == "web" ? "auto" : undefined
+      overflow: "hidden"
     }
 
     if (!this.p.optionsPortal) {
@@ -1908,20 +1936,20 @@ class HayaSelect extends ShapeComponent {
         style={style}
         testID="haya-select-options-container"
       >
-        {Platform.OS == "web" &&
-          optionsContent
-        }
-        {Platform.OS != "web" &&
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            style={styles[`nativeOptionsScrollView-${style.maxHeight || 300}`] ||= {
-              maxHeight: style.maxHeight || 300
-            }}
-          >
-            {optionsContent}
-          </ScrollView>
-        }
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+          style={styles[`optionsScrollView-${style.maxHeight || 300}`] ||= {
+            flexGrow: 0,
+            flexShrink: 1,
+            maxHeight: style.maxHeight || 300,
+            minHeight: 0
+          }}
+          testID="haya-select-options-scroll-view"
+        >
+          {optionsListContent}
+        </ScrollView>
+        {paginationControls}
       </View>
     )
   }

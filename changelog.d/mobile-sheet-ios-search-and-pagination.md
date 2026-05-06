@@ -1,0 +1,1 @@
+- Keep pagination visible outside the scrollable options list and prevent iPhone zoom on the mobile sheet search input.
