@@ -20,7 +20,7 @@ describe("HayaSelect pagination", () => {
     await timeout({errorMessage: "afterEach: timed out closing paginated select", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
         await closePaginatedSelect(systemTest)
-      })
+      }, {screen: "pagination-change-page"})
     })
   })
 
@@ -43,7 +43,7 @@ describe("HayaSelect pagination", () => {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
           }
         })
-      })
+      }, {screen: "pagination-manual-entry"})
     })
   })
 
@@ -65,7 +65,7 @@ describe("HayaSelect pagination", () => {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
           }
         })
-      })
+      }, {screen: "pagination-next-prev"})
     })
   })
 
@@ -97,7 +97,7 @@ describe("HayaSelect pagination", () => {
             throw new Error(`Unexpected first option text: ${texts[0]}`)
           }
         })
-      })
+      }, {screen: "pagination-select"})
     })
   })
 })

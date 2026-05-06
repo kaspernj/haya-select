@@ -43,12 +43,26 @@ let runQueue = Promise.resolve()
 /** @param {unknown} error */
 const dismissToListenerMissingError = (error) => error instanceof Error && error.message.includes("No listener registered for command event: dismissTo")
 
+/** @typedef {{screen?: string}} RunSystemTestOptions */
+
+/**
+ * @param {string} rootPath System test root path.
+ * @param {string|undefined} screen Example screen name.
+ * @returns {string} Root path with the example screen query parameter.
+ */
+const rootPathForScreen = (rootPath, screen) => {
+  if (!screen) return rootPath
+
+  return `${rootPath}&screen=${encodeURIComponent(screen)}`
+}
+
 /**
  * @param {import("system-testing/build/system-test.js").default} systemTest
+ * @param {RunSystemTestOptions} [options] Run options.
  * @returns {Promise<void>}
  */
-const initializeSystemTestRun = async (systemTest) => {
-  const rootPath = systemTest.getRootPath()
+const initializeSystemTestRun = async (systemTest, {screen} = {}) => {
+  const rootPath = rootPathForScreen(systemTest.getRootPath(), screen)
 
   await systemTest.driverVisit(rootPath)
   await systemTest.waitForClientWebSocket()
@@ -58,15 +72,16 @@ const initializeSystemTestRun = async (systemTest) => {
 /**
  * Runs system test callbacks sequentially to avoid overlapping WebSocket commands.
  * @param {(systemTest: import("system-testing/build/system-test.js").default) => Promise<void>} callback
+ * @param {RunSystemTestOptions} [options] Run options.
  * @returns {Promise<void>}
  */
-export const runSystemTest = async (callback) => {
+export const runSystemTest = async (callback, options = {}) => {
   const run = async () => {
     const systemTest = SystemTest.current(systemTestArgs)
 
     for (let attemptNumber = 1; attemptNumber <= 3; attemptNumber++) {
       try {
-        await initializeSystemTestRun(systemTest)
+        await initializeSystemTestRun(systemTest, options)
         await callback(systemTest)
         return
       } catch (error) {

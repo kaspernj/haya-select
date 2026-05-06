@@ -49,4 +49,3 @@
 - Build `example/dist` automatically when running system tests with `SYSTEM_TEST_HOST=dist`.
 - Serialize shared SystemTest usage in system specs to avoid overlapping WebSocket command races.
 - Stabilize placement callback system assertions by waiting for both placement state and updated corner radii.
-- Add a mobile bottom-sheet options view with the `mobileOptionsMode` override prop.

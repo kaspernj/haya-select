@@ -1,71 +1,22 @@
 import Text from "@kaspernj/api-maker/build/utils/text"
-import {PortalHost,PortalProvider} from "conjointment"
-import {useEvent} from "expo"
+import {PortalHost, PortalProvider} from "conjointment"
 import OutsideEyeProvider from "outside-eye/build/provider.js"
-import React, {useEffect, useState} from "react"
-import {Button,Platform,SafeAreaView,ScrollView,View} from "react-native"
+import React, {useEffect} from "react"
+import {Platform, SafeAreaView} from "react-native"
 import SystemTestBrowserHelper from "system-testing/build/system-test-browser-helper.js"
 
-import HayaSelectModule,{HayaSelectView} from "./haya-select-module"
-// The example app needs the select component for system testing.
-// @ts-expect-error - the component is authored in JS.
-import HayaSelect from "../src/select/index.jsx"
 import HayaSelectConfiguration from "../src/config.js"
+import {screenForName} from "./screens"
+import {styles} from "./screens/shared"
+
+const currentScreenName = () => {
+  if (Platform.OS !== "web" || typeof window === "undefined") return null
+
+  return new URLSearchParams(window.location.search).get("screen")
+}
 
 export default function App() {
-  const onChangePayload = useEvent(HayaSelectModule, "onChange")
-  const selectOptions = [
-    {value: "one", text: "One"},
-    {value: "two", text: "Two"},
-    {value: "three", text: "Three"}
-  ]
-  const placementAboveOptions = Array.from({length: 25}).map((_, index) => ({
-    value: `placement-above-${index + 1}`,
-    text: `Placement Option ${index + 1}`
-  }))
-  const mobileSheetOptions = Array.from({length: 40}).map((_, index) => ({
-    value: `mobile-sheet-${index + 1}`,
-    text: `Mobile Sheet Option ${index + 1}`
-  }))
-  const rightSelectOptions = selectOptions.map((option) => ({
-    ...option,
-    right: <Text>Right {option.text}</Text>
-  }))
-  const controlledValues = ["one", "two"]
-  const staleValueOptions = [
-    {value: "one", text: "One"},
-    {value: "two", text: "Two"}
-  ]
-  const staleValues = ["one", "missing"]
-  const paginationPageSize = 5
-  const paginationTotalCount = 24
-  const placementStyleCallback = {
-    optionsContainer: ({optionsPlacement, style}: {optionsPlacement?: "above" | "below"; style: Record<string, unknown>}) => {
-      Object.freeze(style)
-
-      if (optionsPlacement === "above") {
-        return {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
-          borderTopLeftRadius: 14,
-          borderTopRightRadius: 14
-        }
-      }
-
-      return {
-        borderBottomLeftRadius: 14,
-        borderBottomRightRadius: 14,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0
-      }
-    }
-  }
-  const [actionTypeValue, setActionTypeValue] = useState<string | null>(null)
-  const actionTypeOptions = [
-    {value: "email", text: "Email"},
-    {value: "points", text: "Points"},
-    {value: "sms", text: "SMS"}
-  ]
+  const Screen = screenForName(currentScreenName())
 
   useEffect(() => {
     HayaSelectConfiguration.current().setUseTranslate(() => ({
@@ -76,40 +27,14 @@ export default function App() {
       }
     }))
 
-    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    if (Platform.OS !== "web" || typeof window === "undefined") return
 
     const params = new URLSearchParams(window.location.search)
-    if (params.get("systemTest") !== "true") return;
+    if (params.get("systemTest") !== "true") return
 
     const helper = new SystemTestBrowserHelper()
     helper.enableOnBrowser()
   }, [])
-
-  const paginatedOptions = async ({searchValue, page = 1}: {searchValue?: string; page?: number}) => {
-    const availableOptions = Array.from({length: paginationTotalCount}).map((_, index) => ({
-      value: `option-${index + 1}`,
-      text: `Item ${index + 1}`
-    }))
-    const filteredOptions = searchValue
-      ? availableOptions.filter((option) => option.text.toLowerCase().includes(searchValue.toLowerCase()))
-      : availableOptions
-    const startIndex = (page - 1) * paginationPageSize
-    const pageOptions = filteredOptions
-      .slice(startIndex, startIndex + paginationPageSize)
-      .map((option) => ({...option, text: `Page ${page} ${option.text}`}))
-
-    return {
-      options: pageOptions,
-      totalCount: filteredOptions.length,
-      page,
-      pageSize: paginationPageSize
-    }
-  }
-  const controlledOptions = async ({values}: {values?: Array<string>}) => {
-    if (Array.isArray(values)) return {options: []}
-
-    return {options: selectOptions}
-  }
 
   return (
     <PortalProvider>
@@ -120,203 +45,13 @@ export default function App() {
             style={styles.container}
             testID="systemTestingComponent"
           >
-            <ScrollView style={styles.container}>
-              <Text testID="blankText" style={styles.blankText}>
-                {" "}
-              </Text>
-              <Text style={styles.header}>Module API Example</Text>
-              {/*
-                Keep the placement-below select at the top of the ScrollView
-                so its trigger lives near the top of the viewport in CI,
-                regardless of default window height. The placement decision
-                in HayaSelect uses `document.documentElement.scrollTop` and
-                does not track scroll inside this RN ScrollView, so a
-                trigger far down the list otherwise flips to "above" when
-                there isn't enough room below it.
-              */}
-              <Group name="Placement Callback Select Top">
-                <View testID="hayaSelectPlacementBelowRoot">
-                  <HayaSelect
-                    options={selectOptions}
-                    placeholder="Placement below"
-                    styles={placementStyleCallback}
-                  />
-                </View>
-              </Group>
-              <Group name="Constants">
-                <Text>{HayaSelectModule.PI}</Text>
-              </Group>
-              <Group name="Functions">
-                <Text>{HayaSelectModule.hello()}</Text>
-              </Group>
-              <Group name="Async functions">
-                <Button
-                  title="Set value"
-                  onPress={async () => {
-                    await HayaSelectModule.setValueAsync('Hello from JS!');
-                  }}
-                />
-              </Group>
-              <Group name="Events">
-                <Text>{onChangePayload?.value}</Text>
-              </Group>
-              <Group name="Select">
-                <View testID="hayaSelectRoot">
-                  <HayaSelect
-                    options={selectOptions}
-                    placeholder="Pick one"
-                  />
-                </View>
-              </Group>
-              <Group name="Right Option Select">
-                <View testID="hayaSelectRightOptionRoot">
-                  <HayaSelect
-                    options={rightSelectOptions}
-                    placeholder="Pick with right"
-                  />
-                </View>
-              </Group>
-              <Group name="Option Content Select">
-                <View testID="hayaSelectOptionContentRoot">
-                  <HayaSelect
-                    optionContent={({option}) => (
-                      <Text>
-                        Custom {option.text}
-                      </Text>
-                    )}
-                    options={selectOptions}
-                    placeholder="Pick custom"
-                  />
-                </View>
-              </Group>
-              <Group name="Multiple Select">
-                <View testID="hayaSelectMultipleRoot">
-                  <HayaSelect
-                    multiple
-                    options={selectOptions}
-                    placeholder="Pick multiple"
-                  />
-                </View>
-              </Group>
-              <Group name="Close On Change Select">
-                <View testID="hayaSelectCloseOnChangeRoot">
-                  <HayaSelect
-                    onChangeValue={(value) => setActionTypeValue(value)}
-                    options={actionTypeOptions}
-                    placeholder="Pick action"
-                  />
-                  {actionTypeValue === "points" &&
-                    <Text testID="hayaSelectCloseOnChangeDetails">
-                      Points selected
-                    </Text>
-                  }
-                </View>
-              </Group>
-              <Group name="Controlled Values Select">
-                <View testID="hayaSelectControlledValuesRoot">
-                  <HayaSelect
-                    multiple
-                    name="controlled_values"
-                    options={controlledOptions}
-                    placeholder="Pick controlled"
-                    values={controlledValues}
-                  />
-                </View>
-              </Group>
-              <Group name="Stale Values Select">
-                <View testID="hayaSelectStaleValuesRoot">
-                  <HayaSelect
-                    multiple
-                    name="stale_values"
-                    options={staleValueOptions}
-                    placeholder="Pick stale"
-                    values={staleValues}
-                  />
-                </View>
-              </Group>
-              <Group name="Paginated Select">
-                <View testID="hayaSelectPaginationRoot">
-                  <HayaSelect
-                    options={paginatedOptions}
-                    placeholder="Pick a page"
-                    search
-                  />
-                </View>
-              </Group>
-              <Group name="Mobile Sheet Select">
-                <View testID="hayaSelectMobileSheetRoot">
-                  <HayaSelect
-                    options={mobileSheetOptions}
-                    placeholder="Pick mobile sheet"
-                    search
-                  />
-                </View>
-              </Group>
-              <Group name="Views">
-                <HayaSelectView
-                  url="https://www.example.com"
-                  onLoad={({nativeEvent: {url}}) => console.log(`Loaded: ${url}`)}
-                  style={styles.view}
-                />
-              </Group>
-            </ScrollView>
-            <View style={styles.fixedBottomSelectContainer}>
-              <View testID="hayaSelectPlacementAboveRoot">
-                <HayaSelect
-                  options={placementAboveOptions}
-                  placeholder="Placement above"
-                  styles={placementStyleCallback}
-                />
-              </View>
-            </View>
+            <Text testID="blankText" style={styles.blankText}>
+              {" "}
+            </Text>
+            <Screen />
           </SafeAreaView>
         </OutsideEyeProvider>
       </PortalHost>
     </PortalProvider>
-  );
-}
-
-function Group(props: {name: string; children: React.ReactNode}) {
-  return (
-    <View style={styles.group}>
-      <Text style={styles.groupHeader}>{props.name}</Text>
-      {props.children}
-    </View>
-  );
-}
-
-const styles = {
-  header: {
-    fontSize: 30,
-    margin: 20,
-  },
-  groupHeader: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  group: {
-    margin: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#eee',
-  },
-  view: {
-    flex: 1,
-    height: 200,
-  },
-  blankText: {
-    height: 1,
-    opacity: 0.01,
-    width: 1,
-  },
-  fixedBottomSelectContainer: {
-    bottom: 20,
-    left: 20,
-    position: "absolute",
-    right: 20
-  }
+  )
 }

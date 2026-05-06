@@ -13,7 +13,7 @@ describe("HayaSelect", () => {
     await timeout({errorMessage: "render test timed out: renders in the example app", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
         await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
-      })
+      }, {screen: "basic-select"})
     })
   })
 
@@ -34,7 +34,7 @@ describe("HayaSelect", () => {
         })
 
         await helper.close()
-      })
+      }, {screen: "option-content"})
     })
   })
 
@@ -55,7 +55,7 @@ describe("HayaSelect", () => {
         })
 
         await helper.close()
-      })
+      }, {screen: "right-option"})
     })
   })
 
@@ -75,7 +75,7 @@ describe("HayaSelect", () => {
             throw new Error("Expected points details to render")
           }
         })
-      })
+      }, {screen: "close-on-change"})
     })
   })
 
@@ -99,7 +99,7 @@ describe("HayaSelect", () => {
           throw new Error(`Expected chip text to include 'One', got: ${text}`)
         }
       })
-    })
+    }, {screen: "stale-values"})
   })
 
   it("renders hidden input for controlled values without current options", async () => {
@@ -122,7 +122,7 @@ describe("HayaSelect", () => {
           throw new Error(`Expected hidden input name to be 'controlled_values[]', got: ${names.join(", ")}`)
         }
       })
-    })
+    }, {screen: "controlled-values"})
   })
 
   it("filters options when searching", async () => {
@@ -163,7 +163,7 @@ describe("HayaSelect", () => {
         })
 
         await helper.close()
-      })
+      }, {screen: "filter-select"})
     })
   })
 
@@ -204,7 +204,7 @@ describe("HayaSelect", () => {
         })
 
         await helper.close()
-      })
+      }, {screen: "no-options-select"})
     })
   })
 
@@ -306,7 +306,7 @@ describe("HayaSelect", () => {
         } finally {
           await driver.manage().window().setRect(originalWindowRect)
         }
-      })
+      }, {screen: "mobile-sheet-select"})
     })
   })
 
@@ -354,7 +354,7 @@ describe("HayaSelect", () => {
         } finally {
           await driver.manage().window().setRect(originalWindowRect)
         }
-      })
+      }, {screen: "mobile-sheet-resize"})
     })
   })
 
@@ -409,7 +409,7 @@ describe("HayaSelect", () => {
         await helper.selectOption({value: "two"})
 
         await helper.close()
-      })
+      }, {screen: "multiple-highlight"})
     })
   })
 
@@ -532,7 +532,7 @@ describe("HayaSelect", () => {
             throw new Error(`Expected placeholder, got: ${text}`)
           }
         })
-      })
+      }, {screen: "multiple-clear"})
     })
   })
 
@@ -614,7 +614,7 @@ describe("HayaSelect", () => {
         expect(finalRadii.topRight).not.toBe("0px")
         expect(finalRadii.bottomLeft).not.toBe("0px")
         expect(finalRadii.bottomRight).not.toBe("0px")
-      })
+      }, {screen: "rounded-corners-select"})
     })
   })
 
@@ -688,7 +688,7 @@ describe("HayaSelect", () => {
         expect(abovePlacementAndRadii.bottomLeft).toBe("0px")
         expect(abovePlacementAndRadii.bottomRight).toBe("0px")
         await aboveHelper.close()
-      })
+      }, {screen: "placement-callback"})
     })
   })
 
