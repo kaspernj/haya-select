@@ -14,6 +14,7 @@ const PressableComponent = /** @type {any} */ (Pressable)
  * @property {string} [icon]
  * @property {(event: import("react").SyntheticEvent, option: Record<string, any>) => void} onOptionClicked
  * @property {Record<string, any>} option
+ * @property {"above"|"below"|"sheet"|undefined} [optionsPlacement]
  * @property {(option: Record<string, any>, mode: string) => import("react").ReactNode} presentOption
  * @property {string} [selectedBackgroundColor]
  * @property {string} [selectedHoverBackgroundColor]
@@ -33,6 +34,7 @@ class Option extends ShapeComponent {
     icon: PropTypes.string,
     onOptionClicked: PropTypes.func.isRequired,
     option: PropTypes.object.isRequired,
+    optionsPlacement: PropTypes.oneOf(["above", "below", "sheet"]),
     presentOption: PropTypes.func.isRequired,
     selectedBackgroundColor: PropTypes.string,
     selectedHoverBackgroundColor: PropTypes.string
@@ -47,16 +49,18 @@ class Option extends ShapeComponent {
     const {currentOptionValues, option} = this.p
     const {hover} = this.s
     const disabled = Boolean(option.disabled)
+    const mobileSheet = this.p.optionsPlacement == "sheet"
     const selected = Boolean(currentOptionValues?.find((currentOptionValue) => currentOptionValue == option.value))
 
     const style = useMemo(() => {
       const selectedBackgroundColor = this.props.selectedBackgroundColor || "#cfe1ff"
       const selectedHoverBackgroundColor = this.props.selectedHoverBackgroundColor || "#9bbcfb"
       const style = {
-        paddingTop: 4,
-        paddingRight: 8,
-        paddingBottom: 4,
-        paddingLeft: 8,
+        paddingTop: mobileSheet ? 14 : 4,
+        paddingRight: mobileSheet ? 16 : 8,
+        paddingBottom: mobileSheet ? 14 : 4,
+        paddingLeft: mobileSheet ? 16 : 8,
+        minHeight: mobileSheet ? 48 : undefined,
         color: "#000"
       }
 
@@ -76,7 +80,7 @@ class Option extends ShapeComponent {
       }
 
       return style
-    }, [disabled, hover, selected, this.props.selectedBackgroundColor, this.props.selectedHoverBackgroundColor])
+    }, [disabled, hover, mobileSheet, selected, this.props.selectedBackgroundColor, this.props.selectedHoverBackgroundColor])
 
     return (
       <PressableComponent
@@ -90,6 +94,7 @@ class Option extends ShapeComponent {
         onPointerOver={this.tt.onPointerOver}
         onPointerOut={this.tt.onPointerOut}
         style={style}
+        testID="haya-select-option"
       >
         {this.p.presentOption(option, "option")}
       </PressableComponent>

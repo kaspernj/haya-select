@@ -21,6 +21,7 @@ export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
           color: "#000",
           fontWeight: "bold"
         }}
+        testID="haya-select-option-group"
       >
         <Text>
           {this.props.option.text}

@@ -23,11 +23,11 @@ export default class HayaSelectSystemTestHelper {
     this.systemTest = systemTest
     this.testId = testId
     this.rootSelector = `[data-testid='${testId}']`
-    this.componentSelector = `${this.rootSelector} [data-component='haya-select']`
-    this.chevronContainerSelector = `${this.rootSelector} [data-class='chevron-container']`
-    this.selectContainerSelector = `${this.rootSelector} [data-class='select-container']`
-    this.searchInputSelector = `${this.rootSelector} [data-class='search-text-input']`
-    this.optionsContainerSelectorFallback = "[data-class='options-container']"
+    this.componentSelector = `${this.rootSelector} [data-testid='haya-select']`
+    this.chevronContainerSelector = `${this.rootSelector} [data-testid='haya-select-chevron-container']`
+    this.selectContainerSelector = `${this.rootSelector} [data-testid='haya-select-select-container']`
+    this.searchInputSelector = `${this.rootSelector} [data-testid='haya-select-search-input']`
+    this.optionsContainerSelectorFallback = "[data-testid='haya-select-options-container']"
   }
 
   /** @returns {Promise<void>} */
@@ -114,7 +114,7 @@ export default class HayaSelectSystemTestHelper {
 
     const id = rootId || (elements.length > 0 ? await elements[0].getAttribute("data-id") : null)
 
-    this._optionsContainerSelector = id ? `[data-class='options-container'][data-id='${id}']` : this.optionsContainerSelectorFallback
+    this._optionsContainerSelector = id ? `[data-testid='haya-select-options-container'][data-id='${id}']` : this.optionsContainerSelectorFallback
 
     return this._optionsContainerSelector
   }
@@ -122,7 +122,7 @@ export default class HayaSelectSystemTestHelper {
   /** @returns {Promise<string[]>} */
   async optionTexts() {
     const optionsContainerSelector = await this.optionsContainerSelector()
-    const options = await this.findElements(`${optionsContainerSelector} [data-class='select-option']`)
+    const options = await this.findElements(`${optionsContainerSelector} [data-testid='haya-select-option']`)
 
     return await Promise.all(options.map(async (option) => (await option.getText()).trim()))
   }
@@ -145,7 +145,7 @@ export default class HayaSelectSystemTestHelper {
     if (typeof value != "undefined") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.findElements(`${optionsContainerSelector} [data-class='select-option'][data-value='${value}']`)
+        const options = await this.findElements(`${optionsContainerSelector} [data-testid='haya-select-option'][data-value='${value}']`)
         const option = options[0]
 
         if (!option) {
@@ -160,7 +160,7 @@ export default class HayaSelectSystemTestHelper {
     if (typeof index == "number") {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.findElements(`${optionsContainerSelector} [data-class='select-option']`)
+        const options = await this.findElements(`${optionsContainerSelector} [data-testid='haya-select-option']`)
         const option = options[index]
 
         if (!option) throw new Error(`No option at index: ${index}`)
@@ -173,7 +173,7 @@ export default class HayaSelectSystemTestHelper {
     if (text) {
       await waitFor({timeout: 5000}, async () => {
         const optionsContainerSelector = await this.optionsContainerSelector()
-        const options = await this.findElements(`${optionsContainerSelector} [data-class='select-option']`)
+        const options = await this.findElements(`${optionsContainerSelector} [data-testid='haya-select-option']`)
 
         for (const option of options) {
           const optionText = (await option.getText()).trim()

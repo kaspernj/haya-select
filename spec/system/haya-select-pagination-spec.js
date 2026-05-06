@@ -78,7 +78,7 @@ describe("HayaSelect pagination", () => {
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 
-        await clickPaginationSelector(systemTest, "[data-class='pagination-next']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-next']")
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -88,7 +88,7 @@ describe("HayaSelect pagination", () => {
           }
         })
 
-        await clickPaginationSelector(systemTest, "[data-class='pagination-prev']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-prev']")
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
