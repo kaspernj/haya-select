@@ -228,12 +228,59 @@ describe("HayaSelect", () => {
           await systemTest.findByTestID("hayaSelectMobileSheetRoot", {timeout: 5000})
           await helper.open()
 
-          const optionsContainerSelector = await helper.optionsContainerSelector()
+          let optionsContainerSelector = await helper.optionsContainerSelector()
 
           await systemTest.find(
             "[data-testid='hayaSelectMobileSheetRoot'] [data-testid='haya-select'][data-options-placement='sheet']",
             {timeout: 5000}
           )
+
+          const backdrop = await systemTest.find("[data-testid='haya-select-mobile-options-backdrop']", {timeout: 5000, useBaseSelector: false})
+          const backdropCursor = await backdrop.getCssValue("cursor")
+
+          if (backdropCursor == "pointer") {
+            throw new Error("Expected mobile options backdrop not to use pointer cursor")
+          }
+
+          await driver.executeScript(`
+            const backdrop = document.querySelector("[data-testid='haya-select-mobile-options-backdrop']")
+            if (!backdrop) throw new Error("Missing mobile options backdrop")
+
+            const rect = backdrop.getBoundingClientRect()
+            const clientX = Math.round(rect.left + (rect.width / 2))
+            const clientY = Math.round(rect.top + 24)
+            const target = document.elementFromPoint(clientX, clientY)
+
+            if (target !== backdrop) {
+              throw new Error("Expected visible backdrop at click point")
+            }
+
+            for (const eventName of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
+              const eventClass = eventName.startsWith("pointer") && window.PointerEvent ? PointerEvent : MouseEvent
+              target.dispatchEvent(new eventClass(eventName, {
+                bubbles: true,
+                button: 0,
+                cancelable: true,
+                clientX,
+                clientY,
+                pointerId: 1,
+                pointerType: "mouse"
+              }))
+            }
+          `)
+          await waitFor({timeout: 5000}, async () => {
+            const openedElements = await systemTest.all(
+              "[data-testid='hayaSelectMobileSheetRoot'] [data-testid='haya-select'][data-opened='true']",
+              {timeout: 0}
+            )
+
+            if (openedElements.length > 0) {
+              throw new Error("Expected mobile backdrop to close the sheet")
+            }
+          })
+
+          await helper.open()
+          optionsContainerSelector = await helper.optionsContainerSelector()
 
           await waitFor({timeout: 5000}, async () => {
             const metrics = await driver.executeScript(`

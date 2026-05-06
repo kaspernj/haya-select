@@ -1,7 +1,7 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
 import {dig, digg} from "diggerize"
-import {Dimensions, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
+import {Dimensions, PanResponder, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
 import React, {createRef, memo, useEffect} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
@@ -1328,15 +1328,22 @@ class HayaSelect extends ShapeComponent {
   }
 
   /**
-   * @param {import("react").SyntheticEvent} event Press event.
+   * @param {import("react").SyntheticEvent} event Responder event.
    * @returns {void}
    */
-  onMobileOptionsBackdropPress = (event) => {
-    event.preventDefault()
-    event.stopPropagation()
+  onMobileOptionsBackdropRelease = (event) => {
+    event.preventDefault?.()
+    event.stopPropagation?.()
 
     this.closeOptions()
   }
+
+  mobileOptionsBackdropPanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => false,
+    onPanResponderRelease: this.tt.onMobileOptionsBackdropRelease,
+    onPanResponderTerminate: this.tt.onMobileOptionsBackdropRelease
+  })
 
   /** @returns {number|null} */
   paginationTotalPages() {
@@ -1718,9 +1725,8 @@ class HayaSelect extends ShapeComponent {
         })}
         testID="haya-select-mobile-options-overlay"
       >
-        <Pressable
+        <View
           dataSet={this.mobileOptionsBackdropDataSet ||= {class: "mobile-options-backdrop"}}
-          onPress={this.tt.onMobileOptionsBackdropPress}
           style={this.stylingFor("mobileOptionsBackdrop", styles.mobileOptionsBackdrop ||= {
             position: "absolute",
             top: 0,
@@ -1730,6 +1736,7 @@ class HayaSelect extends ShapeComponent {
             backgroundColor: "rgba(15, 23, 42, 0.32)"
           })}
           testID="haya-select-mobile-options-backdrop"
+          {...this.tt.mobileOptionsBackdropPanResponder.panHandlers}
         />
         <View
           dataSet={this.cache(

@@ -1,1 +1,1 @@
-- Align mobile sheet options to the bottom of the options area, make filtered sheets shrink to content, add thumb-friendly mobile option padding, expose stable test IDs for select internals, and remove the sheet's top border.
+- Align mobile sheet options to the bottom of the options area, make filtered sheets shrink to content, add thumb-friendly mobile option padding, expose stable test IDs for select internals, remove the sheet's top border, and use a responder backdrop that avoids pointer cursor styling.
