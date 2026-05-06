@@ -48,6 +48,7 @@ export default memo(shapeComponent(class PaginationPageButton extends ShapeCompo
           marginHorizontal: 4,
           width: 28
         }}
+        testID="haya-select-pagination-page"
       >
         <Text
           style={styles[`paginationPageText-${active}`] ||= {

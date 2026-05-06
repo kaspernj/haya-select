@@ -2,7 +2,7 @@ import waitFor from "awaitery/build/wait-for.js"
 
 export const setPaginationInputValue = async (systemTest, value) => {
   await waitFor({timeout: 5000}, async () => {
-    const element = await systemTest.find("[data-class='pagination-input']", {useBaseSelector: false})
+    const element = await systemTest.find("[data-testid='haya-select-pagination-input']", {useBaseSelector: false})
     const driver = systemTest.getDriver()
     await driver.executeScript(
       "arguments[0].focus(); arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles: true})); arguments[0].dispatchEvent(new Event('change', {bubbles: true})); arguments[0].blur();",
@@ -13,7 +13,7 @@ export const setPaginationInputValue = async (systemTest, value) => {
 }
 
 export const paginationLabelText = async (systemTest) => {
-  const labelElements = await systemTest.all("[data-class='pagination-input']", {timeout: 0, useBaseSelector: false})
+  const labelElements = await systemTest.all("[data-testid='haya-select-pagination-input']", {timeout: 0, useBaseSelector: false})
 
   if (labelElements.length === 0) return null
 
@@ -23,10 +23,10 @@ export const paginationLabelText = async (systemTest) => {
 }
 
 export const openPaginatedSelect = async (systemTest) => {
-  const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+  const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-select-container']")
   const driver = systemTest.getDriver()
   const searchInputs = await systemTest.all(
-    "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+    "[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-search-input']",
     {timeout: 0, visible: true}
   )
 
@@ -38,7 +38,7 @@ export const openPaginatedSelect = async (systemTest) => {
     await systemTest.click(selectContainer)
     await waitFor({timeout: 5000}, async () => {
       const searchInputsAfterClick = await systemTest.all(
-        "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+        "[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-search-input']",
         {timeout: 0, visible: true}
       )
 
@@ -55,7 +55,7 @@ export const openPaginatedSelect = async (systemTest) => {
   await systemTest.click(selectContainer)
   await waitFor({timeout: 5000}, async () => {
     const searchInputsAfterClick = await systemTest.all(
-      "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+      "[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-search-input']",
       {timeout: 0, visible: true}
     )
 
@@ -65,7 +65,7 @@ export const openPaginatedSelect = async (systemTest) => {
   })
 
   await waitFor({timeout: 5000}, async () => {
-    const paginationElements = await systemTest.all("[data-class='options-pagination']", {timeout: 0, useBaseSelector: false})
+    const paginationElements = await systemTest.all("[data-testid='haya-select-options-pagination']", {timeout: 0, useBaseSelector: false})
 
     if (paginationElements.length === 0) {
       throw new Error("Pagination not visible yet")
@@ -77,12 +77,12 @@ export const openPaginatedSelect = async (systemTest) => {
 
 export const closePaginatedSelect = async (systemTest) => {
   const inputs = await systemTest.all(
-    "[data-testid='hayaSelectPaginationRoot'] [data-class='search-text-input']",
+    "[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-search-input']",
     {timeout: 0, visible: true}
   )
 
   if (inputs.length > 0) {
-    const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-class='select-container']")
+    const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-select-container']")
     const driver = systemTest.getDriver()
     await driver.executeScript(
       "arguments[0].scrollIntoView({block: 'center', inline: 'center'})",
@@ -114,7 +114,7 @@ export const findPaginationPageButton = async (systemTest, pageNumber) => {
   let matchingButton
 
   await waitFor({timeout: 5000}, async () => {
-    const pageButtons = await systemTest.all("[data-class='pagination-page']", {useBaseSelector: false})
+    const pageButtons = await systemTest.all("[data-testid='haya-select-pagination-page']", {useBaseSelector: false})
 
     for (const pageButton of pageButtons) {
       const buttonText = (await pageButton.getText()).trim()
