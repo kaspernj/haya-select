@@ -1,0 +1,1 @@
+- Remove the options container `data-class` marker and prevent mobile sheet mode from keeping fixed custom heights.

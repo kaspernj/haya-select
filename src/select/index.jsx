@@ -1696,7 +1696,7 @@ class HayaSelect extends ShapeComponent {
    */
   mobileOptionsContainer({id, optionsContent}) {
     const sheetMaxHeight = Math.round(Dimensions.get("window").height * 0.8)
-    const sheetStyle = this.stylingFor("optionsContainer", {
+    let sheetStyle = this.stylingFor("optionsContainer", {
       position: "absolute",
       zIndex: 100000,
       elevation: 100000,
@@ -1710,6 +1710,11 @@ class HayaSelect extends ShapeComponent {
       overflow: "hidden",
       visibility: this.s.optionsVisibility
     }, [sheetMaxHeight, this.s.optionsVisibility])
+
+    if ("height" in sheetStyle) {
+      sheetStyle = Object.assign({}, sheetStyle)
+      delete sheetStyle.height
+    }
 
     return (
       <View
@@ -1741,7 +1746,7 @@ class HayaSelect extends ShapeComponent {
         <View
           dataSet={this.cache(
             "mobileOptionsContainerDataSet",
-            {class: "options-container", id, role: "dialog", optionsPlacement: "sheet", optionsVisibility: this.s.optionsVisibility || "hidden"},
+            {id, role: "dialog", optionsPlacement: "sheet", optionsVisibility: this.s.optionsVisibility || "hidden"},
             [id, this.s.optionsVisibility]
           )}
           onLayout={this.tt.onOptionsContainerLayout}
@@ -1757,7 +1762,7 @@ class HayaSelect extends ShapeComponent {
             dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
-            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexShrink: 1})}
+            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
             testID="haya-select-mobile-options-scroll-view"
           >
             {optionsContent}
@@ -1895,7 +1900,7 @@ class HayaSelect extends ShapeComponent {
       <View
         dataSet={this.cache(
           "optionsContainerDataSet",
-          {class: "options-container", id, role: "dialog", optionsVisibility: optionsVisibility || "hidden"},
+          {id, role: "dialog", optionsVisibility: optionsVisibility || "hidden"},
           [id, optionsVisibility]
         )}
         onLayout={this.tt.onOptionsContainerLayout}

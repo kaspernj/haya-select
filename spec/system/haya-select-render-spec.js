@@ -294,7 +294,9 @@ describe("HayaSelect", () => {
 
               return {
                 bottom: Math.round(window.innerHeight - rect.bottom),
+                dataClass: container.getAttribute("data-class"),
                 height: rect.height,
+                inlineHeight: container.style.height,
                 optionPaddingBottom: parseFloat(optionStyle.paddingBottom),
                 optionPaddingLeft: parseFloat(optionStyle.paddingLeft),
                 optionPaddingRight: parseFloat(optionStyle.paddingRight),
@@ -306,6 +308,14 @@ describe("HayaSelect", () => {
 
             if (metrics.height > maxHeight + 8) {
               throw new Error(`Expected sheet height at most 80vh, got: ${metrics.height} of ${metrics.windowHeight}`)
+            }
+
+            if (metrics.dataClass) {
+              throw new Error(`Expected options container to use testID instead of data-class, got: ${metrics.dataClass}`)
+            }
+
+            if (metrics.inlineHeight) {
+              throw new Error(`Expected mobile options container not to keep a fixed height, got: ${metrics.inlineHeight}`)
             }
 
             if (Math.abs(metrics.bottom) > 2) {
@@ -367,7 +377,9 @@ describe("HayaSelect", () => {
               return {
                 borderTopWidth: containerStyle.borderTopWidth,
                 containerHeight: container.getBoundingClientRect().height,
+                dataClass: container.getAttribute("data-class"),
                 distanceToScrollBottom: Math.round(scrollViewRect.bottom - optionRect.bottom),
+                inlineHeight: container.style.height,
                 windowHeight: window.innerHeight
               }
             `)
@@ -375,6 +387,14 @@ describe("HayaSelect", () => {
 
             if (layout.containerHeight >= maxHeight - 8) {
               throw new Error(`Expected filtered sheet to shrink below max height, got: ${layout.containerHeight}`)
+            }
+
+            if (layout.dataClass) {
+              throw new Error(`Expected filtered options container to use testID instead of data-class, got: ${layout.dataClass}`)
+            }
+
+            if (layout.inlineHeight) {
+              throw new Error(`Expected filtered mobile options container not to keep a fixed height, got: ${layout.inlineHeight}`)
             }
 
             if (layout.borderTopWidth !== "0px") {
