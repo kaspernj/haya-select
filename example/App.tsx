@@ -23,6 +23,10 @@ export default function App() {
     value: `placement-above-${index + 1}`,
     text: `Placement Option ${index + 1}`
   }))
+  const mobileSheetOptions = Array.from({length: 40}).map((_, index) => ({
+    value: `mobile-sheet-${index + 1}`,
+    text: `Mobile Sheet Option ${index + 1}`
+  }))
   const rightSelectOptions = selectOptions.map((option) => ({
     ...option,
     right: <Text>Right {option.text}</Text>
@@ -235,6 +239,15 @@ export default function App() {
                   <HayaSelect
                     options={paginatedOptions}
                     placeholder="Pick a page"
+                    search
+                  />
+                </View>
+              </Group>
+              <Group name="Mobile Sheet Select">
+                <View testID="hayaSelectMobileSheetRoot">
+                  <HayaSelect
+                    options={mobileSheetOptions}
+                    placeholder="Pick mobile sheet"
                     search
                   />
                 </View>

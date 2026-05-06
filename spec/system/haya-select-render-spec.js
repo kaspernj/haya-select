@@ -208,6 +208,108 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("uses a bottom sheet on mobile-sized screens", async () => {
+    await timeout({errorMessage: "render test timed out: uses a bottom sheet on mobile-sized screens", timeout: 60000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const driver = systemTest.getDriver()
+        const originalWindowRect = await driver.manage().window().getRect()
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMobileSheetRoot"})
+
+        try {
+          await driver.manage().window().setRect({height: 844, width: 390})
+          await waitFor({timeout: 5000}, async () => {
+            const width = await driver.executeScript("return window.innerWidth")
+
+            if (width > 768) {
+              throw new Error(`Expected mobile viewport width, got: ${width}`)
+            }
+          })
+
+          await systemTest.findByTestID("hayaSelectMobileSheetRoot", {timeout: 5000})
+          await helper.open()
+
+          const optionsContainerSelector = await helper.optionsContainerSelector()
+
+          await systemTest.find(
+            "[data-testid='hayaSelectMobileSheetRoot'] [data-component='haya-select'][data-options-placement='sheet']",
+            {timeout: 5000}
+          )
+
+          await waitFor({timeout: 5000}, async () => {
+            const metrics = await driver.executeScript(`
+              const container = document.querySelector(${JSON.stringify(optionsContainerSelector)})
+              if (!container) throw new Error("Missing mobile options container")
+
+              const rect = container.getBoundingClientRect()
+              return {
+                bottom: Math.round(window.innerHeight - rect.bottom),
+                height: rect.height,
+                windowHeight: window.innerHeight
+              }
+            `)
+            const expectedHeight = metrics.windowHeight * 0.8
+
+            if (Math.abs(metrics.height - expectedHeight) > 8) {
+              throw new Error(`Expected sheet height near 80vh, got: ${metrics.height} of ${metrics.windowHeight}`)
+            }
+
+            if (Math.abs(metrics.bottom) > 2) {
+              throw new Error(`Expected sheet to be anchored to bottom, got bottom offset: ${metrics.bottom}`)
+            }
+          })
+
+          await driver.executeScript("window.scrollTo(0, 500)")
+          await waitFor({timeout: 5000}, async () => {
+            const openOptions = await systemTest.all(optionsContainerSelector, {timeout: 0, useBaseSelector: false, visible: true})
+
+            if (openOptions.length === 0) {
+              throw new Error("Expected mobile sheet to stay open after page scroll")
+            }
+          })
+
+          await driver.executeScript(`
+            const scrollView = document.querySelector("[data-class='mobile-options-scroll-view']")
+            if (!scrollView) throw new Error("Missing mobile options scroll view")
+            scrollView.scrollTop = scrollView.scrollHeight
+            scrollView.dispatchEvent(new Event("scroll", {bubbles: true}))
+          `)
+
+          await systemTest.interact(
+            {selector: `${optionsContainerSelector} [data-class='search-text-input']`, useBaseSelector: false},
+            "sendKeys",
+            Key.chord(Key.CONTROL, "a"),
+            Key.BACK_SPACE,
+            "40"
+          )
+
+          await waitFor({timeout: 5000}, async () => {
+            const texts = await helper.optionTexts()
+
+            if (texts.length !== 1 || !texts[0].includes("Mobile Sheet Option 40")) {
+              throw new Error(`Unexpected mobile sheet filtered options: ${texts.join(", ")}`)
+            }
+          })
+
+          await helper.selectOption({value: "mobile-sheet-40"})
+
+          await waitFor({timeout: 5000}, async () => {
+            const currentSelected = await systemTest.find(
+              "[data-testid='hayaSelectMobileSheetRoot'] [data-class='current-selected']",
+              {timeout: 0}
+            )
+            const text = (await currentSelected.getText()).trim()
+
+            if (!text.includes("Mobile Sheet Option 40")) {
+              throw new Error(`Expected selected mobile sheet option, got: ${text}`)
+            }
+          })
+        } finally {
+          await driver.manage().window().setRect(originalWindowRect)
+        }
+      })
+    })
+  })
+
   it("highlights selected options in multiple select", async () => {
     await timeout({errorMessage: "render test timed out: highlights selected options in multiple select", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
