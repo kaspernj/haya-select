@@ -1,7 +1,7 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
 import {dig, digg} from "diggerize"
-import {Dimensions, PanResponder, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
+import {Animated, Dimensions, Easing, PanResponder, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
 import React, {createRef, memo, useEffect} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
@@ -282,10 +282,25 @@ class HayaSelect extends ShapeComponent {
   bodyScrollLocked = false
   endOfSelectRef = createRef()
   latestLoadOptionsRequestId = 0
+  mobileOptionsBackdropOpacity = new Animated.Value(0)
   optionsContainerRef = createRef()
   pageInputRef = createRef()
   previousBodyOverflow = undefined
   previousDocumentOverflow = undefined
+  mobileOptionsContainerProgress = new Animated.Value(0)
+  mobileOptionsContainerScale = this.mobileOptionsContainerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1]
+  })
+  mobileOptionsContainerTranslateY = this.mobileOptionsContainerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0]
+  })
+  mobileOptionsContainerTransform = [
+    {translateY: this.mobileOptionsContainerTranslateY},
+    {scale: this.mobileOptionsContainerScale}
+  ]
+  mobileOptionsClosing = false
   searchTextValue = ""
   searchTextInputRef = createRef()
   selectContainerRef = createRef()
@@ -580,6 +595,8 @@ class HayaSelect extends ShapeComponent {
 
   /** @returns {void} */
   componentWillUnmount() {
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
     this.unlockBodyScroll()
   }
 
@@ -1051,6 +1068,50 @@ class HayaSelect extends ShapeComponent {
   closeOptions({options} = {}) {
     const closedOptions = options || this.getCurrentOptions()
     if (this.isDebugEnabled()) this.debugLog("closeOptions", {closedOptionsCount: closedOptions?.length || 0})
+
+    if (this.s.opened && this.s.optionsPlacement == "sheet") {
+      this.closeMobileOptionsWithAnimation({closedOptions})
+      return
+    }
+
+    this.finishCloseOptions({closedOptions})
+  }
+
+  /**
+   * @param {{closedOptions: Array<HayaSelectOption>}} params Close payload.
+   * @returns {void}
+   */
+  closeMobileOptionsWithAnimation({closedOptions}) {
+    if (this.mobileOptionsClosing) return
+
+    this.mobileOptionsClosing = true
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
+
+    Animated.parallel([
+      Animated.timing(this.mobileOptionsBackdropOpacity, {
+        duration: 90,
+        easing: Easing.out(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true
+      }),
+      Animated.timing(this.mobileOptionsContainerProgress, {
+        duration: 110,
+        easing: Easing.in(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true
+      })
+    ]).start(() => {
+      this.mobileOptionsClosing = false
+      this.finishCloseOptions({closedOptions})
+    })
+  }
+
+  /**
+   * @param {{closedOptions: Array<HayaSelectOption>}} params Close payload.
+   * @returns {void}
+   */
+  finishCloseOptions({closedOptions}) {
     this.callOptionsPositionAboveIfOutsideScreen = false
     this.unlockBodyScroll()
 
@@ -1077,6 +1138,33 @@ class HayaSelect extends ShapeComponent {
     }
 
     if (this.p.onBlur) this.p.onBlur()
+  }
+
+  /** @returns {void} */
+  prepareMobileOptionsAnimation() {
+    this.mobileOptionsClosing = false
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
+    this.mobileOptionsBackdropOpacity.setValue(0)
+    this.mobileOptionsContainerProgress.setValue(0)
+  }
+
+  /** @returns {void} */
+  startMobileOptionsOpenAnimation() {
+    Animated.parallel([
+      Animated.timing(this.mobileOptionsBackdropOpacity, {
+        duration: 90,
+        easing: Easing.out(Easing.cubic),
+        toValue: 1,
+        useNativeDriver: true
+      }),
+      Animated.timing(this.mobileOptionsContainerProgress, {
+        duration: 130,
+        easing: Easing.out(Easing.back(1.05)),
+        toValue: 1,
+        useNativeDriver: true
+      })
+    ]).start()
   }
 
   /** @returns {string} */
@@ -1126,6 +1214,11 @@ class HayaSelect extends ShapeComponent {
     })
     this.searchTextValue = ""
     this.callOptionsPositionAboveIfOutsideScreen = !mobileOptionsSheet
+
+    if (mobileOptionsSheet) {
+      this.prepareMobileOptionsAnimation()
+    }
+
     this.setState(
       {
         height: mobileOptionsSheet ? null : this.s.selectContainerLayout?.height,
@@ -1142,6 +1235,7 @@ class HayaSelect extends ShapeComponent {
       () => {
         if (mobileOptionsSheet) {
           this.lockBodyScroll()
+          this.startMobileOptionsOpenAnimation()
         } else {
           this.measureNativeSelectLayouts()
           this.focusTextInput()
@@ -1259,6 +1353,12 @@ class HayaSelect extends ShapeComponent {
   setOptionsPositionSheet() {
     if (!this.s.opened) return
 
+    const switchingToSheet = this.s.optionsPlacement != "sheet"
+
+    if (switchingToSheet) {
+      this.prepareMobileOptionsAnimation()
+    }
+
     this.lockBodyScroll()
 
     this.setState({
@@ -1267,6 +1367,8 @@ class HayaSelect extends ShapeComponent {
       optionsPlacement: "sheet",
       optionsVisibility: "visible",
       optionsWidth: undefined
+    }, () => {
+      if (switchingToSheet) this.startMobileOptionsOpenAnimation()
     })
   }
 
@@ -1750,7 +1852,9 @@ class HayaSelect extends ShapeComponent {
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
+      opacity: this.mobileOptionsContainerProgress,
       overflow: "hidden",
+      transform: this.mobileOptionsContainerTransform,
       visibility: this.s.optionsVisibility
     }, [sheetMaxHeight, this.s.optionsVisibility])
 
@@ -1772,19 +1876,20 @@ class HayaSelect extends ShapeComponent {
         })}
         testID="haya-select/mobile-options-overlay"
       >
-        <View
-          style={this.stylingFor("mobileOptionsBackdrop", styles.mobileOptionsBackdrop ||= {
+        <Animated.View
+          style={this.stylingFor("mobileOptionsBackdrop", this.mobileOptionsBackdropStyle ||= {
             position: "absolute",
             top: 0,
             right: 0,
             bottom: 0,
             left: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.32)"
+            backgroundColor: "rgba(15, 23, 42, 0.32)",
+            opacity: this.mobileOptionsBackdropOpacity
           })}
           testID="haya-select/mobile-options-backdrop"
           {...this.tt.mobileOptionsBackdropPanResponder.panHandlers}
         />
-        <View
+        <Animated.View
           dataSet={this.cache(
             "mobileOptionsContainerDataSet",
             {id, role: "dialog", optionsPlacement: "sheet", optionsVisibility: this.s.optionsVisibility || "hidden"},
@@ -1821,7 +1926,7 @@ class HayaSelect extends ShapeComponent {
           >
             {this.searchTextInput({mobileOptionsSheet: true})}
           </View>
-        </View>
+        </Animated.View>
       </View>
     )
   }
