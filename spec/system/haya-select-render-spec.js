@@ -290,10 +290,12 @@ describe("HayaSelect", () => {
               if (!option) throw new Error("Missing mobile option")
 
               const rect = container.getBoundingClientRect()
+              const containerStyle = window.getComputedStyle(container)
               const optionStyle = window.getComputedStyle(option)
 
               return {
                 bottom: Math.round(window.innerHeight - rect.bottom),
+                boxShadow: containerStyle.boxShadow,
                 dataClass: container.getAttribute("data-class"),
                 height: rect.height,
                 inlineHeight: container.style.height,
@@ -332,6 +334,10 @@ describe("HayaSelect", () => {
 
             if (metrics.width >= metrics.windowWidth) {
               throw new Error(`Expected sheet width below viewport width, got width=${metrics.width} viewport=${metrics.windowWidth}`)
+            }
+
+            if (!metrics.boxShadow || metrics.boxShadow == "none") {
+              throw new Error(`Expected mobile options sheet to have a shadow, got: ${metrics.boxShadow}`)
             }
 
             if (metrics.optionPaddingBottom < 14 || metrics.optionPaddingTop < 14) {

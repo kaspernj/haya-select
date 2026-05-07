@@ -1756,10 +1756,14 @@ class HayaSelect extends ShapeComponent {
       right: 10,
       bottom: 0,
       maxHeight: sheetMaxHeight,
+      shadowColor: "#0f172a",
+      shadowOffset: {height: -8, width: 0},
+      shadowOpacity: 0.24,
+      shadowRadius: 24,
+      boxShadow: Platform.OS == "web" ? "0 -12px 36px rgba(15, 23, 42, 0.22)" : undefined,
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
-      overflow: "hidden",
       visibility: this.s.optionsVisibility
     }, [sheetMaxHeight, this.s.optionsVisibility])
 
@@ -1806,33 +1810,44 @@ class HayaSelect extends ShapeComponent {
           style={sheetStyle}
           testID="haya-select-options-container"
         >
-          <ScrollView
-            contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
-              flexGrow: 1,
-              justifyContent: "flex-end"
-            })}
-            dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
-            testID="haya-select-mobile-options-scroll-view"
-          >
-            {optionsListContent}
-          </ScrollView>
-          {paginationControls}
           <View
-            dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
-            style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
-              borderTopColor: "#cbd5e1",
-              borderTopWidth: 1,
-              paddingBottom: 14,
-              paddingLeft: 14,
-              paddingRight: 14,
-              paddingTop: 10
-            })}
-            testID="haya-select-mobile-options-search-container"
+            style={this.stylingFor("mobileOptionsSheetContent", {
+              maxHeight: sheetMaxHeight,
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              overflow: "hidden"
+            }, [sheetMaxHeight])}
+            testID="haya-select-mobile-options-sheet-content"
           >
-            {this.searchTextInput({mobileOptionsSheet: true})}
+            <ScrollView
+              contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
+                flexGrow: 1,
+                justifyContent: "flex-end"
+              })}
+              dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
+              testID="haya-select-mobile-options-scroll-view"
+            >
+              {optionsListContent}
+            </ScrollView>
+            {paginationControls}
+            <View
+              dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
+              style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
+                borderTopColor: "#cbd5e1",
+                borderTopWidth: 1,
+                paddingBottom: 14,
+                paddingLeft: 14,
+                paddingRight: 14,
+                paddingTop: 10
+              })}
+              testID="haya-select-mobile-options-search-container"
+            >
+              {this.searchTextInput({mobileOptionsSheet: true})}
+            </View>
           </View>
         </View>
       </View>

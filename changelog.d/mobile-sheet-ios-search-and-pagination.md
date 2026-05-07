@@ -1,1 +1,1 @@
-- Keep pagination visible outside the scrollable options list, prevent iPhone zoom on the mobile sheet search input, and inset the mobile sheet from the viewport edges.
+- Keep pagination visible outside the scrollable options list, prevent iPhone zoom on the mobile sheet search input, and inset the mobile sheet from the viewport edges with a shadow.
