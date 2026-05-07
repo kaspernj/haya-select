@@ -235,6 +235,16 @@ describe("HayaSelect", () => {
             {timeout: 5000}
           )
 
+          const classTestIDs = await driver.executeScript(`
+            return Array.from(document.querySelectorAll("[data-testid^='haya-select'][data-class]")).map((element) =>
+              element.getAttribute("data-testid")
+            )
+          `)
+
+          if (classTestIDs.length > 0) {
+            throw new Error(`Expected HayaSelect internals to use testID instead of data-class, got: ${classTestIDs.join(", ")}`)
+          }
+
           const backdrop = await systemTest.find("[data-testid='haya-select-mobile-options-backdrop']", {timeout: 5000, useBaseSelector: false})
           const backdropCursor = await backdrop.getCssValue("cursor")
 

@@ -36,7 +36,7 @@ export default memo(shapeComponent(class PaginationPageButton extends ShapeCompo
 
     return (
       <Pressable
-        dataSet={dataSets[`paginationPage-${page}`] ||= {class: "pagination-page", page}}
+        dataSet={dataSets[`paginationPage-${page}`] ||= {page}}
         disabled={active}
         onPress={this.tt.onPress}
         style={styles[`paginationPageButton-${active}`] ||= {

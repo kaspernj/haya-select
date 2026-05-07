@@ -20,7 +20,6 @@ import useEventListener from "ya-use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
 
 const styles = {}
-const dataSets = {}
 const MOBILE_OPTIONS_MAX_WIDTH = 768
 
 /**
@@ -648,7 +647,6 @@ class HayaSelect extends ShapeComponent {
         testID="haya-select"
       >
         <Pressable
-          dataSet={this.selectContainerDataSet ||= {class: "select-container"}}
           onLayout={this.tt.onSelectContainerLayout}
           onPress={this.tt.onSelectClicked}
           ref={this.tt.selectContainerRef}
@@ -656,7 +654,6 @@ class HayaSelect extends ShapeComponent {
           testID="haya-select-select-container"
         >
           <View
-            dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
             style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {flex: 1, flexWrap: "wrap", overflow: "hidden"})}
             testID="haya-select-current-selected"
           >
@@ -695,7 +692,6 @@ class HayaSelect extends ShapeComponent {
                 }
                 {currentOptions.map((currentOption) =>
                   <View
-                    dataSet={this.currentOptionDataSet ||= {class: "current-option"}}
                     key={currentOption.key || `current-value-${currentOption.value}`}
                     style={this.stylingFor("currentOption", {marginRight: 6})}
                     testID="haya-select-current-option"
@@ -726,7 +722,6 @@ class HayaSelect extends ShapeComponent {
             }
           </View>
           <View
-            dataSet={this.chevronContainerDataSet ||= {class: "chevron-container"}}
             style={this.stylingFor("chevronContainer", this.chevronContainerStyle ||= {
               alignItems: "center",
               justifyContent: "center",
@@ -740,7 +735,6 @@ class HayaSelect extends ShapeComponent {
           </View>
         </Pressable>
         <View
-          dataSet={this.endOfSelectDataSet ||= {class: "end-of-select"}}
           onLayout={this.tt.onEndOfSelectLayout}
           ref={endOfSelectRef}
           testID="haya-select-end-of-select"
@@ -768,7 +762,6 @@ class HayaSelect extends ShapeComponent {
 
     return (
       <TextInput
-        dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
         defaultValue={this.searchTextValue}
         onChangeText={this.tt.onChangeSearchText}
         placeholder={this.translate(".search_dot_dot_dot")}
@@ -1563,7 +1556,6 @@ class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={dataSets.paginationContainer ||= {class: "options-pagination"}}
         style={styles.paginationContainer ||= {
           borderTopColor: "#e2e8f0",
           borderTopWidth: 1,
@@ -1572,12 +1564,10 @@ class HayaSelect extends ShapeComponent {
         testID="haya-select-options-pagination"
       >
         <View
-          dataSet={dataSets.paginationHeader ||= {class: "pagination-header"}}
           style={styles.paginationHeader ||= {flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}
           testID="haya-select-pagination-header"
         >
           <Pressable
-            dataSet={dataSets.paginationPrevButton ||= {class: "pagination-prev"}}
             disabled={prevDisabled}
             onPress={this.tt.onPaginationPrevPressed}
             style={styles[`paginationNavButton-${prevDisabled}`] ||= {
@@ -1600,7 +1590,6 @@ class HayaSelect extends ShapeComponent {
           </Pressable>
           <View
             dataSet={this.cache("paginationLabelDataSet", {
-              class: "pagination-label",
               page: currentPage
             }, [currentPage])}
             style={styles.paginationLabelButton ||= {
@@ -1617,7 +1606,6 @@ class HayaSelect extends ShapeComponent {
             testID="haya-select-pagination-label"
           >
             <TextInput
-              dataSet={dataSets.paginationInput ||= {class: "pagination-input"}}
               keyboardType="number-pad"
               onBlur={this.tt.onPaginationInputBlur}
               onChangeText={this.tt.onPaginationInputChange}
@@ -1641,7 +1629,6 @@ class HayaSelect extends ShapeComponent {
             />
           </View>
           <Pressable
-            dataSet={dataSets.paginationNextButton ||= {class: "pagination-next"}}
             disabled={nextDisabled}
             onPress={this.tt.onPaginationNextPressed}
             style={styles[`paginationNavButton-${nextDisabled}`] ||= {
@@ -1664,7 +1651,6 @@ class HayaSelect extends ShapeComponent {
           </Pressable>
         </View>
         <View
-          dataSet={dataSets.paginationPages ||= {class: "pagination-pages"}}
           style={styles.paginationPages ||= {
             flexDirection: "row",
             flexWrap: "wrap",
@@ -1677,7 +1663,6 @@ class HayaSelect extends ShapeComponent {
             if (item.type == "ellipsis") {
               return (
                 <View
-                  dataSet={dataSets[`paginationEllipsis-${item.key}`] ||= {class: "pagination-ellipsis"}}
                   key={item.key}
                   style={styles.paginationEllipsis ||= {paddingHorizontal: 6}}
                   testID="haya-select-pagination-ellipsis"
@@ -1724,7 +1709,6 @@ class HayaSelect extends ShapeComponent {
         )}
         {loadedOptions?.length === 0 &&
           <View
-            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
             style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
               paddingBottom: 10,
               paddingLeft: 8,
@@ -1757,10 +1741,12 @@ class HayaSelect extends ShapeComponent {
       bottom: 0,
       maxHeight: sheetMaxHeight,
       shadowColor: "#0f172a",
-      shadowOffset: {height: -8, width: 0},
-      shadowOpacity: 0.24,
-      shadowRadius: 24,
-      boxShadow: Platform.OS == "web" ? "0 -12px 36px rgba(15, 23, 42, 0.22)" : undefined,
+      shadowOffset: {height: -12, width: 0},
+      shadowOpacity: 0.48,
+      shadowRadius: 34,
+      boxShadow: Platform.OS == "web"
+        ? "0 -28px 72px rgba(15, 23, 42, 0.56), 0 -8px 24px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(15, 23, 42, 0.12)"
+        : undefined,
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
@@ -1775,7 +1761,6 @@ class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={this.mobileOptionsOverlayDataSet ||= {class: "mobile-options-overlay"}}
         style={this.stylingFor("mobileOptionsOverlay", styles.mobileOptionsOverlay ||= {
           position: Platform.OS == "web" ? "fixed" : "absolute",
           top: 0,
@@ -1788,7 +1773,6 @@ class HayaSelect extends ShapeComponent {
         testID="haya-select-mobile-options-overlay"
       >
         <View
-          dataSet={this.mobileOptionsBackdropDataSet ||= {class: "mobile-options-backdrop"}}
           style={this.stylingFor("mobileOptionsBackdrop", styles.mobileOptionsBackdrop ||= {
             position: "absolute",
             top: 0,
@@ -1816,7 +1800,6 @@ class HayaSelect extends ShapeComponent {
               flexGrow: 1,
               justifyContent: "flex-end"
             })}
-            dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
@@ -1826,7 +1809,6 @@ class HayaSelect extends ShapeComponent {
           </ScrollView>
           {paginationControls}
           <View
-            dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
             style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
               borderTopColor: "#cbd5e1",
               borderTopWidth: 1,

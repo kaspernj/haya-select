@@ -85,7 +85,6 @@ class Option extends ShapeComponent {
     return (
       <PressableComponent
         dataSet={this.cache("pressableDataSet", {
-          class: "select-option",
           disabled,
           selected,
           value: this.props.option.value
