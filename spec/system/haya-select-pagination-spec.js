@@ -79,7 +79,7 @@ describe("HayaSelect pagination", () => {
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 
-        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-next']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select/pagination-next']")
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -89,7 +89,7 @@ describe("HayaSelect pagination", () => {
           }
         })
 
-        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-prev']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select/pagination-prev']")
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -113,7 +113,7 @@ describe("HayaSelect pagination", () => {
 
         await assertPaginationOutsideScroll(systemTest, {
           optionsContainerSelector: await helper.optionsContainerSelector(),
-          scrollViewTestID: "haya-select-options-scroll-view"
+          scrollViewTestID: "haya-select/options-scroll-view"
         })
       }, {screen: "pagination-long-page"})
     })
@@ -130,14 +130,14 @@ describe("HayaSelect pagination", () => {
           await driver.manage().window().setRect({height: 844, width: 390})
           await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
 
-          const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select-select-container']")
+          const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select/select-container']")
 
           await systemTest.click(selectContainer)
           await waitForPaginationLabel(systemTest, "Page 1 of 2")
 
           await assertPaginationOutsideScroll(systemTest, {
             optionsContainerSelector: await helper.optionsContainerSelector(),
-            scrollViewTestID: "haya-select-mobile-options-scroll-view"
+            scrollViewTestID: "haya-select/mobile-options-scroll-view"
           })
         } finally {
           await driver.manage().window().setRect(originalWindowRect)

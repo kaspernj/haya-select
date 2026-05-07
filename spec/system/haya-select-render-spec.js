@@ -85,7 +85,7 @@ describe("HayaSelect", () => {
 
       await waitFor({timeout: 5000}, async () => {
         const chips = await systemTest.all(
-          "[data-testid='hayaSelectStaleValuesRoot'] [data-testid='haya-select-current-option']",
+          "[data-testid='hayaSelectStaleValuesRoot'] [data-testid='haya-select/current-option']",
           {timeout: 0, useBaseSelector: false}
         )
 
@@ -108,7 +108,7 @@ describe("HayaSelect", () => {
 
       await waitFor({timeout: 5000}, async () => {
         const inputs = await systemTest.all(
-          "[data-testid='hayaSelectControlledValuesRoot'] [data-testid='haya-select-current-selected'] input[type='hidden']",
+          "[data-testid='hayaSelectControlledValuesRoot'] [data-testid='haya-select/current-selected'] input[type='hidden']",
           {timeout: 0, visible: null}
         )
         const values = await Promise.all(inputs.map((input) => input.getAttribute("value")))
@@ -192,7 +192,7 @@ describe("HayaSelect", () => {
 
         await waitFor({timeout: 5000}, async () => {
           const noOptionsContainer = await systemTest.find(
-            `${optionsContainerSelector} [data-testid='haya-select-no-options-container']`,
+            `${optionsContainerSelector} [data-testid='haya-select/no-options-container']`,
             {timeout: 0, useBaseSelector: false}
           )
           const paddingBottom = parseFloat(await noOptionsContainer.getCssValue("padding-bottom"))
@@ -245,7 +245,7 @@ describe("HayaSelect", () => {
             throw new Error(`Expected HayaSelect internals to use testID instead of data-class, got: ${classTestIDs.join(", ")}`)
           }
 
-          const backdrop = await systemTest.find("[data-testid='haya-select-mobile-options-backdrop']", {timeout: 5000, useBaseSelector: false})
+          const backdrop = await systemTest.find("[data-testid='haya-select/mobile-options-backdrop']", {timeout: 5000, useBaseSelector: false})
           const backdropCursor = await backdrop.getCssValue("cursor")
 
           if (backdropCursor == "pointer") {
@@ -253,7 +253,7 @@ describe("HayaSelect", () => {
           }
 
           await driver.executeScript(`
-            const backdrop = document.querySelector("[data-testid='haya-select-mobile-options-backdrop']")
+            const backdrop = document.querySelector("[data-testid='haya-select/mobile-options-backdrop']")
             if (!backdrop) throw new Error("Missing mobile options backdrop")
 
             const rect = backdrop.getBoundingClientRect()
@@ -295,7 +295,7 @@ describe("HayaSelect", () => {
           await waitFor({timeout: 5000}, async () => {
             const metrics = await driver.executeScript(`
               const container = document.querySelector(${JSON.stringify(optionsContainerSelector)})
-              const option = container && container.querySelector("[data-testid='haya-select-option']")
+              const option = container && container.querySelector("[data-testid='haya-select/option']")
               if (!container) throw new Error("Missing mobile options container")
               if (!option) throw new Error("Missing mobile option")
 
@@ -369,14 +369,14 @@ describe("HayaSelect", () => {
           })
 
           await driver.executeScript(`
-            const scrollView = document.querySelector("[data-testid='haya-select-mobile-options-scroll-view']")
+            const scrollView = document.querySelector("[data-testid='haya-select/mobile-options-scroll-view']")
             if (!scrollView) throw new Error("Missing mobile options scroll view")
             scrollView.scrollTop = scrollView.scrollHeight
             scrollView.dispatchEvent(new Event("scroll", {bubbles: true}))
           `)
 
           await systemTest.interact(
-            {selector: `${optionsContainerSelector} [data-testid='haya-select-search-input']`, useBaseSelector: false},
+            {selector: `${optionsContainerSelector} [data-testid='haya-select/search-input']`, useBaseSelector: false},
             "sendKeys",
             Key.chord(Key.CONTROL, "a"),
             Key.BACK_SPACE,
@@ -394,8 +394,8 @@ describe("HayaSelect", () => {
           await waitFor({timeout: 5000}, async () => {
             const layout = await driver.executeScript(`
               const container = document.querySelector(${JSON.stringify(optionsContainerSelector)})
-              const option = container && container.querySelector("[data-testid='haya-select-option']")
-              const scrollView = container && container.querySelector("[data-testid='haya-select-mobile-options-scroll-view']")
+              const option = container && container.querySelector("[data-testid='haya-select/option']")
+              const scrollView = container && container.querySelector("[data-testid='haya-select/mobile-options-scroll-view']")
               if (!container || !option || !scrollView) throw new Error("Missing mobile sheet layout elements")
 
               const containerStyle = window.getComputedStyle(container)
@@ -438,7 +438,7 @@ describe("HayaSelect", () => {
 
           await waitFor({timeout: 5000}, async () => {
             const currentSelected = await systemTest.find(
-              "[data-testid='hayaSelectMobileSheetRoot'] [data-testid='haya-select-current-selected']",
+              "[data-testid='hayaSelectMobileSheetRoot'] [data-testid='haya-select/current-selected']",
               {timeout: 0}
             )
             const text = (await currentSelected.getText()).trim()
@@ -476,7 +476,7 @@ describe("HayaSelect", () => {
           await helper.open()
 
           const searchInput = await systemTest.find(
-            "[data-testid='haya-select-options-container'] [data-testid='haya-select-search-input']",
+            "[data-testid='haya-select/options-container'] [data-testid='haya-select/search-input']",
             {timeout: 5000, useBaseSelector: false}
           )
           const fontSize = parseFloat(await searchInput.getCssValue("font-size"))
@@ -551,7 +551,7 @@ describe("HayaSelect", () => {
 
         await waitFor({timeout: 5000}, async () => {
           await systemTest.find(
-            `${optionsContainerSelector} [data-testid='haya-select-option'][data-value='one']`,
+            `${optionsContainerSelector} [data-testid='haya-select/option'][data-value='one']`,
             {timeout: 0, useBaseSelector: false}
           )
         })
@@ -569,7 +569,7 @@ describe("HayaSelect", () => {
         `)
 
         const selectedElements = await systemTest.all(
-          "[data-testid='haya-select-option'][data-selected='true']",
+          "[data-testid='haya-select/option'][data-selected='true']",
           {timeout: 0, useBaseSelector: false}
         )
         const selected = await Promise.all(selectedElements.map((element) => element.getCssValue("background-color")))
@@ -606,15 +606,15 @@ describe("HayaSelect", () => {
             {timeout: 5000}
           )
         const componentId = rootId || (componentElement ? await componentElement.getAttribute("data-id") : null)
-        const optionsContainerSelector = componentId ? `[data-testid='haya-select-options-container'][data-id='${componentId}']` : "[data-testid='haya-select-options-container']"
+        const optionsContainerSelector = componentId ? `[data-testid='haya-select/options-container'][data-id='${componentId}']` : "[data-testid='haya-select/options-container']"
         const selectContainer = await systemTest.find(
-          "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select-select-container']",
+          "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select/select-container']",
           {timeout: 5000}
         )
 
         const currentSelectedText = async () => {
           const elements = await systemTest.all(
-            "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select-current-selected']",
+            "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select/current-selected']",
             {timeout: 0}
           )
           return elements.length > 0 ? (await elements[0].getText()).trim() : ""
@@ -622,7 +622,7 @@ describe("HayaSelect", () => {
 
         const currentOptionCount = async () => {
           const options = await systemTest.all(
-            "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select-current-option']",
+            "[data-testid='hayaSelectMultipleRoot'] [data-testid='haya-select/current-option']",
             {timeout: 0}
           )
           return options.length
@@ -666,12 +666,12 @@ describe("HayaSelect", () => {
         await clickElement(selectContainer)
         await waitForOptionsVisible()
         await clickElement(await systemTest.find(
-          `${optionsContainerSelector} [data-testid='haya-select-option'][data-value='one']`,
+          `${optionsContainerSelector} [data-testid='haya-select/option'][data-value='one']`,
           {timeout: 5000, useBaseSelector: false}
         ))
         await waitFor({timeout: 5000}, async () => {
           const option = await systemTest.find(
-            `${optionsContainerSelector} [data-testid='haya-select-option'][data-value='one']`,
+            `${optionsContainerSelector} [data-testid='haya-select/option'][data-value='one']`,
             {timeout: 0, useBaseSelector: false}
           )
           const selected = await option.getAttribute("data-selected")
@@ -682,12 +682,12 @@ describe("HayaSelect", () => {
         })
 
         await clickElement(await systemTest.find(
-          `${optionsContainerSelector} [data-testid='haya-select-option'][data-value='one']`,
+          `${optionsContainerSelector} [data-testid='haya-select/option'][data-value='one']`,
           {timeout: 5000, useBaseSelector: false}
         ))
         await waitFor({timeout: 5000}, async () => {
           const option = await systemTest.find(
-            `${optionsContainerSelector} [data-testid='haya-select-option'][data-value='one']`,
+            `${optionsContainerSelector} [data-testid='haya-select/option'][data-value='one']`,
             {timeout: 0, useBaseSelector: false}
           )
           const selected = await option.getAttribute("data-selected")
@@ -729,9 +729,9 @@ describe("HayaSelect", () => {
             {timeout: 5000}
           )
         const componentId = rootId || (componentElement ? await componentElement.getAttribute("data-id") : null)
-        const optionsContainerSelector = componentId ? `[data-testid='haya-select-options-container'][data-id='${componentId}']` : "[data-testid='haya-select-options-container']"
+        const optionsContainerSelector = componentId ? `[data-testid='haya-select/options-container'][data-id='${componentId}']` : "[data-testid='haya-select/options-container']"
         const selectContainer = await systemTest.find(
-          "[data-testid='hayaSelectRoot'] [data-testid='haya-select-select-container']",
+          "[data-testid='hayaSelectRoot'] [data-testid='haya-select/select-container']",
           {timeout: 5000}
         )
         const driver = systemTest.getDriver()
@@ -753,7 +753,7 @@ describe("HayaSelect", () => {
 
         const getBorderRadii = async () => {
           const elements = await systemTest.all(
-            "[data-testid='hayaSelectRoot'] [data-testid='haya-select-select-container']",
+            "[data-testid='hayaSelectRoot'] [data-testid='haya-select/select-container']",
             {timeout: 0}
           )
           if (elements.length === 0) return null
