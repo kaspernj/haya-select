@@ -297,11 +297,15 @@ describe("HayaSelect", () => {
                 dataClass: container.getAttribute("data-class"),
                 height: rect.height,
                 inlineHeight: container.style.height,
+                left: Math.round(rect.left),
                 optionPaddingBottom: parseFloat(optionStyle.paddingBottom),
                 optionPaddingLeft: parseFloat(optionStyle.paddingLeft),
                 optionPaddingRight: parseFloat(optionStyle.paddingRight),
                 optionPaddingTop: parseFloat(optionStyle.paddingTop),
-                windowHeight: window.innerHeight
+                right: Math.round(window.innerWidth - rect.right),
+                width: rect.width,
+                windowHeight: window.innerHeight,
+                windowWidth: window.innerWidth
               }
             `)
             const maxHeight = metrics.windowHeight * 0.8
@@ -320,6 +324,14 @@ describe("HayaSelect", () => {
 
             if (Math.abs(metrics.bottom) > 2) {
               throw new Error(`Expected sheet to be anchored to bottom, got bottom offset: ${metrics.bottom}`)
+            }
+
+            if (Math.abs(metrics.left - 10) > 2 || Math.abs(metrics.right - 10) > 2) {
+              throw new Error(`Expected sheet to have 10px side margins, got left=${metrics.left} right=${metrics.right}`)
+            }
+
+            if (metrics.width >= metrics.windowWidth) {
+              throw new Error(`Expected sheet width below viewport width, got width=${metrics.width} viewport=${metrics.windowWidth}`)
             }
 
             if (metrics.optionPaddingBottom < 14 || metrics.optionPaddingTop < 14) {
