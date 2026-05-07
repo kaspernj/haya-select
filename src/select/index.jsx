@@ -1764,6 +1764,7 @@ class HayaSelect extends ShapeComponent {
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
+      overflow: "hidden",
       visibility: this.s.optionsVisibility
     }, [sheetMaxHeight, this.s.optionsVisibility])
 
@@ -1810,44 +1811,33 @@ class HayaSelect extends ShapeComponent {
           style={sheetStyle}
           testID="haya-select-options-container"
         >
-          <View
-            style={this.stylingFor("mobileOptionsSheetContent", {
-              maxHeight: sheetMaxHeight,
-              backgroundColor: "#fff",
-              borderTopLeftRadius: 18,
-              borderTopRightRadius: 18,
-              overflow: "hidden"
-            }, [sheetMaxHeight])}
-            testID="haya-select-mobile-options-sheet-content"
+          <ScrollView
+            contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
+              flexGrow: 1,
+              justifyContent: "flex-end"
+            })}
+            dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+            style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
+            testID="haya-select-mobile-options-scroll-view"
           >
-            <ScrollView
-              contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
-                flexGrow: 1,
-                justifyContent: "flex-end"
-              })}
-              dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled
-              style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
-              testID="haya-select-mobile-options-scroll-view"
-            >
-              {optionsListContent}
-            </ScrollView>
-            {paginationControls}
-            <View
-              dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
-              style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
-                borderTopColor: "#cbd5e1",
-                borderTopWidth: 1,
-                paddingBottom: 14,
-                paddingLeft: 14,
-                paddingRight: 14,
-                paddingTop: 10
-              })}
-              testID="haya-select-mobile-options-search-container"
-            >
-              {this.searchTextInput({mobileOptionsSheet: true})}
-            </View>
+            {optionsListContent}
+          </ScrollView>
+          {paginationControls}
+          <View
+            dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
+            style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
+              borderTopColor: "#cbd5e1",
+              borderTopWidth: 1,
+              paddingBottom: 14,
+              paddingLeft: 14,
+              paddingRight: 14,
+              paddingTop: 10
+            })}
+            testID="haya-select-mobile-options-search-container"
+          >
+            {this.searchTextInput({mobileOptionsSheet: true})}
           </View>
         </View>
       </View>
