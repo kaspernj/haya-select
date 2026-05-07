@@ -1,0 +1,1 @@
+- Keep pagination visible outside the scrollable options list, prevent iPhone zoom on the mobile sheet search input, inset the mobile sheet from the viewport edges with a clearer shadow, animate the mobile sheet backdrop and container, and use slash-namespaced Haya Select testIDs instead of duplicate data-class markers.

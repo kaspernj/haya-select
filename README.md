@@ -78,7 +78,7 @@ If `totalCount` and `page` are provided, the options list shows pagination contr
 
 ## Mobile options sheet
 
-HayaSelect opens options in a bottom sheet on mobile-sized screens by default. The sheet is used when the window width is 768px or less on web, iOS, and Android. It keeps the options list scrollable inside the sheet and places the search input at the bottom.
+HayaSelect opens options in a bottom sheet on mobile-sized screens by default. The sheet is used when the window width is 768px or less on web, iOS, and Android. It keeps the options list scrollable inside the sheet and places the search input at the bottom. When pagination is enabled, the pagination controls stay fixed above the search input instead of scrolling with the options.
 
 Use `mobileOptionsMode` to override the automatic behavior:
 

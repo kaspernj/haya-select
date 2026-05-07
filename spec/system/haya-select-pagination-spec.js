@@ -2,6 +2,7 @@ import "velocious/build/src/testing/test.js"
 import timeout from "awaitery/build/timeout.js"
 import waitFor from "awaitery/build/wait-for.js"
 import {
+  assertPaginationOutsideScroll,
   clickPaginationSelector,
   closePaginatedSelect,
   findPaginationPageButton,
@@ -78,7 +79,7 @@ describe("HayaSelect pagination", () => {
         await openPaginatedSelect(systemTest)
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
 
-        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-next']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select/pagination-next']")
         await waitForPaginationLabel(systemTest, "Page 2 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -88,7 +89,7 @@ describe("HayaSelect pagination", () => {
           }
         })
 
-        await clickPaginationSelector(systemTest, "[data-testid='haya-select-pagination-prev']")
+        await clickPaginationSelector(systemTest, "[data-testid='haya-select/pagination-prev']")
         await waitForPaginationLabel(systemTest, "Page 1 of 5")
         await waitFor({timeout: 5000}, async () => {
           const texts = await helper.optionTexts()
@@ -98,6 +99,50 @@ describe("HayaSelect pagination", () => {
           }
         })
       }, {screen: "pagination-select"})
+    })
+  })
+
+  it("keeps pagination outside the scrolled desktop options list", async () => {
+    await timeout({errorMessage: "pagination test timed out: keeps pagination outside the scrolled desktop options list", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
+
+        await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
+        await openPaginatedSelect(systemTest)
+        await waitForPaginationLabel(systemTest, "Page 1 of 2")
+
+        await assertPaginationOutsideScroll(systemTest, {
+          optionsContainerSelector: await helper.optionsContainerSelector(),
+          scrollViewTestID: "haya-select/options-scroll-view"
+        })
+      }, {screen: "pagination-long-page"})
+    })
+  })
+
+  it("keeps pagination outside the scrolled mobile sheet options list", async () => {
+    await timeout({errorMessage: "pagination test timed out: keeps pagination outside the scrolled mobile sheet options list", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const driver = systemTest.getDriver()
+        const originalWindowRect = await driver.manage().window().getRect()
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectPaginationRoot"})
+
+        try {
+          await driver.manage().window().setRect({height: 844, width: 390})
+          await systemTest.findByTestID("hayaSelectPaginationRoot", {timeout: 5000})
+
+          const selectContainer = await systemTest.find("[data-testid='hayaSelectPaginationRoot'] [data-testid='haya-select/select-container']")
+
+          await systemTest.click(selectContainer)
+          await waitForPaginationLabel(systemTest, "Page 1 of 2")
+
+          await assertPaginationOutsideScroll(systemTest, {
+            optionsContainerSelector: await helper.optionsContainerSelector(),
+            scrollViewTestID: "haya-select/mobile-options-scroll-view"
+          })
+        } finally {
+          await driver.manage().window().setRect(originalWindowRect)
+        }
+      }, {screen: "pagination-long-page"})
     })
   })
 })

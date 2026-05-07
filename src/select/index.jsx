@@ -1,7 +1,7 @@
 import {anythingDifferent} from "set-state-compare/build/diff-utils"
 import Config from "../config.js"
 import {dig, digg} from "diggerize"
-import {Dimensions, PanResponder, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
+import {Animated, Dimensions, Easing, PanResponder, Platform, Pressable, ScrollView, TextInput, View} from "react-native"
 import React, {createRef, memo, useEffect} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import debounce from "debounce"
@@ -20,7 +20,6 @@ import useEventListener from "ya-use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
 
 const styles = {}
-const dataSets = {}
 const MOBILE_OPTIONS_MAX_WIDTH = 768
 
 /**
@@ -152,6 +151,19 @@ function layoutHasPosition(layout) {
   return Number.isFinite(layout?.left) && Number.isFinite(layout?.top)
 }
 
+/** @returns {boolean} True for native iOS and iOS/iPadOS Safari on web. */
+function isIOSLikePlatform() {
+  if (Platform.OS == "ios") return true
+  if (Platform.OS != "web" || typeof navigator == "undefined") return false
+
+  const platform = navigator.platform || ""
+  const userAgent = navigator.userAgent || ""
+
+  return /iPad|iPhone|iPod/.test(platform) ||
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform == "MacIntel" && navigator.maxTouchPoints > 1)
+}
+
 /**
  * @typedef {object} HayaSelectOptionRenderContext
  * @property {string|undefined} icon
@@ -270,10 +282,25 @@ class HayaSelect extends ShapeComponent {
   bodyScrollLocked = false
   endOfSelectRef = createRef()
   latestLoadOptionsRequestId = 0
+  mobileOptionsBackdropOpacity = new Animated.Value(0)
   optionsContainerRef = createRef()
   pageInputRef = createRef()
   previousBodyOverflow = undefined
   previousDocumentOverflow = undefined
+  mobileOptionsContainerProgress = new Animated.Value(0)
+  mobileOptionsContainerScale = this.mobileOptionsContainerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1]
+  })
+  mobileOptionsContainerTranslateY = this.mobileOptionsContainerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0]
+  })
+  mobileOptionsContainerTransform = [
+    {translateY: this.mobileOptionsContainerTranslateY},
+    {scale: this.mobileOptionsContainerScale}
+  ]
+  mobileOptionsClosing = false
   searchTextValue = ""
   searchTextInputRef = createRef()
   selectContainerRef = createRef()
@@ -568,6 +595,8 @@ class HayaSelect extends ShapeComponent {
 
   /** @returns {void} */
   componentWillUnmount() {
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
     this.unlockBodyScroll()
   }
 
@@ -635,17 +664,15 @@ class HayaSelect extends ShapeComponent {
         testID="haya-select"
       >
         <Pressable
-          dataSet={this.selectContainerDataSet ||= {class: "select-container"}}
           onLayout={this.tt.onSelectContainerLayout}
           onPress={this.tt.onSelectClicked}
           ref={this.tt.selectContainerRef}
           style={selectContainerStyleActual}
-          testID="haya-select-select-container"
+          testID="haya-select/select-container"
         >
           <View
-            dataSet={this.currentSelectedDataSet ||= {class: "current-selected"}}
             style={this.stylingFor("currentSelected", this.currentSelectedStyle ||= {flex: 1, flexWrap: "wrap", overflow: "hidden"})}
-            testID="haya-select-current-selected"
+            testID="haya-select/current-selected"
           >
             {opened && !mobileOptionsSheet &&
               this.searchTextInput()
@@ -682,10 +709,9 @@ class HayaSelect extends ShapeComponent {
                 }
                 {currentOptions.map((currentOption) =>
                   <View
-                    dataSet={this.currentOptionDataSet ||= {class: "current-option"}}
                     key={currentOption.key || `current-value-${currentOption.value}`}
                     style={this.stylingFor("currentOption", {marginRight: 6})}
-                    testID="haya-select-current-option"
+                    testID="haya-select/current-option"
                   >
                     {currentOption.type == "group" &&
                       <View style={this.stylingFor("currentOptionGroup", this.currentOptionGroupStyle ||= {fontWeight: "bold"})}>
@@ -713,7 +739,6 @@ class HayaSelect extends ShapeComponent {
             }
           </View>
           <View
-            dataSet={this.chevronContainerDataSet ||= {class: "chevron-container"}}
             style={this.stylingFor("chevronContainer", this.chevronContainerStyle ||= {
               alignItems: "center",
               justifyContent: "center",
@@ -721,16 +746,15 @@ class HayaSelect extends ShapeComponent {
               marginLeft: "auto",
               marginRight: 8
             })}
-            testID="haya-select-chevron-container"
+            testID="haya-select/chevron-container"
           >
             <FontAwesomeIcon name={opened ? "chevron-up" : "chevron-down"} style={this.stylingFor("chevron", this.chevronStyle ||= {fontSize: 12})} />
           </View>
         </Pressable>
         <View
-          dataSet={this.endOfSelectDataSet ||= {class: "end-of-select"}}
           onLayout={this.tt.onEndOfSelectLayout}
           ref={endOfSelectRef}
-          testID="haya-select-end-of-select"
+          testID="haya-select/end-of-select"
         />
         {opened && this.p.optionsPortal &&
           <Portal name={this.portalName()}>
@@ -746,22 +770,27 @@ class HayaSelect extends ShapeComponent {
     )
   }
 
-  /** @returns {import("react").ReactNode} */
-  searchTextInput() {
+  /**
+   * @param {{mobileOptionsSheet?: boolean}} [params]
+   * @returns {import("react").ReactNode}
+   */
+  searchTextInput({mobileOptionsSheet = false} = {}) {
+    const iosLikeMobileSheet = mobileOptionsSheet && isIOSLikePlatform()
+
     return (
       <TextInput
-        dataSet={this.searchTextInputDataSet ||= {class: "search-text-input"}}
         defaultValue={this.searchTextValue}
         onChangeText={this.tt.onChangeSearchText}
         placeholder={this.translate(".search_dot_dot_dot")}
         ref={this.tt.searchTextInputRef}
-        style={this.stylingFor("searchTextInput", this.searchTextInputStyle ||= {
+        style={this.stylingFor("searchTextInput", styles[`searchTextInput-${iosLikeMobileSheet}`] ||= {
           width: "100%",
           borderWidth: 0,
+          fontSize: iosLikeMobileSheet ? 16 : undefined,
           outline: Platform.OS == "web" ? "none" : undefined,
           padding: 0
-        })}
-        testID="haya-select-search-input"
+        }, [iosLikeMobileSheet])}
+        testID="haya-select/search-input"
         {...this.p.searchTextInputProps}
       />
     )
@@ -1039,6 +1068,50 @@ class HayaSelect extends ShapeComponent {
   closeOptions({options} = {}) {
     const closedOptions = options || this.getCurrentOptions()
     if (this.isDebugEnabled()) this.debugLog("closeOptions", {closedOptionsCount: closedOptions?.length || 0})
+
+    if (this.s.opened && this.s.optionsPlacement == "sheet") {
+      this.closeMobileOptionsWithAnimation({closedOptions})
+      return
+    }
+
+    this.finishCloseOptions({closedOptions})
+  }
+
+  /**
+   * @param {{closedOptions: Array<HayaSelectOption>}} params Close payload.
+   * @returns {void}
+   */
+  closeMobileOptionsWithAnimation({closedOptions}) {
+    if (this.mobileOptionsClosing) return
+
+    this.mobileOptionsClosing = true
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
+
+    Animated.parallel([
+      Animated.timing(this.mobileOptionsBackdropOpacity, {
+        duration: 90,
+        easing: Easing.out(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true
+      }),
+      Animated.timing(this.mobileOptionsContainerProgress, {
+        duration: 110,
+        easing: Easing.in(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true
+      })
+    ]).start(() => {
+      this.mobileOptionsClosing = false
+      this.finishCloseOptions({closedOptions})
+    })
+  }
+
+  /**
+   * @param {{closedOptions: Array<HayaSelectOption>}} params Close payload.
+   * @returns {void}
+   */
+  finishCloseOptions({closedOptions}) {
     this.callOptionsPositionAboveIfOutsideScreen = false
     this.unlockBodyScroll()
 
@@ -1065,6 +1138,33 @@ class HayaSelect extends ShapeComponent {
     }
 
     if (this.p.onBlur) this.p.onBlur()
+  }
+
+  /** @returns {void} */
+  prepareMobileOptionsAnimation() {
+    this.mobileOptionsClosing = false
+    this.mobileOptionsBackdropOpacity.stopAnimation()
+    this.mobileOptionsContainerProgress.stopAnimation()
+    this.mobileOptionsBackdropOpacity.setValue(0)
+    this.mobileOptionsContainerProgress.setValue(0)
+  }
+
+  /** @returns {void} */
+  startMobileOptionsOpenAnimation() {
+    Animated.parallel([
+      Animated.timing(this.mobileOptionsBackdropOpacity, {
+        duration: 90,
+        easing: Easing.out(Easing.cubic),
+        toValue: 1,
+        useNativeDriver: true
+      }),
+      Animated.timing(this.mobileOptionsContainerProgress, {
+        duration: 130,
+        easing: Easing.out(Easing.back(1.05)),
+        toValue: 1,
+        useNativeDriver: true
+      })
+    ]).start()
   }
 
   /** @returns {string} */
@@ -1114,6 +1214,11 @@ class HayaSelect extends ShapeComponent {
     })
     this.searchTextValue = ""
     this.callOptionsPositionAboveIfOutsideScreen = !mobileOptionsSheet
+
+    if (mobileOptionsSheet) {
+      this.prepareMobileOptionsAnimation()
+    }
+
     this.setState(
       {
         height: mobileOptionsSheet ? null : this.s.selectContainerLayout?.height,
@@ -1130,6 +1235,7 @@ class HayaSelect extends ShapeComponent {
       () => {
         if (mobileOptionsSheet) {
           this.lockBodyScroll()
+          this.startMobileOptionsOpenAnimation()
         } else {
           this.measureNativeSelectLayouts()
           this.focusTextInput()
@@ -1247,6 +1353,12 @@ class HayaSelect extends ShapeComponent {
   setOptionsPositionSheet() {
     if (!this.s.opened) return
 
+    const switchingToSheet = this.s.optionsPlacement != "sheet"
+
+    if (switchingToSheet) {
+      this.prepareMobileOptionsAnimation()
+    }
+
     this.lockBodyScroll()
 
     this.setState({
@@ -1255,6 +1367,8 @@ class HayaSelect extends ShapeComponent {
       optionsPlacement: "sheet",
       optionsVisibility: "visible",
       optionsWidth: undefined
+    }, () => {
+      if (switchingToSheet) this.startMobileOptionsOpenAnimation()
     })
   }
 
@@ -1544,21 +1658,18 @@ class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={dataSets.paginationContainer ||= {class: "options-pagination"}}
         style={styles.paginationContainer ||= {
           borderTopColor: "#e2e8f0",
           borderTopWidth: 1,
           padding: 8
         }}
-        testID="haya-select-options-pagination"
+        testID="haya-select/options-pagination"
       >
         <View
-          dataSet={dataSets.paginationHeader ||= {class: "pagination-header"}}
           style={styles.paginationHeader ||= {flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}
-          testID="haya-select-pagination-header"
+          testID="haya-select/pagination-header"
         >
           <Pressable
-            dataSet={dataSets.paginationPrevButton ||= {class: "pagination-prev"}}
             disabled={prevDisabled}
             onPress={this.tt.onPaginationPrevPressed}
             style={styles[`paginationNavButton-${prevDisabled}`] ||= {
@@ -1572,7 +1683,7 @@ class HayaSelect extends ShapeComponent {
               opacity: prevDisabled ? 0.4 : 1,
               width: 30
             }}
-            testID="haya-select-pagination-prev"
+            testID="haya-select/pagination-prev"
           >
             <FontAwesomeIcon
               name="chevron-left"
@@ -1581,7 +1692,6 @@ class HayaSelect extends ShapeComponent {
           </Pressable>
           <View
             dataSet={this.cache("paginationLabelDataSet", {
-              class: "pagination-label",
               page: currentPage
             }, [currentPage])}
             style={styles.paginationLabelButton ||= {
@@ -1595,10 +1705,9 @@ class HayaSelect extends ShapeComponent {
               paddingHorizontal: 10,
               paddingVertical: 6
             }}
-            testID="haya-select-pagination-label"
+            testID="haya-select/pagination-label"
           >
             <TextInput
-              dataSet={dataSets.paginationInput ||= {class: "pagination-input"}}
               keyboardType="number-pad"
               onBlur={this.tt.onPaginationInputBlur}
               onChangeText={this.tt.onPaginationInputChange}
@@ -1617,12 +1726,11 @@ class HayaSelect extends ShapeComponent {
                 textAlign: "center",
                 width: 120
               }}
-              testID="haya-select-pagination-input"
+              testID="haya-select/pagination-input"
               value={this.paginationInputValue(totalPages)}
             />
           </View>
           <Pressable
-            dataSet={dataSets.paginationNextButton ||= {class: "pagination-next"}}
             disabled={nextDisabled}
             onPress={this.tt.onPaginationNextPressed}
             style={styles[`paginationNavButton-${nextDisabled}`] ||= {
@@ -1636,7 +1744,7 @@ class HayaSelect extends ShapeComponent {
               opacity: nextDisabled ? 0.4 : 1,
               width: 30
             }}
-            testID="haya-select-pagination-next"
+            testID="haya-select/pagination-next"
           >
             <FontAwesomeIcon
               name="chevron-right"
@@ -1645,23 +1753,21 @@ class HayaSelect extends ShapeComponent {
           </Pressable>
         </View>
         <View
-          dataSet={dataSets.paginationPages ||= {class: "pagination-pages"}}
           style={styles.paginationPages ||= {
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "center",
             marginTop: 8
           }}
-          testID="haya-select-pagination-pages"
+          testID="haya-select/pagination-pages"
         >
           {this.paginationPageItems(totalPages).map((item) => {
             if (item.type == "ellipsis") {
               return (
                 <View
-                  dataSet={dataSets[`paginationEllipsis-${item.key}`] ||= {class: "pagination-ellipsis"}}
                   key={item.key}
                   style={styles.paginationEllipsis ||= {paddingHorizontal: 6}}
-                  testID="haya-select-pagination-ellipsis"
+                  testID="haya-select/pagination-ellipsis"
                 >
                   <Text
                     style={styles.paginationEllipsisText ||= {
@@ -1691,23 +1797,64 @@ class HayaSelect extends ShapeComponent {
   }
 
   /**
-   * @param {{id: string|number, optionsContent: import("react").ReactNode}} args Mobile sheet content.
+   * @param {{loadedOptions: Array<HayaSelectOption>|undefined}} args Options to render.
    * @returns {import("react").ReactNode}
    */
-  mobileOptionsContainer({id, optionsContent}) {
+  optionsListContent({loadedOptions}) {
+    return (
+      <>
+        {loadedOptions?.map((loadedOption) =>
+          this.hayaSelectOption({
+            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
+            loadedOption
+          })
+        )}
+        {loadedOptions?.length === 0 &&
+          <View
+            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
+              paddingBottom: 10,
+              paddingLeft: 8,
+              paddingRight: 8,
+              paddingTop: 10
+            })}
+            testID="haya-select/no-options-container"
+          >
+            <Text>
+              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
+            </Text>
+          </View>
+        }
+      </>
+    )
+  }
+
+  /**
+   * @param {{id: string|number, optionsListContent: import("react").ReactNode, paginationControls: import("react").ReactNode|null}} args Mobile sheet content.
+   * @returns {import("react").ReactNode}
+   */
+  mobileOptionsContainer({id, optionsListContent, paginationControls}) {
     const sheetMaxHeight = Math.round(Dimensions.get("window").height * 0.8)
     let sheetStyle = this.stylingFor("optionsContainer", {
       position: "absolute",
       zIndex: 100000,
       elevation: 100000,
-      left: 0,
-      right: 0,
+      left: 10,
+      right: 10,
       bottom: 0,
       maxHeight: sheetMaxHeight,
+      shadowColor: "#0f172a",
+      shadowOffset: {height: -12, width: 0},
+      shadowOpacity: 0.48,
+      shadowRadius: 34,
+      boxShadow: Platform.OS == "web"
+        ? "0 -28px 72px rgba(15, 23, 42, 0.56), 0 -8px 24px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(15, 23, 42, 0.12)"
+        : undefined,
       backgroundColor: "#fff",
       borderTopLeftRadius: 18,
       borderTopRightRadius: 18,
+      opacity: this.mobileOptionsContainerProgress,
       overflow: "hidden",
+      transform: this.mobileOptionsContainerTransform,
       visibility: this.s.optionsVisibility
     }, [sheetMaxHeight, this.s.optionsVisibility])
 
@@ -1718,7 +1865,6 @@ class HayaSelect extends ShapeComponent {
 
     return (
       <View
-        dataSet={this.mobileOptionsOverlayDataSet ||= {class: "mobile-options-overlay"}}
         style={this.stylingFor("mobileOptionsOverlay", styles.mobileOptionsOverlay ||= {
           position: Platform.OS == "web" ? "fixed" : "absolute",
           top: 0,
@@ -1728,22 +1874,22 @@ class HayaSelect extends ShapeComponent {
           zIndex: 99999,
           elevation: 99999
         })}
-        testID="haya-select-mobile-options-overlay"
+        testID="haya-select/mobile-options-overlay"
       >
-        <View
-          dataSet={this.mobileOptionsBackdropDataSet ||= {class: "mobile-options-backdrop"}}
-          style={this.stylingFor("mobileOptionsBackdrop", styles.mobileOptionsBackdrop ||= {
+        <Animated.View
+          style={this.stylingFor("mobileOptionsBackdrop", this.mobileOptionsBackdropStyle ||= {
             position: "absolute",
             top: 0,
             right: 0,
             bottom: 0,
             left: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.32)"
+            backgroundColor: "rgba(15, 23, 42, 0.32)",
+            opacity: this.mobileOptionsBackdropOpacity
           })}
-          testID="haya-select-mobile-options-backdrop"
+          testID="haya-select/mobile-options-backdrop"
           {...this.tt.mobileOptionsBackdropPanResponder.panHandlers}
         />
-        <View
+        <Animated.View
           dataSet={this.cache(
             "mobileOptionsContainerDataSet",
             {id, role: "dialog", optionsPlacement: "sheet", optionsVisibility: this.s.optionsVisibility || "hidden"},
@@ -1752,23 +1898,22 @@ class HayaSelect extends ShapeComponent {
           onLayout={this.tt.onOptionsContainerLayout}
           ref={this.tt.optionsContainerRef}
           style={sheetStyle}
-          testID="haya-select-options-container"
+          testID="haya-select/options-container"
         >
           <ScrollView
             contentContainerStyle={this.stylingFor("mobileOptionsScrollContent", styles.mobileOptionsScrollContent ||= {
               flexGrow: 1,
               justifyContent: "flex-end"
             })}
-            dataSet={this.mobileOptionsScrollViewDataSet ||= {class: "mobile-options-scroll-view"}}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             style={this.stylingFor("mobileOptionsScrollView", styles.mobileOptionsScrollView ||= {flexGrow: 0, flexShrink: 1, minHeight: 0})}
-            testID="haya-select-mobile-options-scroll-view"
+            testID="haya-select/mobile-options-scroll-view"
           >
-            {optionsContent}
+            {optionsListContent}
           </ScrollView>
+          {paginationControls}
           <View
-            dataSet={this.mobileOptionsSearchContainerDataSet ||= {class: "mobile-options-search-container"}}
             style={this.stylingFor("mobileOptionsSearchContainer", styles.mobileOptionsSearchContainer ||= {
               borderTopColor: "#cbd5e1",
               borderTopWidth: 1,
@@ -1777,11 +1922,11 @@ class HayaSelect extends ShapeComponent {
               paddingRight: 14,
               paddingTop: 10
             })}
-            testID="haya-select-mobile-options-search-container"
+            testID="haya-select/mobile-options-search-container"
           >
-            {this.searchTextInput()}
+            {this.searchTextInput({mobileOptionsSheet: true})}
           </View>
-        </View>
+        </Animated.View>
       </View>
     )
   }
@@ -1792,36 +1937,11 @@ class HayaSelect extends ShapeComponent {
     let left, top
     const id = idForComponent(this)
     const desktopOptionsPlacement = optionsPlacement == "sheet" ? "below" : optionsPlacement
-    const optionsContent = (
-      <>
-        {loadedOptions?.map((loadedOption) =>
-          this.hayaSelectOption({
-            key: loadedOption.key || `loaded-option-${loadedOption.value}`,
-            loadedOption
-          })
-        )}
-        {loadedOptions?.length === 0 &&
-          <View
-            dataSet={this.noOptionsContainerDataSet ||= {class: "no-options-container"}}
-            style={this.stylingFor("noOptionsContainer", this.noOptionsContainerStyle ||= {
-              paddingBottom: 10,
-              paddingLeft: 8,
-              paddingRight: 8,
-              paddingTop: 10
-            })}
-            testID="haya-select-no-options-container"
-          >
-            <Text>
-              {this.p.noOptionsText ? this.p.noOptionsText() : this.translate(".no_options_found")}
-            </Text>
-          </View>
-        }
-        {this.paginationControls()}
-      </>
-    )
+    const optionsListContent = this.optionsListContent({loadedOptions})
+    const paginationControls = this.paginationControls()
 
     if (this.isMobileOptionsSheet()) {
-      return this.mobileOptionsContainer({id, optionsContent})
+      return this.mobileOptionsContainer({id, optionsListContent, paginationControls})
     }
 
     let style = {
@@ -1834,7 +1954,7 @@ class HayaSelect extends ShapeComponent {
       borderColor: "#999",
       borderWidth: 1,
       maxHeight: 300,
-      overflowY: Platform.OS == "web" ? "auto" : undefined
+      overflow: "hidden"
     }
 
     if (!this.p.optionsPortal) {
@@ -1906,22 +2026,22 @@ class HayaSelect extends ShapeComponent {
         onLayout={this.tt.onOptionsContainerLayout}
         ref={this.tt.optionsContainerRef}
         style={style}
-        testID="haya-select-options-container"
+        testID="haya-select/options-container"
       >
-        {Platform.OS == "web" &&
-          optionsContent
-        }
-        {Platform.OS != "web" &&
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-            style={styles[`nativeOptionsScrollView-${style.maxHeight || 300}`] ||= {
-              maxHeight: style.maxHeight || 300
-            }}
-          >
-            {optionsContent}
-          </ScrollView>
-        }
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+          style={styles[`optionsScrollView-${style.maxHeight || 300}`] ||= {
+            flexGrow: 0,
+            flexShrink: 1,
+            maxHeight: style.maxHeight || 300,
+            minHeight: 0
+          }}
+          testID="haya-select/options-scroll-view"
+        >
+          {optionsListContent}
+        </ScrollView>
+        {paginationControls}
       </View>
     )
   }
@@ -2117,19 +2237,19 @@ class HayaSelect extends ShapeComponent {
           value: option.value
         }, [option.text, option.value, toggleOption?.icon, toggleOption?.value])}
         style={this.cache("optionPresentationStyle", {flexDirection: "row", alignItems: "center"})}
-        testID="option-presentation"
+        testID="haya-select/option-presentation"
       >
         {toggleOptions && !(option.value in toggled) &&
           <View
             style={this.cache("toggleIconPlaceholderStyle", {width: 20})}
-            testID="toggle-icon-placeholder"
+            testID="haya-select/toggle-icon-placeholder"
           />
         }
         {toggleOptions && (option.value in toggled) &&
           <View style={this.cache("toggleIconContainerStyle", {alignItems: "center", justifyContent: "center", width: 20})}>
             <FontAwesomeIcon
               name={icon}
-              testID="toggle-icon"
+              testID="haya-select/toggle-icon"
             />
           </View>
         }
@@ -2149,7 +2269,7 @@ class HayaSelect extends ShapeComponent {
             contentNode = (
               <Text
                 style={style}
-                testID="option-presentation-text"
+                testID="haya-select/option-presentation-text"
               >
                 {option.text}
               </Text>

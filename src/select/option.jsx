@@ -85,7 +85,6 @@ class Option extends ShapeComponent {
     return (
       <PressableComponent
         dataSet={this.cache("pressableDataSet", {
-          class: "select-option",
           disabled,
           selected,
           value: this.props.option.value
@@ -94,7 +93,7 @@ class Option extends ShapeComponent {
         onPointerOver={this.tt.onPointerOver}
         onPointerOut={this.tt.onPointerOut}
         style={style}
-        testID="haya-select-option"
+        testID="haya-select/option"
       >
         {this.p.presentOption(option, "option")}
       </PressableComponent>
