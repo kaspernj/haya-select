@@ -1,0 +1,1 @@
+- Scope HayaSelect system-test helper option lookups to the opened component when duplicate test IDs are present.

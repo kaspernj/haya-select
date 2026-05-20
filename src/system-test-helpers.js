@@ -190,15 +190,9 @@ export default class HayaSelectSystemTestHelper {
   async optionsContainerSelector() {
     if (this._optionsContainerSelector) return this._optionsContainerSelector
 
-    const rootElements = await this.findElements(this.rootSelector)
-    const rootId = rootElements.length > 0 ? await rootElements[0].getAttribute("data-id") : null
-    let elements = rootElements
-
-    if (!rootId) {
-      elements = await this.findElements(this.componentSelector)
-    }
-
-    const id = rootId || (elements.length > 0 ? await elements[0].getAttribute("data-id") : null)
+    const openedElements = await this.findElements(`${this.componentSelector}[data-opened='true']`)
+    const componentElements = openedElements.length > 0 ? openedElements : await this.findVisibleElements(this.componentSelector)
+    const id = componentElements.length > 0 ? await componentElements[0].getAttribute("data-id") : null
 
     this._optionsContainerSelector = id ? `[data-testid='haya-select/options-container'][data-id="${cssAttributeValue(id)}"]` : this.optionsContainerSelectorFallback
 

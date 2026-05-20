@@ -178,6 +178,17 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("scopes named helper option lookup to the opened select", async () => {
+    await timeout({errorMessage: "render test timed out: scopes named helper option lookup to the opened select", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+
+        await pickHayaSelectOption(systemTest, "hayaSelectRoot", {optionValue: "two"})
+        await expectHayaSelectCurrentOptions(systemTest, "hayaSelectRoot", ["Two"])
+      }, {screen: "duplicate-test-id-select"})
+    })
+  })
+
   it("clicks visible options in an already-open dropdown", async () => {
     await timeout({errorMessage: "render test timed out: clicks visible options in an already-open dropdown", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
