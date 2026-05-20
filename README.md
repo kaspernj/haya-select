@@ -76,6 +76,20 @@ The callback receives the current `searchValue`, `page`, and optional `values` w
 
 If `totalCount` and `page` are provided, the options list shows pagination controls with previous/next buttons, a page range around the current page, and a "Page X of Y" label that can be clicked to enter a page number manually.
 
+## System test helpers
+
+Browser system-test suites can import helpers from the dedicated test-helper entrypoint:
+
+```js
+import {pickHayaSelectOption} from "haya-select/build/system-test-helpers.js"
+```
+
+The helper entrypoint exports:
+
+- `pickHayaSelectOption(systemTest, testID, {optionText, optionValue, search})`
+- `clickVisibleHayaSelectOption(systemTest, {optionValue})`
+- `expectHayaSelectCurrentOptions(systemTest, testID, expectedTexts)`
+
 ## Mobile options sheet
 
 HayaSelect opens options in a bottom sheet on mobile-sized screens by default. The sheet is used when the window width is 768px or less on web, iOS, and Android. It keeps the options list scrollable inside the sheet and places the search input at the bottom. When pagination is enabled, the pagination controls stay fixed above the search input instead of scrolling with the options.
