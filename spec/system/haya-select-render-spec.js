@@ -4,7 +4,7 @@ import waitFor from "awaitery/build/wait-for.js"
 import {Key} from "selenium-webdriver"
 import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
-import HayaSelectSystemTestHelper from "../../src/system-test-helpers.js"
+import HayaSelectSystemTestHelper, {clickVisibleHayaSelectOption, expectHayaSelectCurrentOptions, pickHayaSelectOption} from "../../src/system-test-helpers.js"
 
 setupSystemTestLifecycle()
 
@@ -164,6 +164,37 @@ describe("HayaSelect", () => {
 
         await helper.close()
       }, {screen: "filter-select"})
+    })
+  })
+
+  it("exposes named helpers for selecting and asserting options", async () => {
+    await timeout({errorMessage: "render test timed out: exposes named helpers for selecting and asserting options", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+
+        await pickHayaSelectOption(systemTest, "hayaSelectRoot", {optionText: "Two", search: true})
+        await expectHayaSelectCurrentOptions(systemTest, "hayaSelectRoot", ["Two"])
+      }, {screen: "filter-select"})
+    })
+  })
+
+  it("clicks visible options in an already-open dropdown", async () => {
+    await timeout({errorMessage: "render test timed out: clicks visible options in an already-open dropdown", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleRoot"})
+
+        await systemTest.findByTestID("hayaSelectMultipleRoot", {timeout: 5000})
+        await helper.open()
+        await clickVisibleHayaSelectOption(systemTest, {optionValue: "one"})
+
+        if (!await helper.isOpen()) {
+          await helper.open()
+        }
+
+        await clickVisibleHayaSelectOption(systemTest, {optionValue: "two"})
+        await helper.close()
+        await expectHayaSelectCurrentOptions(systemTest, "hayaSelectMultipleRoot", ["One", "Two"])
+      }, {screen: "multiple-select"})
     })
   })
 
