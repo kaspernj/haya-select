@@ -18,8 +18,8 @@ const DEFAULT_TIMEOUT = 5000
  * @rejects {Error} When neither text nor value is supplied.
  */
 export async function pickHayaSelectOption(systemTest, testId, {optionText, optionValue, search = false, timeout = DEFAULT_TIMEOUT, useBaseSelector = true}) {
-  const selectSelector = `${testIdSelector(testId)} [data-testid="haya-select/select-container"]`
-  const selectElement = await systemTest.find(selectSelector, {timeout, useBaseSelector})
+  const helper = new HayaSelectSystemTestHelper({systemTest, testId})
+  const selectElement = await systemTest.find(helper.selectContainerSelector, {timeout, useBaseSelector})
   await selectElement.click()
 
   if (search) {
@@ -27,18 +27,19 @@ export async function pickHayaSelectOption(systemTest, testId, {optionText, opti
       throw new Error(`Expected optionText when searching ${testId}`)
     }
 
-    const searchSelector = `${testIdSelector(testId)} [data-testid="haya-select/search-input"]`
-    const searchElement = await systemTest.find(searchSelector, {timeout, useBaseSelector})
+    const searchElement = await systemTest.find(helper.searchInputSelector, {timeout, useBaseSelector})
     await searchElement.sendKeys(optionText)
   }
 
+  const optionsContainerSelector = await helper.optionsContainerSelector()
+
   if (typeof optionValue !== "undefined") {
-    await clickVisibleSelectOptionByValue(systemTest, optionValue, timeout)
+    await clickVisibleSelectOptionByValue(systemTest, optionValue, timeout, optionsContainerSelector)
     return
   }
 
   if (optionText) {
-    await clickVisibleSelectOptionByText(systemTest, optionText, timeout)
+    await clickVisibleSelectOptionByText(systemTest, optionText, timeout, optionsContainerSelector)
     return
   }
 
@@ -283,10 +284,11 @@ export default class HayaSelectSystemTestHelper {
  * @param {object} systemTest Browser session used by the running spec.
  * @param {string | number} optionValue Backend value stored in `data-value`.
  * @param {number} timeout Maximum wait in milliseconds.
+ * @param {string} [optionsContainerSelector] Options container selector to scope the lookup.
  * @returns {Promise<void>} Completes after the matching visible option is clicked.
  */
-async function clickVisibleSelectOptionByValue(systemTest, optionValue, timeout) {
-  const selector = `[data-testid="haya-select/option"][data-value="${cssAttributeValue(optionValue)}"]`
+async function clickVisibleSelectOptionByValue(systemTest, optionValue, timeout, optionsContainerSelector = "") {
+  const selector = `${optionsContainerSelector ? `${optionsContainerSelector} ` : ""}[data-testid="haya-select/option"][data-value="${cssAttributeValue(optionValue)}"]`
   const element = await findVisibleElement(systemTest, selector, timeout)
   await element.click()
 }
@@ -296,13 +298,15 @@ async function clickVisibleSelectOptionByValue(systemTest, optionValue, timeout)
  * @param {object} systemTest Browser session used by the running spec.
  * @param {string} expectedText Visible fragment rendered by the option.
  * @param {number} timeout Maximum wait in milliseconds.
+ * @param {string} [optionsContainerSelector] Options container selector to scope the lookup.
  * @returns {Promise<void>} Completes after the matching visible option is clicked.
  */
-async function clickVisibleSelectOptionByText(systemTest, expectedText, timeout) {
+async function clickVisibleSelectOptionByText(systemTest, expectedText, timeout, optionsContainerSelector = "") {
   const element = /** @type {WebElement} */ (
     await systemTest.getDriver().wait(
       async () => {
-        const optionElements = await systemTest.getDriver().findElements(By.css("[data-testid='haya-select/option']"))
+        const selector = `${optionsContainerSelector ? `${optionsContainerSelector} ` : ""}[data-testid='haya-select/option']`
+        const optionElements = await systemTest.getDriver().findElements(By.css(selector))
 
         for (const optionElement of optionElements) {
           if (!(await optionElement.isDisplayed())) {
