@@ -54,6 +54,7 @@ const MOBILE_OPTIONS_MAX_WIDTH = 768
  * @typedef {object} HayaSelectProps
  * @property {string} [attribute]
  * @property {string} [className]
+ * @property {boolean} [closeOnChange]
  * @property {object} [defaultToggled]
  * @property {string|number} [defaultValue]
  * @property {Array<string|number>} [defaultValues]
@@ -212,6 +213,7 @@ const nameForComponentWithMultiple = (component) => {
 /** @augments {ShapeComponent<HayaSelectProps, HayaSelectState>} */
 class HayaSelect extends ShapeComponent {
   static defaultProps = {
+    closeOnChange: false,
     debug: false,
     mobileOptionsMode: "auto",
     multiple: false,
@@ -229,6 +231,7 @@ class HayaSelect extends ShapeComponent {
   static propTypes = propTypesExact({
     attribute: PropTypes.string,
     className: PropTypes.string,
+    closeOnChange: PropTypes.bool.isRequired,
     defaultToggled: PropTypes.object,
     defaultValue: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     defaultValues: PropTypes.array,
@@ -380,6 +383,7 @@ class HayaSelect extends ShapeComponent {
     if (this.isDebugEnabled()) this.debugLog("setup", {
       hasControlledValues: "values" in this.props,
       hasControlledToggled: "toggled" in this.props,
+      closeOnChange: this.p.closeOnChange,
       multiple: this.p.multiple,
       optionsType: Array.isArray(this.props.options) ? "array" : typeof this.props.options
     })
@@ -2128,7 +2132,7 @@ class HayaSelect extends ShapeComponent {
       optionsCountAfter: options.length
     })
 
-    if (!multiple) this.closeOptions({options})
+    if (!multiple || this.p.closeOnChange) this.closeOptions({options})
 
     if (onChange) {
       /** @type {HayaSelectOnChangePayload} */

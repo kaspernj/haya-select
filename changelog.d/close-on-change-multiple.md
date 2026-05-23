@@ -1,0 +1,1 @@
+- Add `closeOnChange` so filter-style multiple selects can close after each picked option.
