@@ -76,6 +76,20 @@ The callback receives the current `searchValue`, `page`, and optional `values` w
 
 If `totalCount` and `page` are provided, the options list shows pagination controls with previous/next buttons, a page range around the current page, and a "Page X of Y" label that can be clicked to enter a page number manually.
 
+## Closing multiple selects after a change
+
+Multiple selects stay open after option clicks by default so users can pick several values quickly. Use `closeOnChange` for filter-style selects that update route params or otherwise re-render immediately after each selection.
+
+```jsx
+<HayaSelect
+  closeOnChange
+  multiple
+  onChangeValue={setSelectedValues}
+  options={options}
+  values={selectedValues}
+/>
+```
+
 ## System test helpers
 
 Browser system-test suites can import helpers from the dedicated test-helper entrypoint:

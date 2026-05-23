@@ -79,6 +79,32 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("closes controlled multiple options when closeOnChange is enabled", async () => {
+    await timeout({errorMessage: "render test timed out: closes controlled multiple options when closeOnChange is enabled", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const helper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectCloseOnChangeMultipleRoot"})
+
+        await systemTest.findByTestID("hayaSelectCloseOnChangeMultipleRoot", {timeout: 5000})
+        await helper.open()
+        await helper.selectOption({value: "email"})
+
+        await waitFor({timeout: 5000}, async () => {
+          if (await helper.isOpen()) {
+            throw new Error("Expected closeOnChange multiple select to close after selecting an option")
+          }
+        })
+        await waitFor({timeout: 5000}, async () => {
+          const values = await systemTest.findByTestID("hayaSelectCloseOnChangeMultipleValues", {timeout: 0})
+          const text = await values.getText()
+
+          if (text.trim() !== "email") {
+            throw new Error(`Expected controlled multiple value to update, got: ${text}`)
+          }
+        })
+      }, {screen: "close-on-change"})
+    })
+  })
+
   it("renders without crashing when values include ids missing from options", async () => {
     await runSystemTest(async (systemTest) => {
       await systemTest.findByTestID("hayaSelectStaleValuesRoot", {timeout: 5000})
