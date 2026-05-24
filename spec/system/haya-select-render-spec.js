@@ -208,8 +208,8 @@ describe("HayaSelect", () => {
     await runSystemTest(async (systemTest) => {
       const otherHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectHelperOtherRoot"})
 
-      await systemTest.findByTestID("hayaSelectHelperTargetRoot", {timeout: 5000})
-      await systemTest.findByTestID("hayaSelectHelperOtherRoot", {timeout: 5000})
+      await systemTest.findByTestID("hayaSelectHelperTargetRoot")
+      await systemTest.findByTestID("hayaSelectHelperOtherRoot")
       await openHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
       await closeHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
       await openHayaSelect(systemTest, "hayaSelectHelperOtherRoot")
