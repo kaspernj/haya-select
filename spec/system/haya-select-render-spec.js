@@ -206,12 +206,19 @@ describe("HayaSelect", () => {
 
   it("opens and asserts closed state with named helpers", async () => {
     await runSystemTest(async (systemTest) => {
-      await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+      const otherHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectHelperOtherRoot"})
 
-      await openHayaSelect(systemTest, "hayaSelectRoot")
-      await closeHayaSelect(systemTest, "hayaSelectRoot")
-      await expectHayaSelectOptionsClosed(systemTest, "hayaSelectRoot")
-    }, {screen: "basic-select"})
+      await systemTest.findByTestID("hayaSelectHelperTargetRoot", {timeout: 5000})
+      await systemTest.findByTestID("hayaSelectHelperOtherRoot", {timeout: 5000})
+      await openHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
+      await closeHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
+      await openHayaSelect(systemTest, "hayaSelectHelperOtherRoot")
+      await expectHayaSelectOptionsClosed(systemTest, "hayaSelectHelperTargetRoot")
+
+      if (!await otherHelper.isOpen()) {
+        throw new Error("Expected other HayaSelect to stay open while asserting target select is closed")
+      }
+    }, {screen: "helper-scope"})
   })
 
   it("scopes named helper option lookup to the opened select", async () => {

@@ -196,9 +196,10 @@ export default class HayaSelectSystemTestHelper {
    */
   async expectClosed({timeout = DEFAULT_TIMEOUT} = {}) {
     await waitFor({timeout}, async () => {
+      const optionsContainerSelector = await this.optionsContainerSelector()
       const open = await this.isOpen()
-      const visibleContainersCount = (await this.findVisibleElements("[data-testid='haya-select/options-container']")).length
-      const visibleOptionsCount = (await this.findVisibleElements("[data-testid='haya-select/option']")).length
+      const visibleContainersCount = await this.visibleElementsCount(optionsContainerSelector)
+      const visibleOptionsCount = await this.visibleElementsCount(`${optionsContainerSelector} [data-testid='haya-select/option']`)
 
       if (open || visibleContainersCount > 0 || visibleOptionsCount > 0) {
         throw new Error(`Expected ${this.testId} options to close, got open=${open}, visibleContainers=${visibleContainersCount}, visibleOptions=${visibleOptionsCount}`)
@@ -250,6 +251,25 @@ export default class HayaSelectSystemTestHelper {
     }
 
     return visibleElements
+  }
+
+  /**
+   * Counts visible elements by CSS selector in browser layout state.
+   * @param {string} selector CSS selector to count.
+   * @returns {Promise<number>} Number of visible elements.
+   */
+  async visibleElementsCount(selector) {
+    return Number(
+      await this.systemTest.getDriver().executeScript(
+        `
+          return Array.from(document.querySelectorAll(arguments[0])).filter((element) => {
+            const style = window.getComputedStyle(element)
+            return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0
+          }).length
+        `,
+        selector
+      )
+    )
   }
 
   /** @returns {Promise<string>} */
