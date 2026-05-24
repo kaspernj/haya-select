@@ -1,1 +1,2 @@
 - Export named HayaSelect system-test helper functions for downstream browser specs.
+- Add named open, close, and close-state helpers for downstream browser specs.

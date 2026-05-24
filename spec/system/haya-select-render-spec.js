@@ -4,7 +4,7 @@ import waitFor from "awaitery/build/wait-for.js"
 import {Key} from "selenium-webdriver"
 import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
-import HayaSelectSystemTestHelper, {clickVisibleHayaSelectOption, expectHayaSelectCurrentOptions, pickHayaSelectOption} from "../../src/system-test-helpers.js"
+import HayaSelectSystemTestHelper, {clickVisibleHayaSelectOption, closeHayaSelect, expectHayaSelectCurrentOptions, expectHayaSelectOptionsClosed, openHayaSelect, pickHayaSelectOption} from "../../src/system-test-helpers.js"
 
 setupSystemTestLifecycle()
 
@@ -202,6 +202,23 @@ describe("HayaSelect", () => {
         await expectHayaSelectCurrentOptions(systemTest, "hayaSelectRoot", ["Two"])
       }, {screen: "filter-select"})
     })
+  })
+
+  it("opens and asserts closed state with named helpers", async () => {
+    await runSystemTest(async (systemTest) => {
+      const otherHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectHelperOtherRoot"})
+
+      await systemTest.findByTestID("hayaSelectHelperTargetRoot")
+      await systemTest.findByTestID("hayaSelectHelperOtherRoot")
+      await openHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
+      await closeHayaSelect(systemTest, "hayaSelectHelperTargetRoot")
+      await openHayaSelect(systemTest, "hayaSelectHelperOtherRoot")
+      await expectHayaSelectOptionsClosed(systemTest, "hayaSelectHelperTargetRoot")
+
+      if (!await otherHelper.isOpen()) {
+        throw new Error("Expected other HayaSelect to stay open while asserting target select is closed")
+      }
+    }, {screen: "helper-scope"})
   })
 
   it("scopes named helper option lookup to the opened select", async () => {

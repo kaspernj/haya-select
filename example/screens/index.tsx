@@ -5,6 +5,7 @@ import CloseOnChangeScreen from "./close-on-change-screen"
 import ControlledValuesScreen from "./controlled-values-screen"
 import DuplicateTestIdSelectScreen from "./duplicate-test-id-select-screen"
 import FilterSelectScreen from "./filter-select-screen"
+import HelperScopeScreen from "./helper-scope-screen"
 import MobileSheetResizeScreen from "./mobile-sheet-resize-screen"
 import MobileSheetSelectScreen from "./mobile-sheet-select-screen"
 import ModuleApiScreen from "./module-api-screen"
@@ -29,6 +30,7 @@ const screens: Record<string, React.ComponentType> = {
   "controlled-values": ControlledValuesScreen,
   "duplicate-test-id-select": DuplicateTestIdSelectScreen,
   "filter-select": FilterSelectScreen,
+  "helper-scope": HelperScopeScreen,
   "mobile-sheet-resize": MobileSheetResizeScreen,
   "mobile-sheet-select": MobileSheetSelectScreen,
   "module-api": ModuleApiScreen,

@@ -2,9 +2,11 @@ import waitFor from "awaitery/build/wait-for.js"
 import {By} from "selenium-webdriver"
 
 /** @typedef {{systemTest: object, testId: string}} HayaSelectSystemTestHelperOptions */
+/** @typedef {{timeout?: number, useBaseSelector?: boolean}} HayaSelectOpenOptions */
 /** @typedef {{optionText?: string, optionValue?: string | number, search?: boolean, timeout?: number, useBaseSelector?: boolean}} PickHayaSelectOptionOptions */
 /** @typedef {{optionValue: string | number, timeout?: number}} ClickVisibleHayaSelectOptionOptions */
 /** @typedef {{timeout?: number}} ExpectHayaSelectCurrentOptionsOptions */
+/** @typedef {{timeout?: number}} ExpectHayaSelectOptionsClosedOptions */
 /** @typedef {import("selenium-webdriver").WebElement} WebElement */
 
 const DEFAULT_TIMEOUT = 5000
@@ -57,6 +59,32 @@ export async function clickVisibleHayaSelectOption(systemTest, {optionValue, tim
 }
 
 /**
+ * Opens a HayaSelect instance by clicking its select container.
+ * @param {object} systemTest Browser session used by the running spec.
+ * @param {string} testId Wrapper `data-testid` around the select.
+ * @param {HayaSelectOpenOptions} [options] Optional selector scope and timeout.
+ * @returns {Promise<void>} Completes after the select opens.
+ */
+export async function openHayaSelect(systemTest, testId, {timeout = DEFAULT_TIMEOUT, useBaseSelector = true} = {}) {
+  const helper = new HayaSelectSystemTestHelper({systemTest, testId})
+
+  await helper.open({timeout, useBaseSelector})
+}
+
+/**
+ * Closes a HayaSelect instance by clicking its select container.
+ * @param {object} systemTest Browser session used by the running spec.
+ * @param {string} testId Wrapper `data-testid` around the select.
+ * @param {HayaSelectOpenOptions} [options] Optional selector scope and timeout.
+ * @returns {Promise<void>} Completes after the select closes.
+ */
+export async function closeHayaSelect(systemTest, testId, {timeout = DEFAULT_TIMEOUT, useBaseSelector = true} = {}) {
+  const helper = new HayaSelectSystemTestHelper({systemTest, testId})
+
+  await helper.close({timeout, useBaseSelector})
+}
+
+/**
  * Waits until a HayaSelect renders exactly the expected current-option labels.
  * @param {object} systemTest Browser session used by the running spec.
  * @param {string} testId Wrapper `data-testid` around the select.
@@ -90,6 +118,19 @@ export async function expectHayaSelectCurrentOptions(systemTest, testId, expecte
 }
 
 /**
+ * Waits until a HayaSelect and its portal-rendered options are closed.
+ * @param {object} systemTest Browser session used by the running spec.
+ * @param {string} testId Wrapper `data-testid` around the select.
+ * @param {ExpectHayaSelectOptionsClosedOptions} [options] Optional Selenium timeout override.
+ * @returns {Promise<void>} Completes after no visible options remain.
+ */
+export async function expectHayaSelectOptionsClosed(systemTest, testId, {timeout = DEFAULT_TIMEOUT} = {}) {
+  const helper = new HayaSelectSystemTestHelper({systemTest, testId})
+
+  await helper.expectClosed({timeout})
+}
+
+/**
  * System test helper for interacting with HayaSelect instances.
  */
 export default class HayaSelectSystemTestHelper {
@@ -116,12 +157,15 @@ export default class HayaSelectSystemTestHelper {
     this.optionsContainerSelectorFallback = "[data-testid='haya-select/options-container']"
   }
 
-  /** @returns {Promise<void>} */
-  async open() {
-    await this.clickSelectContainer()
+  /**
+   * @param {HayaSelectOpenOptions} [options] Optional selector scope and timeout.
+   * @returns {Promise<void>} Completes after the select opens.
+   */
+  async open({timeout = DEFAULT_TIMEOUT, useBaseSelector = true} = {}) {
+    await this.clickSelectContainer({timeout, useBaseSelector})
     this._optionsContainerSelector = null
 
-    await waitFor({timeout: 5000}, async () => {
+    await waitFor({timeout}, async () => {
       const openedElements = await this.findElements(`${this.componentSelector}[data-opened='true']`)
 
       if (openedElements.length === 0) {
@@ -130,15 +174,35 @@ export default class HayaSelectSystemTestHelper {
     })
   }
 
-  /** @returns {Promise<void>} */
-  async close() {
-    await this.clickSelectContainer()
+  /**
+   * @param {HayaSelectOpenOptions} [options] Optional selector scope and timeout.
+   * @returns {Promise<void>} Completes after the select closes.
+   */
+  async close({timeout = DEFAULT_TIMEOUT, useBaseSelector = true} = {}) {
+    await this.clickSelectContainer({timeout, useBaseSelector})
 
-    await waitFor({timeout: 5000}, async () => {
+    await waitFor({timeout}, async () => {
       const openedElements = await this.findElements(`${this.componentSelector}[data-opened='true']`)
 
       if (openedElements.length > 0) {
         throw new Error(`Expected HayaSelect to close: ${this.testId}`)
+      }
+    })
+  }
+
+  /**
+   * @param {ExpectHayaSelectOptionsClosedOptions} [options] Optional timeout.
+   * @returns {Promise<void>} Completes after no visible options remain.
+   */
+  async expectClosed({timeout = DEFAULT_TIMEOUT} = {}) {
+    await waitFor({timeout}, async () => {
+      const optionsContainerSelector = await this.optionsContainerSelector()
+      const open = await this.isOpen()
+      const visibleContainersCount = await this.visibleElementsCount(optionsContainerSelector)
+      const visibleOptionsCount = await this.visibleElementsCount(`${optionsContainerSelector} [data-testid='haya-select/option']`)
+
+      if (open || visibleContainersCount > 0 || visibleOptionsCount > 0) {
+        throw new Error(`Expected ${this.testId} options to close, got open=${open}, visibleContainers=${visibleContainersCount}, visibleOptions=${visibleOptionsCount}`)
       }
     })
   }
@@ -154,9 +218,12 @@ export default class HayaSelectSystemTestHelper {
     return searchInputs.length > 0
   }
 
-  /** @returns {Promise<void>} */
-  async clickSelectContainer() {
-    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout: 5000})
+  /**
+   * @param {HayaSelectOpenOptions} [options] Optional selector scope and timeout.
+   * @returns {Promise<void>} Completes after the select container click.
+   */
+  async clickSelectContainer({timeout = DEFAULT_TIMEOUT, useBaseSelector = true} = {}) {
+    const selectContainer = await this.systemTest.find(this.selectContainerSelector, {timeout, useBaseSelector})
 
     await selectContainer.click()
   }
@@ -184,6 +251,25 @@ export default class HayaSelectSystemTestHelper {
     }
 
     return visibleElements
+  }
+
+  /**
+   * Counts visible elements by CSS selector in browser layout state.
+   * @param {string} selector CSS selector to count.
+   * @returns {Promise<number>} Number of visible elements.
+   */
+  async visibleElementsCount(selector) {
+    return Number(
+      await this.systemTest.getDriver().executeScript(
+        `
+          return Array.from(document.querySelectorAll(arguments[0])).filter((element) => {
+            const style = window.getComputedStyle(element)
+            return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0
+          }).length
+        `,
+        selector
+      )
+    )
   }
 
   /** @returns {Promise<string>} */
