@@ -4,7 +4,7 @@ import waitFor from "awaitery/build/wait-for.js"
 import {Key} from "selenium-webdriver"
 import {runSystemTest, setupSystemTestLifecycle} from "./system-test-lifecycle.js"
 
-import HayaSelectSystemTestHelper, {clickVisibleHayaSelectOption, expectHayaSelectCurrentOptions, pickHayaSelectOption} from "../../src/system-test-helpers.js"
+import HayaSelectSystemTestHelper, {clickVisibleHayaSelectOption, closeHayaSelect, expectHayaSelectCurrentOptions, expectHayaSelectOptionsClosed, openHayaSelect, pickHayaSelectOption} from "../../src/system-test-helpers.js"
 
 setupSystemTestLifecycle()
 
@@ -202,6 +202,16 @@ describe("HayaSelect", () => {
         await expectHayaSelectCurrentOptions(systemTest, "hayaSelectRoot", ["Two"])
       }, {screen: "filter-select"})
     })
+  })
+
+  it("opens and asserts closed state with named helpers", async () => {
+    await runSystemTest(async (systemTest) => {
+      await systemTest.findByTestID("hayaSelectRoot", {timeout: 5000})
+
+      await openHayaSelect(systemTest, "hayaSelectRoot")
+      await closeHayaSelect(systemTest, "hayaSelectRoot")
+      await expectHayaSelectOptionsClosed(systemTest, "hayaSelectRoot")
+    }, {screen: "basic-select"})
   })
 
   it("scopes named helper option lookup to the opened select", async () => {
