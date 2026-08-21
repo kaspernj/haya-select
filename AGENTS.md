@@ -8,6 +8,7 @@
 - Keep a stub `setUseTranslate` in the example app bootstrap for system tests so fallback translator warning logs do not pollute browser output.
 - Avoid ending JavaScript lines with semicolons unless required for correctness.
 - Use spaces inside named import/export braces (for example: `{foo, bar}`).
+- In ShapeComponents, pass and call component methods through `this.tt.methodName` when possible so missing methods fail loudly; do not switch to direct `this.methodName` calls just to fix binding.
 - For scoundrel evals that return data, use an explicit `return` statement inside the eval.
 - Suggest relevant git branch names for the work when asked to create a PR or branch.
 - In this repo, do not use `.browser-spec.js` suffix; keep specs named with the standard `*-spec.js` pattern.

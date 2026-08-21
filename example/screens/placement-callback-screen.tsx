@@ -3,10 +3,13 @@ import {View} from "react-native"
 
 import {Group, HayaSelect, placementStyleCallback, selectOptions, styles, TestScrollView} from "./shared"
 
-const placementAboveOptions = Array.from({length: 25}).map((_, index) => ({
-  value: `placement-above-${index + 1}`,
-  text: `Placement Option ${index + 1}`
-}))
+const placementAboveOptions = [
+  {key: "placement-group", text: "Placement Group", type: "group"},
+  ...Array.from({length: 25}).map((_, index) => ({
+    value: `placement-above-${index + 1}`,
+    text: `Placement Option ${index + 1}`
+  }))
+]
 
 export default function PlacementCallbackScreen() {
   return (
