@@ -985,6 +985,20 @@ describe("HayaSelect", () => {
             }
           `)
         }
+        const getOptionGroupTextColor = async (helper) => {
+          const optionsContainerSelector = await helper.optionsContainerSelector()
+
+          return await scoundrel.evalResult(`
+            const optionsContainer = document.querySelector(${JSON.stringify(optionsContainerSelector)})
+            const groupText = optionsContainer && optionsContainer.querySelector("[data-testid='haya-select/option-group-text']")
+            if (!optionsContainer) {
+              throw new Error("Expected options container to exist for selector: " + ${JSON.stringify(optionsContainerSelector)})
+            }
+            if (!groupText) throw new Error("Expected option group text to exist")
+
+            return window.getComputedStyle(groupText).color
+          `)
+        }
 
         await systemTest.findByTestID("hayaSelectPlacementBelowRoot", {timeout: 60000})
         await belowHelper.open()
@@ -1026,6 +1040,7 @@ describe("HayaSelect", () => {
         expect(abovePlacementAndRadii.topRight).not.toBe("0px")
         expect(abovePlacementAndRadii.bottomLeft).toBe("0px")
         expect(abovePlacementAndRadii.bottomRight).toBe("0px")
+        expect(await getOptionGroupTextColor(aboveHelper)).toBe("rgb(185, 28, 28)")
         await aboveHelper.close()
       }, {screen: "placement-callback"})
     })

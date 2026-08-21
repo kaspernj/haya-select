@@ -57,6 +57,7 @@ yarn-error.log
 .expo/*
 
 # Project specific
+/build/
 link.sh
 db/
 tmp/screenshots/

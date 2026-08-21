@@ -1,10 +1,9 @@
-import {memo} from "react"
 import PropTypes from "prop-types"
 import React from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import {Text, View} from "react-native"
 
-export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
+export default shapeComponent(class OptionGroup extends ShapeComponent {
   static propTypes = {
     option: PropTypes.object.isRequired,
     stylingFor: PropTypes.func.isRequired
@@ -35,4 +34,4 @@ export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
       </View>
     )
   }
-}))
+})
