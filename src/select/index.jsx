@@ -304,6 +304,7 @@ class HayaSelect extends ShapeComponent {
     {scale: this.mobileOptionsContainerScale}
   ]
   mobileOptionsClosing = false
+  optionGroupStylingFor = (stylingName, style = {}, caches = []) => this.tt.stylingFor(stylingName, style, caches)
   searchTextValue = ""
   searchTextInputRef = createRef()
   selectContainerRef = createRef()
@@ -908,7 +909,7 @@ class HayaSelect extends ShapeComponent {
    */
   hayaSelectOption({key, loadedOption}) {
     if (loadedOption.type == "group") {
-      return <OptionGroup key={key} option={loadedOption} />
+      return <OptionGroup key={key} option={loadedOption} stylingFor={this.tt.optionGroupStylingFor} />
     }
 
     return (

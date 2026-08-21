@@ -59,6 +59,79 @@ describe("HayaSelect", () => {
     })
   })
 
+  it("styles option group labels distinctly and accepts custom styles", async () => {
+    await timeout({errorMessage: "render test timed out: styles option group labels distinctly and accepts custom styles", timeout: 30000}, async () => {
+      await runSystemTest(async (systemTest) => {
+        const defaultHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionGroupDefaultRoot"})
+        const customHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectOptionGroupCustomRoot"})
+
+        await systemTest.findByTestID("hayaSelectOptionGroupDefaultRoot", {timeout: 5000})
+        await defaultHelper.open()
+
+        const defaultOptionsContainerSelector = await defaultHelper.optionsContainerSelector()
+
+        await waitFor({timeout: 5000}, async () => {
+          const defaultGroupMetrics = await systemTest.getDriver().executeScript(`
+            const container = document.querySelector(${JSON.stringify(defaultOptionsContainerSelector)})
+            const group = container && container.querySelector("[data-testid='haya-select/option-group']")
+            const groupText = group && (group.querySelector("[data-testid='haya-select/option-group-text']") || group.querySelector("[dir]"))
+            if (!container) throw new Error("Missing default options container")
+            if (!group) throw new Error("Missing default option group")
+            if (!groupText) throw new Error("Missing default option group text")
+
+            const textStyle = window.getComputedStyle(groupText)
+
+            return {
+              fontWeight: textStyle.fontWeight
+            }
+          `)
+          const defaultFontWeight = Number.parseInt(defaultGroupMetrics.fontWeight, 10)
+
+          if (!Number.isFinite(defaultFontWeight) || defaultFontWeight < 600) {
+            throw new Error(`Expected default group label font weight to be bold, got: ${defaultGroupMetrics.fontWeight}`)
+          }
+        })
+        await defaultHelper.close()
+
+        await customHelper.open()
+
+        const customOptionsContainerSelector = await customHelper.optionsContainerSelector()
+
+        await waitFor({timeout: 5000}, async () => {
+          const customGroupMetrics = await systemTest.getDriver().executeScript(`
+            const container = document.querySelector(${JSON.stringify(customOptionsContainerSelector)})
+            const group = container && container.querySelector("[data-testid='haya-select/option-group']")
+            const groupText = group && (group.querySelector("[data-testid='haya-select/option-group-text']") || group.querySelector("[dir]"))
+            if (!container) throw new Error("Missing custom options container")
+            if (!group) throw new Error("Missing custom option group")
+            if (!groupText) throw new Error("Missing custom option group text")
+
+            const groupStyle = window.getComputedStyle(group)
+            const textStyle = window.getComputedStyle(groupText)
+
+            return {
+              backgroundColor: groupStyle.backgroundColor,
+              color: textStyle.color,
+              fontWeight: textStyle.fontWeight
+            }
+          `)
+
+          if (customGroupMetrics.backgroundColor !== "rgb(238, 242, 255)") {
+            throw new Error(`Expected custom group background color, got: ${customGroupMetrics.backgroundColor}`)
+          }
+
+          if (customGroupMetrics.color !== "rgb(185, 28, 28)") {
+            throw new Error(`Expected custom group text color, got: ${customGroupMetrics.color}`)
+          }
+
+          if (customGroupMetrics.fontWeight !== "800") {
+            throw new Error(`Expected custom group text font weight, got: ${customGroupMetrics.fontWeight}`)
+          }
+        })
+      }, {screen: "option-group-style"})
+    })
+  })
+
   it("closes options after change-triggered re-render", async () => {
     await timeout({errorMessage: "render test timed out: closes options after change-triggered re-render", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
