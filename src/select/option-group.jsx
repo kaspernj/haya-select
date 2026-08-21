@@ -1,15 +1,24 @@
 import PropTypes from "prop-types"
-import React from "react"
+import React, {memo} from "react"
 import {shapeComponent, ShapeComponent} from "set-state-compare/build/shape-component.js"
 import {Text, View} from "react-native"
 
-export default shapeComponent(class OptionGroup extends ShapeComponent {
+export default memo(shapeComponent(class OptionGroup extends ShapeComponent {
   static propTypes = {
     option: PropTypes.object.isRequired,
+    styleEntries: PropTypes.shape({
+      optionGroup: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+      optionGroupText: PropTypes.oneOfType([PropTypes.func, PropTypes.object])
+    }).isRequired,
+    stylingContextKey: PropTypes.object,
     stylingFor: PropTypes.func.isRequired
   }
 
-  stylingFor = (stylingName, style = {}, caches = []) => this.p.stylingFor(stylingName, style, caches)
+  stylingFor = (stylingName, style = {}, caches = []) => this.p.stylingFor(stylingName, style, [
+    ...caches,
+    this.p.styleEntries,
+    this.p.stylingContextKey
+  ])
 
   render() {
     return (
@@ -34,4 +43,4 @@ export default shapeComponent(class OptionGroup extends ShapeComponent {
       </View>
     )
   }
-})
+}))
