@@ -1,0 +1,1 @@
+- Style dropdown option group labels distinctly by default and expose `optionGroup` / `optionGroupText` style hooks.

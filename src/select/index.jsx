@@ -304,6 +304,41 @@ class HayaSelect extends ShapeComponent {
     {scale: this.mobileOptionsContainerScale}
   ]
   mobileOptionsClosing = false
+  optionGroupStyleEntries = () => {
+    const optionGroup = dig(this, "props", "styles", "optionGroup")
+    const optionGroupText = dig(this, "props", "styles", "optionGroupText")
+
+    return this.cache("optionGroupStyleEntries", {optionGroup, optionGroupText}, [optionGroup, optionGroupText])
+  }
+  optionGroupStylingContextKey = () => {
+    const {optionGroup, optionGroupText} = this.tt.optionGroupStyleEntries()
+    if (typeof optionGroup != "function" && typeof optionGroupText != "function") return null
+
+    return this.cache("optionGroupStylingContextKey", {}, [
+      this.s.currentOptions,
+      this.s.endOfSelectLayout,
+      this.s.height,
+      this.s.loadedOptions,
+      this.s.loadOptionsAppliedRequestId,
+      this.s.loadOptionsRequestId,
+      this.s.opened,
+      this.s.optionsContainerLayout,
+      this.s.optionsPlacement,
+      this.s.optionsTop,
+      this.s.optionsVisibility,
+      this.s.optionsWidth,
+      this.s.page,
+      this.s.pageInputFocused,
+      this.s.pageInputValue,
+      this.s.pageSize,
+      this.s.scrollLeft,
+      this.s.scrollTop,
+      this.s.selectContainerLayout,
+      this.s.toggled,
+      this.s.totalCount
+    ])
+  }
+  optionGroupStylingFor = (stylingName, style = {}, caches = []) => this.tt.stylingFor(stylingName, style, caches)
   searchTextValue = ""
   searchTextInputRef = createRef()
   selectContainerRef = createRef()
@@ -908,7 +943,15 @@ class HayaSelect extends ShapeComponent {
    */
   hayaSelectOption({key, loadedOption}) {
     if (loadedOption.type == "group") {
-      return <OptionGroup key={key} option={loadedOption} />
+      return (
+        <OptionGroup
+          key={key}
+          option={loadedOption}
+          styleEntries={this.tt.optionGroupStyleEntries()}
+          stylingContextKey={this.tt.optionGroupStylingContextKey()}
+          stylingFor={this.tt.optionGroupStylingFor}
+        />
+      )
     }
 
     return (

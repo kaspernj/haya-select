@@ -14,6 +14,7 @@ import MultipleHighlightScreen from "./multiple-highlight-screen"
 import MultipleSelectScreen from "./multiple-select-screen"
 import NoOptionsSelectScreen from "./no-options-select-screen"
 import OptionContentScreen from "./option-content-screen"
+import OptionGroupStyleScreen from "./option-group-style-screen"
 import PaginationChangePageScreen from "./pagination-change-page-screen"
 import PaginationLongPageScreen from "./pagination-long-page-screen"
 import PaginationManualEntryScreen from "./pagination-manual-entry-screen"
@@ -39,6 +40,7 @@ const screens: Record<string, React.ComponentType> = {
   "multiple-select": MultipleSelectScreen,
   "no-options-select": NoOptionsSelectScreen,
   "option-content": OptionContentScreen,
+  "option-group-style": OptionGroupStyleScreen,
   "pagination-change-page": PaginationChangePageScreen,
   "pagination-long-page": PaginationLongPageScreen,
   "pagination-manual-entry": PaginationManualEntryScreen,

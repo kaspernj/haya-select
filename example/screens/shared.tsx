@@ -15,6 +15,13 @@ export const selectOptions = [
 ]
 
 export const placementStyleCallback = {
+  optionGroupText: ({optionsPlacement, style}: {optionsPlacement?: "above" | "below" | "sheet"; style: Record<string, unknown>}) => {
+    Object.freeze(style)
+
+    return {
+      color: optionsPlacement === "above" ? "#b91c1c" : "#047857"
+    }
+  },
   optionsContainer: ({optionsPlacement, style}: {optionsPlacement?: "above" | "below"; style: Record<string, unknown>}) => {
     Object.freeze(style)
 
