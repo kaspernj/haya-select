@@ -12,6 +12,7 @@ import ModuleApiScreen from "./module-api-screen"
 import MultipleClearScreen from "./multiple-clear-screen"
 import MultipleHighlightScreen from "./multiple-highlight-screen"
 import MultipleSelectScreen from "./multiple-select-screen"
+import MultipleSelectsScreen from "./multiple-selects-screen"
 import NoOptionsSelectScreen from "./no-options-select-screen"
 import OptionContentScreen from "./option-content-screen"
 import OptionGroupStyleScreen from "./option-group-style-screen"
@@ -38,6 +39,7 @@ const screens: Record<string, React.ComponentType> = {
   "multiple-clear": MultipleClearScreen,
   "multiple-highlight": MultipleHighlightScreen,
   "multiple-select": MultipleSelectScreen,
+  "multiple-selects": MultipleSelectsScreen,
   "no-options-select": NoOptionsSelectScreen,
   "option-content": OptionContentScreen,
   "option-group-style": OptionGroupStyleScreen,
