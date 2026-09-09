@@ -11,7 +11,7 @@
     "build": "EXPO_NONINTERACTIVE=1 expo-module build",
     "build:example:dist": "npm run build && EXPO_NONINTERACTIVE=1 cd example && npx expo export --platform web --output-dir ../dist",
     "clean": "expo-module clean",
-    "lint": "npm run eslint && npm run typecheck",
+    "lint": "npm run lint:eslint && npm run typecheck",
     "test": "node scripts/velocious-test.js",
     "test:dist": "npm run build:example:dist && SYSTEM_TEST_HOST=dist npm test",
     "prepare": "expo-module prepare && npm run build",
@@ -20,7 +20,7 @@
     "open:ios": "xed example/ios",
     "open:android": "open -a \"Android Studio\" example/android",
     "typecheck": "tsc --noEmit",
-    "eslint": "expo-module lint"
+    "lint:eslint": "expo-module lint"
   },
   "keywords": [
     "react-native",

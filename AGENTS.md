@@ -63,7 +63,7 @@ Commands below run from the repository root unless noted. Use the checked-in npm
 | `npm install` | Install root dependencies; the `prepare` lifecycle also builds the library. |
 | `npm --prefix example install` | Install the example's separate dependency tree. |
 | `npm run lint` | Required aggregate static gate: ESLint followed by TypeScript. |
-| `npm run eslint` / `npm run typecheck` | Individual checks for diagnosis, not substitutes for the final lint gate. |
+| `npm run lint:eslint` / `npm run typecheck` | Individual checks for diagnosis, not substitutes for the final lint gate. The eslint script is namespaced `lint:eslint` (not `eslint`) because a bare `eslint` script name conflicts with the `eslint` binary in `node_modules/.bin` and fails `expo-doctor`. |
 | `npm run build` | Generate the library's `build/` output with Expo module tooling. |
 | `npm run build:example:dist` | Build the library and export the example web app to `dist/`. |
 | `npx expo-doctor` | Expo health check used by CI; run for Expo/dependency changes. |
