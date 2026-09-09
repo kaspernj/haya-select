@@ -1,0 +1,1 @@
+- Ensure only one HayaSelect options container is open at a time: opening a select now automatically closes any other open select, and switching between mobile sheets no longer leaves the page scroll permanently locked.

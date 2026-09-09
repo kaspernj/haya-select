@@ -121,6 +121,7 @@ Do not use the example's `web` script or pass `--web`; those open a browser auto
 - Keep component test IDs under `haya-select/...`, use unique fixture wrapper IDs, and scope portal queries by the component's `data-id`. Do not assume options live beneath the fixture wrapper or select the first global dropdown when multiple selects exist.
 - Assert visible behavior, selected values, option contents, or layout changes. For pagination, verify the option list changes as well as the page label.
 - Use structured SystemTest/WebDriver interaction APIs and condition-based waits. Do not copy older script-click workarounds or add sleeps/retries to hide lifecycle failures. Scoundrel evals that return diagnostic data need an explicit `return` statement.
+- Do not wrap `runSystemTest` calls in a custom `timeout(..., {timeout: 15000+})` safety net. Each interaction already carries its own specific timeout, so an outer blanket timer is a redundant double timeout that hides which step actually hung. Let the failing interaction's own timeout surface the real cause; only add an outer bound for a documented, inherently long operation.
 - Restore viewport or other shared browser state in `finally`. Inspect browser errors and `tmp/screenshots/` artifacts before changing selectors or timing.
 
 ## Formatting
