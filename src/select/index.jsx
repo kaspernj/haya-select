@@ -18,7 +18,8 @@ import RenderHtml from "react-native-render-html"
 import {Portal} from "conjointment"
 import useEventListener from "ya-use-event-listener"
 import usePressOutside from "outside-eye/build/use-press-outside"
-import {useHayaSelectContext} from "./context"
+import {acquireBodyScrollLock, releaseBodyScrollLock} from "./body-scroll-lock"
+import {selectCoordination} from "./coordination"
 
 const styles = {}
 const MOBILE_OPTIONS_MAX_WIDTH = 768
@@ -289,8 +290,6 @@ class HayaSelect extends ShapeComponent {
   mobileOptionsBackdropOpacity = new Animated.Value(0)
   optionsContainerRef = createRef()
   pageInputRef = createRef()
-  previousBodyOverflow = undefined
-  previousDocumentOverflow = undefined
   mobileOptionsContainerProgress = new Animated.Value(0)
   mobileOptionsContainerScale = this.mobileOptionsContainerProgress.interpolate({
     inputRange: [0, 1],
@@ -415,22 +414,6 @@ class HayaSelect extends ShapeComponent {
     usePressOutside(this.tt.optionsContainerRef, this.tt.onPressOutsideOptions)
     useEventListener(windowTarget, "resize", this.tt.onAnythingResizedDebounced)
     useEventListener(windowTarget, "scroll", this.tt.onAnythingScrolledDebounced)
-
-    // Register with the global select coordination context
-    const selectId = idForComponent(this)
-    const {registerSelect, unregisterSelect, openSelect, closeSelect, openSelectId} = useHayaSelectContext()
-
-    useEffect(() => {
-      registerSelect(selectId)
-      return () => unregisterSelect(selectId)
-    }, [selectId, registerSelect, unregisterSelect])
-
-    // Close this select if another select opens
-    useEffect(() => {
-      if (openSelectId && openSelectId !== selectId && this.s.opened) {
-        this.closeOptions()
-      }
-    }, [openSelectId, selectId])
 
     if (this.isDebugEnabled()) this.debugLog("setup", {
       hasControlledValues: "values" in this.props,
@@ -619,6 +602,8 @@ class HayaSelect extends ShapeComponent {
   componentDidMount() {
     const {attribute, defaultValue, defaultValues, defaultValuesFromOptions, model, options} = this.props
 
+    this.unsubscribeSelectCoordination = selectCoordination.subscribe(this.onSelectCoordinationChanged)
+
     if (this.isDebugEnabled()) this.debugLog("componentDidMount", {
       hasAttributeModel: Boolean(attribute && model),
       hasDefaultValues: Boolean(defaultValue || defaultValues || defaultValuesFromOptions),
@@ -651,9 +636,22 @@ class HayaSelect extends ShapeComponent {
 
   /** @returns {void} */
   componentWillUnmount() {
+    if (this.unsubscribeSelectCoordination) this.unsubscribeSelectCoordination()
+    selectCoordination.closeSelect(idForComponent(this))
     this.mobileOptionsBackdropOpacity.stopAnimation()
     this.mobileOptionsContainerProgress.stopAnimation()
     this.unlockBodyScroll()
+  }
+
+  /**
+   * Closes this select when a different select becomes the open one.
+   * @param {string|null} openSelectId
+   * @returns {void}
+   */
+  onSelectCoordinationChanged = (openSelectId) => {
+    if (openSelectId && openSelectId !== idForComponent(this) && this.s.opened) {
+      this.closeOptions()
+    }
   }
 
   /** @returns {import("react").ReactNode} */
@@ -1132,11 +1130,10 @@ class HayaSelect extends ShapeComponent {
   closeOptions({options} = {}) {
     const closedOptions = options || this.getCurrentOptions()
     const selectId = idForComponent(this)
-    const {closeSelect} = useHayaSelectContext()
     if (this.isDebugEnabled()) this.debugLog("closeOptions", {closedOptionsCount: closedOptions?.length || 0})
 
-    // Notify context to close this select
-    closeSelect(selectId)
+    // Clear the shared open-select slot if this is the select currently open
+    selectCoordination.closeSelect(selectId)
 
     if (this.s.opened && this.s.optionsPlacement == "sheet") {
       this.closeMobileOptionsWithAnimation({closedOptions})
@@ -1276,7 +1273,6 @@ class HayaSelect extends ShapeComponent {
   openOptions() {
     const mobileOptionsSheet = this.isMobileOptionsSheet()
     const selectId = idForComponent(this)
-    const {openSelect} = useHayaSelectContext()
 
     if (this.isDebugEnabled()) this.debugLog("openOptions", {
       currentOptionsCount: this.getCurrentOptions()?.length || 0,
@@ -1286,8 +1282,8 @@ class HayaSelect extends ShapeComponent {
     this.searchTextValue = ""
     this.callOptionsPositionAboveIfOutsideScreen = !mobileOptionsSheet
 
-    // Notify context to open this select and close others
-    openSelect(selectId)
+    // Claim the shared open-select slot, which closes any other open select
+    selectCoordination.openSelect(selectId)
 
     if (mobileOptionsSheet) {
       this.prepareMobileOptionsAnimation()
@@ -1328,27 +1324,18 @@ class HayaSelect extends ShapeComponent {
 
   /** @returns {void} */
   lockBodyScroll() {
-    if (Platform.OS != "web" || typeof document == "undefined" || this.bodyScrollLocked) return
-
-    this.previousBodyOverflow = document.body?.style.overflow
-    this.previousDocumentOverflow = document.documentElement?.style.overflow
-
-    if (document.body) document.body.style.overflow = "hidden"
-    if (document.documentElement) document.documentElement.style.overflow = "hidden"
+    if (this.bodyScrollLocked) return
 
     this.bodyScrollLocked = true
+    acquireBodyScrollLock()
   }
 
   /** @returns {void} */
   unlockBodyScroll() {
-    if (Platform.OS != "web" || typeof document == "undefined" || !this.bodyScrollLocked) return
+    if (!this.bodyScrollLocked) return
 
-    if (document.body) document.body.style.overflow = this.previousBodyOverflow || ""
-    if (document.documentElement) document.documentElement.style.overflow = this.previousDocumentOverflow || ""
-
-    this.previousBodyOverflow = undefined
-    this.previousDocumentOverflow = undefined
     this.bodyScrollLocked = false
+    releaseBodyScrollLock()
   }
 
   /** @returns {void} */

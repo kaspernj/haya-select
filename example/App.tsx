@@ -6,7 +6,6 @@ import {Platform, SafeAreaView} from "react-native"
 import SystemTestBrowserHelper from "system-testing/build/system-test-browser-helper.js"
 
 import HayaSelectConfiguration from "../src/config.js"
-import {HayaSelectProvider} from "../src/select/context"
 import {screenForName} from "./screens"
 import {styles} from "./screens/shared"
 
@@ -41,18 +40,16 @@ export default function App() {
     <PortalProvider>
       <PortalHost>
         <OutsideEyeProvider>
-          <HayaSelectProvider>
-            <SafeAreaView
-              dataSet={{focussed: "true"}}
-              style={styles.container}
-              testID="systemTestingComponent"
-            >
-              <Text testID="blankText" style={styles.blankText}>
-                {" "}
-              </Text>
-              <Screen />
-            </SafeAreaView>
-          </HayaSelectProvider>
+          <SafeAreaView
+            dataSet={{focussed: "true"}}
+            style={styles.container}
+            testID="systemTestingComponent"
+          >
+            <Text testID="blankText" style={styles.blankText}>
+              {" "}
+            </Text>
+            <Screen />
+          </SafeAreaView>
         </OutsideEyeProvider>
       </PortalHost>
     </PortalProvider>

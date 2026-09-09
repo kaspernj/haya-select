@@ -294,6 +294,34 @@ describe("HayaSelect", () => {
     }, {screen: "helper-scope"})
   })
 
+  it("closes the previously open select when opening a second select", async () => {
+    await runSystemTest(async (systemTest) => {
+      const firstHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleFirstRoot"})
+      const secondHelper = new HayaSelectSystemTestHelper({systemTest, testId: "hayaSelectMultipleSecondRoot"})
+
+      await systemTest.findByTestID("hayaSelectMultipleFirstRoot")
+      await systemTest.findByTestID("hayaSelectMultipleSecondRoot")
+
+      await firstHelper.open()
+
+      if (!await firstHelper.isOpen()) {
+        throw new Error("Expected first HayaSelect to open")
+      }
+
+      await secondHelper.open()
+
+      if (!await secondHelper.isOpen()) {
+        throw new Error("Expected second HayaSelect to open")
+      }
+
+      await expectHayaSelectOptionsClosed(systemTest, "hayaSelectMultipleFirstRoot")
+
+      if (await firstHelper.isOpen()) {
+        throw new Error("Expected first HayaSelect to close when the second select opened")
+      }
+    }, {screen: "multiple-selects"})
+  })
+
   it("scopes named helper option lookup to the opened select", async () => {
     await timeout({errorMessage: "render test timed out: scopes named helper option lookup to the opened select", timeout: 30000}, async () => {
       await runSystemTest(async (systemTest) => {
