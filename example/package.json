@@ -9,7 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@kaspernj/api-maker": "1.0.2100",
+    "@kaspernj/api-maker": "1.0.2174",
     "@expo/metro-runtime": "~4.0.1",
     "classnames": "^2.3.1",
     "conjointment": "^0.1.11",
