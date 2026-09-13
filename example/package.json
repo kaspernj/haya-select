@@ -25,7 +25,7 @@
     "react-native": "0.76.9",
     "react-native-render-html": "^6.3.4",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.19.13",
+    "react-native-web": "~0.21.2",
     "set-state-compare": "^1.0.84",
     "ya-use-event-listener": "^0.1.1"
   },
