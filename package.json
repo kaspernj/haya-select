@@ -52,7 +52,7 @@
     "react": "18.3.1",
     "react-native": "0.76.9",
     "release-patch": "^1.0.0",
-    "scoundrel-remote-eval": "1.0.34",
+    "scoundrel-remote-eval": "1.0.36",
     "sqlite": "^5.1.1",
     "sqlite3": "^6.0.1",
     "system-testing": "1.0.137",
