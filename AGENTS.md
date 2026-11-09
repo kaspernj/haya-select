@@ -17,7 +17,7 @@ Haya Select is a published React Native + Web select component. The library uses
 | `spec/system/` | Velocious/Selenium behavior specs, lifecycle, and pagination helpers. |
 | `scripts/velocious-test.js` | Custom test discovery, filtering, dist build, and runner entrypoint. |
 | `android/`, `ios/`, `expo-module.config.json` | Expo native-module scaffold, separate from the JavaScript select implementation. |
-| `peak_flow.yml` | CI installation, static checks, exported-web system tests, and Expo Doctor. |
+| `tensorbuzz.yml` | CI installation, static checks, exported-web system tests, Expo Doctor, and the `paths` list that scopes the build to changed paths. |
 | `README.md`, `CHANGELOG.md`, `changelog.d/` | Public usage documentation, existing changelog, and per-change release-note fragments. |
 
 ## Source And Packaging

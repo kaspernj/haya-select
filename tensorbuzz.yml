@@ -1,0 +1,20 @@
+# Path filter for the single build lane. This config is flat (no `builds:` map),
+# so the root `paths` list is exactly the one build's paths.
+# Rules are ordered and the last match wins per changed path. Negations must be
+# quoted: the config parser reads a bare `!foo` as an unknown YAML scalar tag.
+paths:
+  - "**"
+  - "!README.md"
+  - "!CHANGELOG.md"
+  - "!AGENTS.md"
+  - "!changelog.d/**"
+  - "!.github/**"
+before_script:
+  - npm install
+  - (cd example && npm install)
+  - (cd example && npx expo export --platform web --output-dir ../dist)
+script:
+  - npm run lint
+  - npm run typecheck
+  - SYSTEM_TEST_HOST=dist npm test
+  - npx expo-doctor
