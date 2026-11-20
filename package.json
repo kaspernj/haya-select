@@ -38,7 +38,7 @@
   "dependencies": {
     "awaitery": "^1.0.13",
     "classnames": "^2.3.1",
-    "debounce": "^3.0.0",
+    "debounce": "^4.0.0",
     "diggerize": "^1.0.4",
     "fetching-object": "^1.0.1",
     "react-native-render-html": "^6.3.4",
